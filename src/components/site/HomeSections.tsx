@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Button3D } from "../ui/Buttons";
 import { CANCEL_RULES, MAX_DAYS_AHEAD } from "@/lib/mock";
 import { fa } from "@/lib/format";
+import { Icon3D } from "../ui/Icon3D";
+import type { Icon3DName } from "../ui/icons3d";
 
 const SPORTS = [
   { href: "/book/padel", img: "/media/card-padel.jpg", pos: "50% 60%", lat: "Padel", name: "پدل", alt: "راکت و توپ پدل روی زمین آبی", text: "۳ زمین سرپوشیده؛ ۲ چمن آبی، ۱ چمن مشکی." },
@@ -41,13 +43,24 @@ export function SportCards() {
   );
 }
 
+const AMENITIES: [Icon3DName, string, string][] = [
+  ["roof", "زمین‌های سرپوشیده", "۳ زمین پدل در سوله؛ ۲ چمن آبی، ۱ چمن مشکی"],
+  ["court", "ماسه‌ی نرم و تمیز", "۳ زمین برای تنیس و والیبال ساحلی"],
+  ["user", "مربیان پدل", "کلاس خصوصی و گروهی"],
+  ["racket", "اجاره‌ی راکت و توپ", "در پذیرش مجموعه"],
+  ["shower", "رختکن و دوش", "تمیز و مجهز"],
+  ["cup", "کافه‌ی مجموعه", "قبل و بعد از بازی"],
+  ["park", "پارکینگ", "برای اعضا"],
+  ["cal", "رزرو آنلاین", "بدون تماس تلفنی"],
+];
+
+// Address and front-desk phone go here once the club confirms them.
+const INFO: [Icon3DName, string, string][] = [
+  ["clock", "ساعت کاری", "هر روز، ۸ صبح تا ۱۲ شب"],
+  ["insta", "اینستاگرام", "@kclub.padel"],
+];
+
 export function About() {
-  const items = [
-    ["زمین‌های سرپوشیده", "سه زمین پدل در سوله؛ دو زمین با چمن آبی و یکی با چمن مشکی."],
-    ["ماسه‌ی نرم و تمیز", "سه زمین ساحلی برای تنیس و والیبال."],
-    ["هر روز ۸ تا ۲۴", "سانس‌های یک‌ساعته، بدون تماس تلفنی."],
-    ["مربیان پدل", "کلاس خصوصی و گروهی برای همه‌ی سطح‌ها."],
-  ];
   return (
     <section className="about">
       <div className="wrap">
@@ -56,14 +69,28 @@ export function About() {
           <h2>یک مجموعه، دو حال‌وهوای بازی</h2>
           <p>کی کلاب برای کسانی ساخته شده که می‌خواهند بی‌دردسر بازی کنند: زمین را آنلاین ببینند، رزرو کنند و فقط برای بازی بیایند.</p>
         </div>
-        <ul className="abl">
-          {items.map(([t, d]) => (
-            <li key={t}>
+        <div className="amen">
+          {AMENITIES.map(([i, t, d]) => (
+            <div className="am" key={t}>
+              <Icon3D name={i} />
               <b>{t}</b>
               <span>{d}</span>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
+      </div>
+      <div className="wrap infow">
+        <div className="info3">
+          {INFO.map(([i, t, d]) => (
+            <div className="inf" key={t}>
+              <Icon3D name={i} />
+              <span>
+                <b>{t}</b>
+                <span>{d}</span>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
