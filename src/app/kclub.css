@@ -865,3 +865,15 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:4px 0}
 .fbt{border-top:1px solid var(--blackline);padding-block:16px;color:var(--onblack-mute);font-size:.78rem;font-family:var(--font-jost),sans-serif}
 @media (max-width:720px){.ftg{grid-template-columns:1fr 1fr}.fab{grid-column:1/-1}}
 @media (max-width:560px){.htx .eyebrow{letter-spacing:1.5px;font-size:.7rem}}
+/* ===== Steel Edition 3D icons ===== */
+.i3{display:inline-grid;place-items:center;flex:none;transition:transform .3s cubic-bezier(.3,1.5,.5,1)}
+.i3 svg{width:100%;height:100%;overflow:visible}
+.sb-it .ic.i3{width:30px;height:30px}
+.sb-it:hover .ic.i3{transform:translateY(-2px) rotate(-6deg)}
+.sb-it.on .ic.i3{filter:drop-shadow(0 0 6px rgba(255,255,255,.35))}
+.facts3 .wrap>.f3i{flex-direction:row;align-items:center;gap:14px}
+.f3i>span{display:flex;flex-direction:column}
+.f3i .i3{width:52px;height:52px}
+@media (max-width:820px){.f3i .i3{width:38px;height:38px}}
+@media (max-width:560px){.facts3 .wrap>.f3i{flex-direction:column;align-items:flex-start;gap:6px}}
+@media (prefers-reduced-motion:reduce){.i3{transition:none}}

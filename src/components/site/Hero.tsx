@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import { Icon3D } from "../ui/Icon3D";
 import { useEffect, useRef } from "react";
 import { Button3D } from "../ui/Buttons";
 import { useSession } from "@/lib/store";
@@ -93,17 +94,26 @@ export function Hero() {
       </div>
       <div className="facts3">
         <div className="wrap">
-          <div>
-            <b>۳</b>
-            <span>زمین پدل سرپوشیده</span>
+          <div className="f3i">
+            <Icon3D name="court" />
+            <span>
+              <b>۳</b>
+              <span>زمین پدل سرپوشیده</span>
+            </span>
           </div>
-          <div>
-            <b>۳</b>
-            <span>زمین تنیس ساحلی و والیبال ساحلی</span>
+          <div className="f3i">
+            <Icon3D name="racket" />
+            <span>
+              <b>۳</b>
+              <span>زمین تنیس ساحلی و والیبال ساحلی</span>
+            </span>
           </div>
-          <div>
-            <b>۸ تا ۲۴</b>
-            <span>هر روز هفته</span>
+          <div className="f3i">
+            <Icon3D name="clock" />
+            <span>
+              <b>۸ تا ۲۴</b>
+              <span>هر روز هفته</span>
+            </span>
           </div>
         </div>
       </div>

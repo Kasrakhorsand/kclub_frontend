@@ -9,7 +9,8 @@ import { NOTIFS, TICKETS } from "@/lib/mock";
 import { Brand } from "../site/Brand";
 import { ArrowIcon } from "../ui/Buttons";
 import { ThemeButton } from "../ui/ThemeButton";
-import { ICONS, MENUS, ROLE_EN, ROLE_FA } from "./menus";
+import { MENU_ICON, MENUS, ROLE_EN, ROLE_FA } from "./menus";
+import { Icon3D } from "../ui/Icon3D";
 
 /** Side-navigation shell shared by the player, front-desk and admin panels. */
 export function PanelShell({ children }: { children: React.ReactNode }) {
@@ -71,7 +72,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
             const cnt = m.key === "notif" ? unread : m.key === "tickets" && role !== "player" ? openT : 0;
             return (
               <Link key={m.key} href={href(m.key)} className={clsx("sb-it", page === m.key && "on", m.soon && "soon")} title={m.label}>
-                <span className="ic">{ICONS[m.key] ?? ICONS.dash}</span>
+                <Icon3D name={MENU_ICON[m.key] ?? "grid"} className="ic" />
                 <span className="sb-hide tl">{m.label}</span>
                 {m.soon && <span className="pill sb-hide">به‌زودی</span>}
                 {cnt > 0 && <span className="cnt">{fa(cnt)}</span>}
@@ -82,7 +83,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         <div className="sb-foot">
           <ThemeButton withLabel />
           <button className="sb-it out" onClick={() => { setUser(null); router.push("/"); }} title="خروج">
-            <span className="ic">{ICONS.logout}</span>
+            <Icon3D name="door" className="ic" />
             <span className="sb-hide tl">خروج</span>
           </button>
         </div>
