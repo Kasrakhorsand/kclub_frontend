@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<"wallet" | "gateway">("gateway");
   const [done, setDone] = useState<{ tracking: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   const total = cartTotal(cart);
 
   useEffect(() => {
@@ -75,13 +76,21 @@ export default function CheckoutPage() {
             disabled={!cart.length || busy}
             onClick={async () => {
               setBusy(true);
-              const r = await createBookings(user, cart, method);
-              clearCart();
-              setDone({ tracking: r.tracking });
+              setErr("");
+              try {
+                const r = await createBookings(user, cart, method);
+                clearCart();
+                setDone({ tracking: r.tracking });
+              } catch {
+                setErr("پرداخت انجام نشد. دوباره تلاش کنید؛ اگر مبلغی کم شده باشد به کیف پول برمی‌گردد.");
+              } finally {
+                setBusy(false);
+              }
             }}
           >
             {busy ? "در حال پرداخت…" : `پرداخت ${toman(total)}`}
           </Button3D>
+          {err && <p className="small" role="alert" style={{ color: "var(--busy)" }}>{err}</p>}
           <p className="xs muted">اگر پرداخت ناموفق باشد ولی مبلغ از حساب کم شده باشد، همان مبلغ خودکار به کیف پول کی کلاب برمی‌گردد.</p>
         </div>
       </div>

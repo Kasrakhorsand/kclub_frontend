@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,18 @@ export default function LoginPage() {
   const [code, setCode] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [wait, setWait] = useState(0);
+  useEffect(() => {
+    if (!wait) return;
+    const t = setTimeout(() => setWait(wait - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+  const resend = async () => {
+    setErr("");
+    setCode("");
+    await sendOtp(phone);
+    setWait(60);
+  };
   const pf = useForm<{ phone: string }>({ resolver: zodResolver(phoneSchema) });
   const nf = useForm<{ first: string; last: string }>({ resolver: zodResolver(nameSchema) });
 
@@ -43,6 +55,7 @@ export default function LoginPage() {
               await sendOtp(phone);
               setBusy(false);
               setPhone(phone);
+              setWait(60);
               setStep("otp");
             })}
           >
@@ -62,6 +75,7 @@ export default function LoginPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               setErr("");
+              if (toLatin(code).length !== 5) return setErr("کد باید ۵ رقم باشد");
               try {
                 setBusy(true);
                 const r = await verifyOtp(phone, toLatin(code));
@@ -76,10 +90,15 @@ export default function LoginPage() {
           >
             <h2>کد تأیید</h2>
             <p className="small muted">کد ۵ رقمی ارسال‌شده به {fa(phone)} را وارد کنید.</p>
-            <input className="input otp" inputMode="numeric" maxLength={5} value={code} onChange={(e) => setCode(e.target.value)} autoFocus aria-label="کد تأیید" />
+            <input className="input otp" inputMode="numeric" maxLength={5} value={code} onChange={(e) => setCode(e.target.value.replace(/[^0-9۰-۹]/g, ""))} autoComplete="one-time-code" autoFocus aria-label="کد تأیید" />
             {err && <span className="small" style={{ color: "var(--busy)" }}>{err}</span>}
             <Button3D type="submit" block disabled={busy}>تأیید و ورود</Button3D>
-            <button type="button" className="btn ghost sm" onClick={() => setStep("phone")}>تغییر شماره</button>
+            <div className="row between">
+              <button type="button" className="btn ghost sm" onClick={() => setStep("phone")}>تغییر شماره</button>
+              <button type="button" className="btn ghost sm" disabled={wait > 0} onClick={resend}>
+                {wait > 0 ? `ارسال دوباره تا ${fa(wait)} ثانیه` : "ارسال دوباره‌ی کد"}
+              </button>
+            </div>
           </form>
         )}
         {step === "register" && (

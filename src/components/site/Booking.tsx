@@ -4,12 +4,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import { addDays, dayKey, fa, hm, jDay, jFull, jMonth, toman, weekday } from "@/lib/format";
-import { freeCountSync, getCourts, getSlots } from "@/lib/api";
+import { freeCountSync, getCourts, getSlots, isPast, takenSync } from "@/lib/api";
 import { COURTS, MAX_DAYS_AHEAD, priceOf } from "@/lib/mock";
 import { cartTotal, useSession } from "@/lib/store";
 import type { Court, Sport } from "@/lib/types";
 import { ArrowIcon, BackButton, Button3D } from "../ui/Buttons";
 import { CourtMap3D } from "./CourtMap3D";
+import { toast } from "../ui/Toast";
 
 const PARTS: [string, string, number, number][] = [
   ["صبح", "Morning", 8, 12],
@@ -99,7 +100,8 @@ export function Booking({ sport }: { sport: Sport }) {
   const [date, setDate] = useState(() => dayKey(new Date()));
   const [hour, setHour] = useState<number | null>(null);
   const [weeks, setWeeks] = useState(1);
-  const { cart, toggleCart } = useSession();
+  const { cart, toggleCart, user, setAfterLogin } = useSession();
+  const router = useRouter();
   const { data: slots = [] } = useQuery({ queryKey: ["slots", sport, date], queryFn: () => getSlots(sport, date) });
   const { data: courts = COURTS.filter((c) => c.sport === sport) } = useQuery({ queryKey: ["courts", sport], queryFn: () => getCourts(sport) });
   const mapRef = useRef<HTMLDivElement>(null);
@@ -112,10 +114,31 @@ export function Booking({ sport }: { sport: Sport }) {
   const slot = slots.find((s) => s.hour === hour);
   const pickCourt = (c: Court) => {
     if (hour === null) return;
+    // Removing: drop this court/hour from every repeated week already in the cart.
+    if (inCart(c)) {
+      for (let w = 0; w < weeks; w++) {
+        const d = dayKey(addDays(new Date(`${date}T00:00:00`), w * 7));
+        if (inCart(c, d)) toggleCart({ date: d, hour, courtId: c.id, price: priceOf(sport, hour) });
+      }
+      return;
+    }
+    // Adding: only weeks inside the booking window where the court is still free.
+    const last = dayKey(addDays(new Date(), MAX_DAYS_AHEAD - 1));
+    let added = 0;
     for (let w = 0; w < weeks; w++) {
       const d = dayKey(addDays(new Date(`${date}T00:00:00`), w * 7));
+      if (d > last) break;
+      if (isPast(d, hour) || takenSync(d, c.id, hour) || inCart(c, d)) continue;
       toggleCart({ date: d, hour, courtId: c.id, price: priceOf(sport, hour) });
+      added++;
     }
+    if (weeks > 1 && added < weeks) toast(`${fa(added)} از ${fa(weeks)} هفته اضافه شد؛ بقیه پر است یا خارج از بازه‌ی ${fa(MAX_DAYS_AHEAD)} روزه.`);
+  };
+  const goPay = () => {
+    if (!user) {
+      setAfterLogin("/checkout");
+      router.push("/login");
+    } else router.push("/checkout");
   };
 
   return (
@@ -194,7 +217,7 @@ export function Booking({ sport }: { sport: Sport }) {
         )}
         {cart.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button3D size="lg" href="/checkout">ادامه و پرداخت</Button3D>
+            <Button3D size="lg" onClick={goPay}>ادامه و پرداخت</Button3D>
           </div>
         )}
       </main>
