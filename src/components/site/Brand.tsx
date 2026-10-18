@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+/** Emblem + wordmark lockup; `sub` is the small caption under the wordmark. */
 export function Brand({ sub }: { sub: string }) {
   return (
     <span className="brand">

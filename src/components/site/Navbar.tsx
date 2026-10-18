@@ -20,7 +20,7 @@ export function Navbar() {
   const path = usePathname();
   const router = useRouter();
   const user = useSession((s) => s.user);
-  const [solid, setSolid] = useState(false);
+  const [solid, setSolid] = useState(false); // opaque background once the page scrolls
   const nav = useRef<HTMLElement>(null);
   const ind = useRef<HTMLSpanElement>(null);
   const home = path === "/";
@@ -32,22 +32,24 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
+  /** Slide the gold indicator under `el` (or hide it); `instant` skips the transition. */
   const moveTo = (el: HTMLElement | null, instant = false) => {
-    const i = ind.current;
-    if (!i || !nav.current) return;
+    const indicator = ind.current;
+    if (!indicator || !nav.current) return;
     nav.current.querySelectorAll(".nl").forEach((x) => x.classList.toggle("hot", x === el));
     if (!el) {
-      i.style.opacity = "0";
+      indicator.style.opacity = "0";
       return;
     }
-    if (instant) i.style.transition = "none";
-    i.style.opacity = "1";
-    i.style.width = `${el.offsetWidth}px`;
-    i.style.height = `${el.offsetHeight}px`;
-    i.style.transform = `translate(${el.offsetLeft}px,${el.offsetTop}px)`;
-    i.classList.toggle("lk", el.classList.contains("lock"));
-    if (instant) requestAnimationFrame(() => (i.style.transition = ""));
+    if (instant) indicator.style.transition = "none";
+    indicator.style.opacity = "1";
+    indicator.style.width = `${el.offsetWidth}px`;
+    indicator.style.height = `${el.offsetHeight}px`;
+    indicator.style.transform = `translate(${el.offsetLeft}px,${el.offsetTop}px)`;
+    indicator.classList.toggle("lk", el.classList.contains("lock"));
+    if (instant) requestAnimationFrame(() => (indicator.style.transition = ""));
   };
+  /** The link for the current route, where the indicator rests. */
   const active = () => nav.current?.querySelector<HTMLElement>(".nl.on") ?? null;
   useLayoutEffect(() => moveTo(active(), true), [path]);
 
@@ -60,15 +62,15 @@ export function Navbar() {
           </Link>
           <nav className="lnk" aria-label="منوی اصلی" ref={nav} onPointerLeave={() => moveTo(active())}>
             <span className="ind" ref={ind} aria-hidden="true" />
-            {LINKS.map((l) => (
+            {LINKS.map((link) => (
               <Link
-                key={l.href}
-                href={l.href}
-                className={clsx("nl", l.match.some((m) => path.startsWith(m)) && "on")}
+                key={link.href}
+                href={link.href}
+                className={clsx("nl", link.match.some((prefix) => path.startsWith(prefix)) && "on")}
                 onPointerEnter={(e) => moveTo(e.currentTarget)}
                 onFocus={(e) => moveTo(e.currentTarget)}
               >
-                {l.label}
+                {link.label}
               </Link>
             ))}
             <button

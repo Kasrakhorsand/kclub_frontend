@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import clsx from "clsx";
 
-type B3dProps = {
+type Button3DProps = {
   children: React.ReactNode;
   variant?: "gold" | "dark";
   size?: "sm" | "md" | "lg";
@@ -15,8 +15,9 @@ type B3dProps = {
 };
 
 /** The tactile 3D button from the prototype: tilts toward the pointer and presses down. */
-export function Button3D({ children, variant = "gold", size = "md", block, href, onClick, disabled, type = "button" }: B3dProps) {
+export function Button3D({ children, variant = "gold", size = "md", block, href, onClick, disabled, type = "button" }: Button3DProps) {
   const ref = useRef<HTMLElement>(null);
+  /** Tilt up to ±7° toward the pointer via the --tx/--ty CSS variables. */
   const move = (e: React.PointerEvent) => {
     const el = ref.current;
     if (!el) return;
@@ -43,6 +44,7 @@ export function Button3D({ children, variant = "gold", size = "md", block, href,
   );
 }
 
+/** Right-pointing arrow; CSS flips it where needed for RTL. */
 export const ArrowIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14M13 6l6 6-6 6" />
@@ -61,6 +63,7 @@ export function BackButton({ href, children }: { href: string; children: React.R
   );
 }
 
+/** Small padlock for features that are not open yet. */
 export const LockIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
     <rect x="5" y="11" width="14" height="10" rx="1.5" />

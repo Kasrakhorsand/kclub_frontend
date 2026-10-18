@@ -13,6 +13,7 @@ const MOON = (
   </svg>
 );
 
+/** Light/dark toggle; `withLabel` shows the text next to the icon (panel sidebar). */
 export function ThemeButton({ withLabel }: { withLabel?: boolean }) {
   const { theme, toggleTheme } = useSession();
   const dark = theme === "dark";

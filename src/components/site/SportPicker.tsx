@@ -6,6 +6,9 @@ import clsx from "clsx";
 import { BackButton } from "../ui/Buttons";
 import type { SportKind, SportStageHandle } from "../three/SportStage";
 
+/** Delay before navigating, so the racket-hits-ball animation can finish. */
+const HIT_ANIMATION_MS = 1150;
+
 const SportStage = dynamic(() => import("../three/SportStage"), { ssr: false });
 
 const CARDS: { kind: SportKind; href: string; lat: string; name: string; meta: string }[] = [
@@ -14,6 +17,7 @@ const CARDS: { kind: SportKind; href: string; lat: string; name: string; meta: s
   { kind: "volley", href: "/book/beach?game=volley", lat: "Beach Volley", name: "والیبال ساحلی", meta: "۳ زمین ماسه‌ای" },
 ];
 
+/** Three 3D sport cards; picking one plays a hit animation, then opens that sport's booking page. */
 export function SportPicker() {
   const router = useRouter();
   const stages = useRef<(SportStageHandle | null)[]>([]);
@@ -21,12 +25,12 @@ export function SportPicker() {
 
   const pick = (i: number) => {
     if (picked !== null) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const stage = stages.current[i];
-    if (reduce || !stage) return router.push(CARDS[i].href);
+    if (reducedMotion || !stage) return router.push(CARDS[i].href);
     setPicked(i);
     stage.hit();
-    setTimeout(() => router.push(CARDS[i].href), 1150);
+    setTimeout(() => router.push(CARDS[i].href), HIT_ANIMATION_MS);
   };
 
   return (
@@ -36,21 +40,21 @@ export function SportPicker() {
         <BackButton href="/">بازگشت به خانه</BackButton>
       </div>
       <section className="pick3">
-        {CARDS.map((c, i) => (
+        {CARDS.map((card, i) => (
           <button
-            key={c.kind}
+            key={card.kind}
             className={clsx("pk3", picked === i && "hit", picked !== null && picked !== i && "dim")}
             onClick={() => pick(i)}
-            aria-label={`رزرو ${c.name}`}
+            aria-label={`رزرو ${card.name}`}
           >
             <span className="stage3">
-              <SportStage kind={c.kind} index={i} ref={(h) => { stages.current[i] = h; }} />
+              <SportStage kind={card.kind} index={i} ref={(handle) => { stages.current[i] = handle; }} />
               <span className="floor3" />
             </span>
             <span className="tx3">
-              <span className="lat">{c.lat}</span>
-              <b>{c.name}</b>
-              <span className="m3">{c.meta}</span>
+              <span className="lat">{card.lat}</span>
+              <b>{card.name}</b>
+              <span className="m3">{card.meta}</span>
               <span className="go3">انتخاب و دیدن سانس‌ها ←</span>
             </span>
           </button>

@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
 /** Small soft-box studio used as the environment map for metallic materials. */
-export function studioEnvironment(R: THREE.WebGLRenderer) {
-  const pm = new THREE.PMREMGenerator(R);
+export function studioEnvironment(renderer: THREE.WebGLRenderer) {
+  const pm = new THREE.PMREMGenerator(renderer);
   const env = new THREE.Scene();
   env.add(new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0x0a0a0b, side: THREE.BackSide })));
   const boxes: [number, number, number, number, number, number, number][] = [

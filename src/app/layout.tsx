@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
+/** Self-hosted fonts (no Google Fonts, for reliability inside Iran). */
 const vazir = localFont({
   src: "../fonts/Vazirmatn.woff2",
   variable: "--font-vazir",

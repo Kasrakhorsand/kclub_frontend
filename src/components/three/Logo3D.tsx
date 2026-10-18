@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { studioEnvironment } from "./studio";
 import PARTS from "@/lib/geometry/logo-parts.json";
 
+/** Traced outline: outer ring `o` and holes `h`, as [x, y] points. */
 type Shape = { o: number[][]; h: number[][][] };
 const KPARTS = PARTS as Record<"stem" | "arm" | "head" | "leg" | "ball", Shape[]>;
 

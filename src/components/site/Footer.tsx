@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Brand } from "./Brand";
 import { fa } from "@/lib/format";
 
-const COLS: [string, [string, string][]][] = [
+/** Footer link columns: [heading, [href, label][]]. */
+const COLUMNS: [string, [string, string][]][] = [
   ["رزرو", [["/book/padel", "زمین پدل"], ["/book/beach?game=tennis", "تنیس ساحلی"], ["/book/beach?game=volley", "والیبال ساحلی"]]],
   ["کی کلاب", [["/coaches", "مربیان پدل"], ["/#how", "راهنمای رزرو"], ["/panel", "رزروهای من"]]],
 ];
 
+/** Site footer shown on every public page and the 404 page. */
 export function Footer() {
   return (
     <footer className="ftr">
@@ -15,7 +17,7 @@ export function Footer() {
           <Brand sub="PADEL · BEACH CLUB" />
           <p>رزرو آنلاین زمین پدل، تنیس ساحلی و والیبال ساحلی. هر روز ساعت {fa(8)} تا {fa(24)}.</p>
         </div>
-        {COLS.map(([t, links]) => (
+        {COLUMNS.map(([t, links]) => (
           <nav key={t} aria-label={t}>
             <b>{t}</b>
             {links.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}

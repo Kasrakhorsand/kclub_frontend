@@ -2,7 +2,7 @@
  * Sample data used until the real backend is connected.
  * Everything here is replaceable by API calls in `api.ts`.
  */
-import type { Booking, Coach, Court, PriceBand, User } from "./types";
+import type { Audit, Booking, Coach, Court, Notif, PriceBand, Ticket, Tx, User } from "./types";
 import { addDays, dayKey } from "./format";
 
 export const OPEN_HOUR = 8;
@@ -37,6 +37,7 @@ export const CANCEL_RULES = [
   { hours: 0, percent: 0 },
 ];
 
+/** Session price (toman) for a sport at a start hour. */
 export const priceOf = (sport: "padel" | "beach", hour: number) =>
   PRICING[sport].find((b) => hour >= b.from && hour < b.to)?.price ?? 0;
 
@@ -61,8 +62,10 @@ function hash(s: string) {
   }
   return ((h >>> 0) % 10000) / 10000;
 }
+/** Rough share of courts booked at each hour, so the sample board looks realistic. */
 const occupancy = (h: number) => (h < 12 ? 0.32 : h < 17 ? 0.42 : h < 23 ? 0.78 : 0.5);
 
+/** Deterministic sample bookings for the 14 days starting at `today` (same input, same output). */
 export function seedBookings(today = new Date()): Booking[] {
   const out: Booking[] = [];
   for (let d = 0; d < 14; d++) {
@@ -97,11 +100,8 @@ export const COACHES: Coach[] = [
   { id: "c4", name: "مهسا رحیمی", title: "مربی پدل · کودکان و نوجوانان", level: "Junior Coach", years: 4, students: 95, satisfaction: 97, rating: 4.9, reviews: 29, tags: ["کودکان ۸ تا ۱۶", "مبتدی", "کلاس گروهی"], price: 600_000 },
 ];
 
-export interface Tx { id: string; date: string; phone: string; type: "charge" | "pay" | "refund"; amount: number; desc: string; method: string; actor: string }
-export interface Ticket { id: string; phone: string; title: string; status: "open" | "answered" | "escalated" | "closed"; date: string; messages: { by: "user" | "staff" | "admin"; text: string }[] }
-export interface Notif { id: string; title: string; text: string; read: boolean; date: string }
-export interface Audit { date: string; actor: string; action: string; target: string; detail: string }
 
+/** Day key `n` days from today (negative = past). */
 const k = (n: number) => dayKey(addDays(new Date(), n));
 export const TXS: Tx[] = [
   { id: "TX-1", date: k(-1), phone: "09121234567", type: "charge", amount: 1_000_000, desc: "شارژ کیف پول", method: "درگاه", actor: "کاربر" },

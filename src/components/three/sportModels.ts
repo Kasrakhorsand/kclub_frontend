@@ -1,7 +1,12 @@
+/**
+ * Procedural three.js models for the sport picker: photo-textured rackets,
+ * tennis balls, a volleyball and a hand. Units are scene units (~1 = 10 cm).
+ */
 import * as THREE from "three";
 import PADEL from "@/lib/geometry/padel-shape.json";
 import BEACH from "@/lib/geometry/beach-shape.json";
 
+/** Racket outline traced from the photo: size `w`×`h` and shapes with outer ring `o` and holes `h`, in 0–1 UV space. */
 type Outline = { w: number; h: number; s: { o: number[][]; h: number[][][] }[] };
 
 /** Racket extruded from its photo outline (holes cut through) and textured with the photo. */
@@ -30,6 +35,7 @@ export const padelRacket = () => photoRacket("/models/padel-racket.webp", PADEL 
 export const beachRacket = () => photoRacket("/models/beach-racket.webp", BEACH as Outline, 4.6);
 
 /** Felt tennis ball with the classic curved seam. */
+/** Felt ball of radius `r` with a seam stripe; colours are CSS hex strings. */
 export function tennisBall(r: number, base: string, seam: string) {
   const T = THREE;
   const c = document.createElement("canvas");
@@ -57,6 +63,7 @@ export function tennisBall(r: number, base: string, seam: string) {
 }
 
 /** Volleyball: the product photo projected onto a sphere. */
+/** Panelled volleyball of radius `r`. */
 export function volleyball(r: number) {
   const T = THREE;
   const g = new T.SphereGeometry(r, 64, 48);
@@ -74,6 +81,7 @@ export function volleyball(r: number) {
 }
 
 /** Stylised hand with a K Club wristband. */
+/** Stylised open hand that "sets" the volleyball. */
 export function hand() {
   const T = THREE;
   const G = new T.Group();

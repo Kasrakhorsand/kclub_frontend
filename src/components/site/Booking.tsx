@@ -12,17 +12,26 @@ import { ArrowIcon, BackButton, Button3D } from "../ui/Buttons";
 import { CourtMap3D } from "./CourtMap3D";
 import { toast } from "../ui/Toast";
 
-const PARTS: [string, string, number, number][] = [
-  ["صبح", "Morning", 8, 12],
-  ["ظهر و بعدازظهر", "Afternoon", 12, 17],
-  ["عصر", "Evening", 17, 21],
-  ["شب", "Night", 21, 24],
+/** Time-of-day groups for the slot grid; `to` is exclusive. */
+const DAY_PARTS = [
+  { label: "صبح", latin: "Morning", from: 8, to: 12 },
+  { label: "ظهر و بعدازظهر", latin: "Afternoon", from: 12, to: 17 },
+  { label: "عصر", latin: "Evening", from: 17, to: 21 },
+  { label: "شب", latin: "Night", from: 21, to: 24 },
 ];
 
+/** Below this many free sessions a day is marked "low" in the date strip. */
+const LOW_AVAILABILITY = 5;
+
+/** Same weekday `weeks` weeks after `date`. */
+const plusWeeks = (date: string, weeks: number) => dayKey(addDays(new Date(`${date}T00:00:00`), weeks * 7));
+
+/** Horizontally scrolling day cards for the booking window, with free-session counts. */
 function DateStrip({ sport, value, onChange }: { sport: Sport; value: string; onChange: (k: string) => void }) {
   const cart = useSession((s) => s.cart);
   const row = useRef<HTMLDivElement>(null);
   const days = useMemo(() => Array.from({ length: MAX_DAYS_AHEAD }, (_, i) => dayKey(addDays(new Date(), i))), []);
+  // Bring the selected day into view on first render.
   useEffect(() => {
     row.current?.querySelector(".dc.on")?.scrollIntoView({ block: "nearest", inline: "center" });
   }, []);
@@ -31,16 +40,16 @@ function DateStrip({ sport, value, onChange }: { sport: Sport; value: string; on
     <div className="dstrip">
       <button className="dnav" onClick={() => scroll(1)} aria-label="روزهای قبل"><ArrowIcon /></button>
       <div className="dsr" ref={row}>
-        {days.map((k, i) => {
-          const free = freeCountSync(sport, k);
-          const lvl = free === 0 ? "none" : free < 5 ? "low" : "ok";
+        {days.map((day, i) => {
+          const free = freeCountSync(sport, day);
+          const level = free === 0 ? "none" : free < LOW_AVAILABILITY ? "low" : "ok";
           return (
-            <button key={k} className={clsx("dc", lvl, k === value && "on")} disabled={free === 0} onClick={() => onChange(k)} aria-pressed={k === value}>
-              <span className="w">{i === 0 ? "امروز" : i === 1 ? "فردا" : weekday(k)}</span>
-              <b>{jDay(k)}</b>
-              <span className="mo">{jMonth(k)}</span>
+            <button key={day} className={clsx("dc", level, day === value && "on")} disabled={free === 0} onClick={() => onChange(day)} aria-pressed={day === value}>
+              <span className="w">{i === 0 ? "امروز" : i === 1 ? "فردا" : weekday(day)}</span>
+              <b>{jDay(day)}</b>
+              <span className="mo">{jMonth(day)}</span>
               <span className="av">{free === 0 ? "تکمیل" : `${fa(free)} سانس`}</span>
-              {cart.some((x) => x.date === k) && <span className="ic" title="در سبد شما" />}
+              {cart.some((item) => item.date === day) && <span className="ic" title="در سبد شما" />}
             </button>
           );
         })}
@@ -50,6 +59,7 @@ function DateStrip({ sport, value, onChange }: { sport: Sport; value: string; on
   );
 }
 
+/** Sticky bottom bar with the cart total; expands to list and remove items. Sends guests to login first. */
 function CartBar() {
   const router = useRouter();
   const { cart, toggleCart, user, setAfterLogin } = useSession();
@@ -74,10 +84,10 @@ function CartBar() {
       {open && (
         <div className="wrap" style={{ paddingTop: 10 }}>
           <div className="list">
-            {[...cart].sort((a, b) => `${a.date}${a.hour}`.localeCompare(`${b.date}${b.hour}`)).map((x) => (
-              <div className="li" key={`${x.date}${x.hour}${x.courtId}`}>
-                <span>{jFull(x.date)} · {hm(x.hour)} · <b>{COURTS.find((c) => c.id === x.courtId)?.name}</b></span>
-                <span className="row">{toman(x.price)}<button className="btn ghost sm" onClick={() => toggleCart(x)}>حذف</button></span>
+            {[...cart].sort((a, b) => `${a.date}${a.hour}`.localeCompare(`${b.date}${b.hour}`)).map((item) => (
+              <div className="li" key={`${item.date}${item.hour}${item.courtId}`}>
+                <span>{jFull(item.date)} · {hm(item.hour)} · <b>{COURTS.find((c) => c.id === item.courtId)?.name}</b></span>
+                <span className="row">{toman(item.price)}<button className="btn ghost sm" onClick={() => toggleCart(item)}>حذف</button></span>
               </div>
             ))}
           </div>
@@ -94,12 +104,17 @@ function CartBar() {
   );
 }
 
+/**
+ * Booking flow for one sport: pick a day, then an hour, then a court on the
+ * 3D map. Picks go into the persisted cart; weekly repeat adds the same
+ * court and hour on following weeks.
+ */
 export function Booking({ sport }: { sport: Sport }) {
   const game = useSearchParams().get("game");
   const title = sport === "padel" ? "پدل" : game === "volley" ? "والیبال ساحلی" : game === "tennis" ? "تنیس ساحلی" : "ساحلی";
   const [date, setDate] = useState(() => dayKey(new Date()));
   const [hour, setHour] = useState<number | null>(null);
-  const [weeks, setWeeks] = useState(1);
+  const [weeks, setWeeks] = useState(1); // weekly repeat count
   const { cart, toggleCart, user, setAfterLogin } = useSession();
   const router = useRouter();
   const { data: slots = [] } = useQuery({ queryKey: ["slots", sport, date], queryFn: () => getSlots(sport, date) });
@@ -117,7 +132,7 @@ export function Booking({ sport }: { sport: Sport }) {
     // Removing: drop this court/hour from every repeated week already in the cart.
     if (inCart(c)) {
       for (let w = 0; w < weeks; w++) {
-        const d = dayKey(addDays(new Date(`${date}T00:00:00`), w * 7));
+        const d = plusWeeks(date, w);
         if (inCart(c, d)) toggleCart({ date: d, hour, courtId: c.id, price: priceOf(sport, hour) });
       }
       return;
@@ -126,7 +141,7 @@ export function Booking({ sport }: { sport: Sport }) {
     const last = dayKey(addDays(new Date(), MAX_DAYS_AHEAD - 1));
     let added = 0;
     for (let w = 0; w < weeks; w++) {
-      const d = dayKey(addDays(new Date(`${date}T00:00:00`), w * 7));
+      const d = plusWeeks(date, w);
       if (d > last) break;
       if (isPast(d, hour) || takenSync(d, c.id, hour) || inCart(c, d)) continue;
       toggleCart({ date: d, hour, courtId: c.id, price: priceOf(sport, hour) });
@@ -165,25 +180,25 @@ export function Booking({ sport }: { sport: Sport }) {
 
           <div className="step"><span className="sn2">۲</span><div><h3>ساعت بازی · {jFull(date)}</h3><p className="small muted">هر سانس یک ساعت · صبح‌ها ارزان‌تر</p></div></div>
           <div className="tgrid">
-            {PARTS.map(([t, lt, a, b]) => (
-              <div className="tgrp" key={t}>
-                <div className="tgh"><span>{t}</span><span className="lat">{lt}</span><span className="rng">{hm(a)} تا {hm(b)}</span></div>
+            {DAY_PARTS.map((part) => (
+              <div className="tgrp" key={part.label}>
+                <div className="tgh"><span>{part.label}</span><span className="lat">{part.latin}</span><span className="rng">{hm(part.from)} تا {hm(part.to)}</span></div>
                 <div className="tsg">
-                  {slots.filter((s) => s.hour >= a && s.hour < b).map((s) => {
-                    const f = s.freeCourts.length;
-                    if (s.past || !f)
+                  {slots.filter((s) => s.hour >= part.from && s.hour < part.to).map((s) => {
+                    const freeCount = s.freeCourts.length;
+                    if (s.past || !freeCount)
                       return (
                         <button key={s.hour} className={clsx("ts", s.past ? "past" : "full")} disabled>
                           <b>{hm(s.hour)}</b><span className="to">تا {hm(s.hour + 1)}</span><span className="st">{s.past ? "گذشته" : "تکمیل"}</span>
                         </button>
                       );
-                    const ic = cart.some((x) => x.date === date && x.hour === s.hour);
+                    const inCartHere = cart.some((item) => item.date === date && item.hour === s.hour);
                     return (
-                      <button key={s.hour} className={clsx("ts free", hour === s.hour && "on", ic && "incart")} onClick={() => pickHour(s.hour)}>
+                      <button key={s.hour} className={clsx("ts free", hour === s.hour && "on", inCartHere && "incart")} onClick={() => pickHour(s.hour)}>
                         <b>{hm(s.hour)}</b><span className="to">تا {hm(s.hour + 1)}</span>
                         <span className="pr">{fa(s.price / 1000)} هزار</span>
-                        <span className="dots">{[0, 1, 2].map((i) => <i key={i} className={i < f ? "f" : ""} />)}<em>{fa(f)} خالی</em></span>
-                        {ic && <span className="ck">✓</span>}
+                        <span className="dots">{[0, 1, 2].map((i) => <i key={i} className={i < freeCount ? "f" : ""} />)}<em>{fa(freeCount)} خالی</em></span>
+                        {inCartHere && <span className="ck">✓</span>}
                       </button>
                     );
                   })}

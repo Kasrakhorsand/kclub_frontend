@@ -17,9 +17,9 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
   const { user, role, setUser, setRole } = useSession();
-  const [mini, setMini] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [mini, setMini] = useState(false); // collapsed desktop sidebar
+  const [open, setOpen] = useState(false); // mobile drawer
+  const [ready, setReady] = useState(false); // persisted session has loaded
 
   useEffect(() => {
     setReady(true);
@@ -32,10 +32,11 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
 
   const page = path.split("/")[2] ?? "dash";
   const menu = MENUS[role];
-  const unread = NOTIFS.filter((n) => !n.read).length;
-  const openT = TICKETS.filter((t) => (role === "admin" ? t.status === "escalated" : t.status === "open")).length;
-  const current = menu.find((m) => m.key === page)?.label ?? "داشبورد";
-  const href = (k: string) => (k === "book" ? "/sport" : k === "dash" ? "/panel" : `/panel/${k}`);
+  const unreadNotifs = NOTIFS.filter((n) => !n.read).length;
+  const pendingTickets = TICKETS.filter((t) => (role === "admin" ? t.status === "escalated" : t.status === "open")).length;
+  const currentLabel = menu.find((m) => m.key === page)?.label ?? "داشبورد";
+  /** Menu key → URL; "book" leaves the panel for the public booking flow. */
+  const href = (key: string) => (key === "book" ? "/sport" : key === "dash" ? "/panel" : `/panel/${key}`);
 
   return (
     <div className={clsx("pnl2", mini && "mini", open && "open")}>
@@ -69,13 +70,13 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
         )}
         <nav className="sb-nav">
           {menu.map((m) => {
-            const cnt = m.key === "notif" ? unread : m.key === "tickets" && role !== "player" ? openT : 0;
+            const badge = m.key === "notif" ? unreadNotifs : m.key === "tickets" && role !== "player" ? pendingTickets : 0;
             return (
               <Link key={m.key} href={href(m.key)} className={clsx("sb-it", page === m.key && "on", m.soon && "soon")} title={m.label}>
                 <Icon3D name={MENU_ICON[m.key] ?? "grid"} className="ic" />
                 <span className="sb-hide tl">{m.label}</span>
                 {m.soon && <span className="pill sb-hide">به‌زودی</span>}
-                {cnt > 0 && <span className="cnt">{fa(cnt)}</span>}
+                {badge > 0 && <span className="cnt">{fa(badge)}</span>}
               </Link>
             );
           })}
@@ -96,7 +97,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
             <span />
             <span />
           </button>
-          <b>{current}</b>
+          <b>{currentLabel}</b>
           <span className="pbar-sp" />
           <span className="xs muted">{jFull(dayKey(new Date()))}</span>
         </header>
@@ -106,6 +107,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Panel page header: title, optional subtitle and an action on the opposite side. */
 export const PageHead = ({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) => (
   <div className="ph">
     <div>

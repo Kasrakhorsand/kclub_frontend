@@ -1,63 +1,68 @@
 "use client";
 import dynamic from "next/dynamic";
-import { Icon3D } from "../ui/Icon3D";
 import { useEffect, useRef } from "react";
-import { Button3D } from "../ui/Buttons";
 import { useSession } from "@/lib/store";
+import { Button3D } from "../ui/Buttons";
+import { Icon3D } from "../ui/Icon3D";
 
 const Logo3D = dynamic(() => import("../three/Logo3D"), { ssr: false, loading: () => <div className="klogo3" /> });
 
 /** Background clips play one after another with a crossfade. */
+const CROSSFADE_MS = 900;
 const CLIPS = [
   { src: "/media/hero-beach-tennis.mp4", pos: "50% 55%" },
   { src: "/media/hero-padel.mp4", pos: "50% 68%" },
   { src: "/media/hero-beach-volley.mp4", pos: "50% 50%" },
 ];
 
+/** Muted background videos; each one fades into the next just before it ends. Reduced motion loops the first clip. */
 function HeroVideos() {
   const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const vs = Array.from(wrap.current?.querySelectorAll("video") ?? []);
-    if (!vs.length) return;
+    const videos = Array.from(wrap.current?.querySelectorAll("video") ?? []);
+    if (!videos.length) return;
+    // Autoplay can be refused (e.g. data saver); the poster stays visible then.
+    const play = (v: HTMLVideoElement) => v.play().catch(() => {});
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      vs[0].loop = true;
-      vs[0].play().catch(() => {});
+      videos[0].loop = true;
+      play(videos[0]);
       return;
     }
-    let cur = 0;
+    let current = 0;
     let switching = false;
-    const next = () => {
-      const a = vs[cur];
-      cur = (cur + 1) % vs.length;
-      const b = vs[cur];
-      b.currentTime = 0;
-      b.play().catch(() => {});
-      b.classList.add("on");
+    const crossfade = () => {
+      const from = videos[current];
+      current = (current + 1) % videos.length;
+      const to = videos[current];
+      to.currentTime = 0;
+      play(to);
+      to.classList.add("on");
       setTimeout(() => {
-        a.classList.remove("on");
-        a.pause();
+        from.classList.remove("on");
+        from.pause();
         switching = false;
-      }, 900);
+      }, CROSSFADE_MS);
     };
     const onTime = (e: Event) => {
       const v = e.currentTarget as HTMLVideoElement;
-      if (v === vs[cur] && v.duration && v.duration - v.currentTime < 0.9 && !switching) {
+      const nearEnd = v.duration && v.duration - v.currentTime < CROSSFADE_MS / 1000;
+      if (v === videos[current] && nearEnd && !switching) {
         switching = true;
-        next();
+        crossfade();
       }
     };
-    vs.forEach((v) => v.addEventListener("timeupdate", onTime));
-    vs[0].play().catch(() => {});
-    return () => vs.forEach((v) => v.removeEventListener("timeupdate", onTime));
+    videos.forEach((v) => v.addEventListener("timeupdate", onTime));
+    play(videos[0]);
+    return () => videos.forEach((v) => v.removeEventListener("timeupdate", onTime));
   }, []);
   return (
     <div className="bgv" aria-hidden="true" ref={wrap}>
-      {CLIPS.map((c, i) => (
+      {CLIPS.map((clip, i) => (
         <video
-          key={c.src}
+          key={clip.src}
           className={`hv ${i === 0 ? "on" : ""}`}
-          src={c.src}
-          style={{ objectPosition: c.pos }}
+          src={clip.src}
+          style={{ objectPosition: clip.pos }}
           poster={i === 0 ? "/media/hero-poster.jpg" : undefined}
           muted
           playsInline
@@ -69,6 +74,7 @@ function HeroVideos() {
   );
 }
 
+/** Home hero: video backdrop, 3D logo, headline, calls to action and the stats bar. */
 export function Hero() {
   const user = useSession((s) => s.user);
   return (
