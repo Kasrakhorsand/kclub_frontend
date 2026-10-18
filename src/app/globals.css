@@ -2,20 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Design tokens and component styles ported 1:1 from the approved prototype. */
+@import "./kclub.css";
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { scroll-behavior: smooth; }
+body { margin: 0; }
+img { max-width: 100%; }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Next.js port adjustments (links replace prototype buttons) */
+a.nl, a.spc, a.bk, a.b3d, a.logo, a.plate, a.pk3 { text-decoration: none; color: inherit; }
+a.spc { display: block; color: #fff; }
+a.b3d { display: inline-block; }
+.topbar.fl .nl { cursor: pointer; }
+a.sb-it, a.btn, a.lb-free, a.logo, .sb a { text-decoration: none; }
+a.btn { color: var(--bg); }
+a.btn.ghost, a.btn.soft { color: inherit; }
+.sb-me { cursor: default; }

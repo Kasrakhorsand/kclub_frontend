@@ -1,16 +1,23 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{ts,tsx}"],
+  corePlugins: { preflight: false },
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        bg: "var(--bg)",
+        surface: "var(--surface)",
+        ink: "var(--ink)",
+        muted: "var(--muted)",
+        line: "var(--line)",
+        gold: "var(--gold)",
+        court: "var(--court)",
+        black: "var(--black)",
+      },
+      fontFamily: {
+        sans: ["var(--font-vazir)", "Tahoma", "sans-serif"],
+        latin: ["var(--font-jost)", "sans-serif"],
       },
     },
   },

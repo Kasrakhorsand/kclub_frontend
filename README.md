@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# کی کلاب · K Club Web
 
-## Getting Started
+فرانت‌اند سایت و پنل‌های رزرو کی کلاب (پدل، تنیس ساحلی، والیبال ساحلی)، پیاده‌سازی‌شده از روی پروتوتایپ تأییدشده با تم **مشکی و طلایی**.
 
-First, run the development server:
+## تکنولوژی‌ها
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| بخش | ابزار |
+|---|---|
+| فریم‌ورک | Next.js 15 (App Router) + TypeScript |
+| استایل | Tailwind CSS + توکن‌های طراحی پروتوتایپ (`src/app/kclub.css`) |
+| سه‌بعدی | Three.js (لوگو، راکت‌ها، توپ‌ها) |
+| داده و کش | TanStack Query |
+| وضعیت (سبد، ورود، تم) | Zustand |
+| فرم‌ها | React Hook Form + Zod |
+| تاریخ شمسی | date-fns-jalali |
+| نمودار | Recharts |
+| فونت | وزیرمتن و Jost، روی سرور خود پروژه (بدون Google Fonts) |
+
+هیچ فایل، فونت یا کتابخانه‌ای از CDN خارجی لود نمی‌شود تا سایت روی اینترنت ایران پایدار باشد.
+
+## ساختار
+
+```
+src/
+  app/
+    (site)/            صفحه‌های عمومی: خانه، انتخاب رشته، رزرو، مربیان، ورود، پرداخت
+    panel/             پنل بازیکن، منشی و ادمین (منوی کناری)
+    kclub.css          استایل‌ها و توکن‌های رنگ از پروتوتایپ
+  components/
+    site/              ناوبار، هیرو، کارت‌ها، رزرو، نقشه‌ی سه‌بعدی زمین‌ها
+    panel/             منوی کناری، جدول زنده، صفحه‌های پنل
+    three/             لوگوی سه‌بعدی و مدل‌های راکت و توپ
+    ui/                دکمه‌های سه‌بعدی، دکمه بازگشت، توست، تم
+  lib/
+    api.ts             لایه‌ی داده؛ با NEXT_PUBLIC_API_URL به بک‌اند وصل می‌شود
+    mock.ts            داده‌ی نمونه، زمین‌ها، قیمت‌ها، قوانین لغو
+    store.ts           سبد، کاربر، تم
+    format.ts          اعداد فارسی و تاریخ شمسی
+public/
+  media/               ویدیوهای هیرو و تصاویر کارت‌ها
+  models/              تصویر راکت‌ها و توپ والیبال برای مدل‌های سه‌بعدی
+  brand/               لوگو
+deploy/                کانفیگ Nginx و اسکریپت دیپلوی
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## اجرا روی سیستم
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.example .env.local
+npm run dev        # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+برای تست پنل‌ها در صفحه‌ی ورود از این شماره‌ها استفاده کنید (هر کد ۵ رقمی قبول است):
 
-## Learn More
+- `09121234567` بازیکن
+- `09120000001` منشی
+- `09120000002` ادمین (و منشی)
 
-To learn more about Next.js, take a look at the following resources:
+## اتصال به بک‌اند
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+همه‌ی دسترسی به داده در `src/lib/api.ts` است. با تنظیم `NEXT_PUBLIC_API_URL` هر تابع به‌جای داده‌ی نمونه به API واقعی درخواست می‌دهد. مسیرهای مورد انتظار:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| تابع | درخواست |
+|---|---|
+| `getCourts` | `GET /courts?sport=` |
+| `getSlots` | `GET /slots?sport=&date=` |
+| `getDayBoard` | `GET /bookings?date=` |
+| `sendOtp` | `POST /auth/otp` |
+| `verifyOtp` | `POST /auth/verify` |
+| `createBookings` | `POST /bookings` |
+| `getCoaches` | `GET /coaches` |
 
-## Deploy on Vercel
+درگاه پرداخت و سامانه‌ی پیامک باید سمت بک‌اند وصل شوند؛ فرانت فقط کاربر را به درگاه می‌فرستد و نتیجه را می‌گیرد.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## استقرار روی سرور تست (فردوسی کلاد)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### روش ۱: Docker
+
+```bash
+git clone <repo> kclub-web && cd kclub-web
+cp .env.example .env
+docker compose up -d --build
+```
+
+### روش ۲: PM2
+
+```bash
+npm ci && npm run build
+cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
+npm i -g pm2 && pm2 start ecosystem.config.js && pm2 save && pm2 startup
+```
+
+### Nginx و SSL
+
+```bash
+sudo cp deploy/nginx.conf /etc/nginx/sites-available/kclub
+sudo ln -s /etc/nginx/sites-available/kclub /etc/nginx/sites-enabled/
+sudo htpasswd -c /etc/nginx/.htpasswd kclub     # رمز نسخه‌ی تست
+sudo certbot --nginx -d test.kclub.ir
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+برای به‌روزرسانی: `./deploy/deploy.sh docker` یا `./deploy/deploy.sh pm2`
+
+نسخه‌ی تست با `NEXT_PUBLIC_NOINDEX=1` و رمز Nginx از گوگل پنهان می‌ماند. برای نسخه‌ی نهایی این دو را بردارید.
+
+## وضعیت فاز یک
+
+- آماده: خانه با لوگوی سه‌بعدی و ویدیو، انتخاب رشته‌ی سه‌بعدی، رزرو (روز، سانس، نقشه‌ی سه‌بعدی زمین، رزرو تکراری)، ورود با کد پیامکی، پرداخت، مربیان، پنل بازیکن، منشی (جدول زنده، رزرو جدید، صندوق) و ادمین (درآمد، قیمت‌گذاری، قوانین، بستن زمین، تراکنش‌ها، تاریخچه).
+- فاز بعد: هم‌بازی، مسابقات، پکیج مربی، کافه، فروشگاه.
+- داده‌ها نمونه‌اند: اطلاعات مربیان، آدرس و تلفن واقعی باید جایگزین شوند.
