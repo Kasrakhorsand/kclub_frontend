@@ -110,16 +110,24 @@ function CartBar() {
  * court and hour on following weeks.
  */
 export function Booking({ sport }: { sport: Sport }) {
-  const game = useSearchParams().get("game");
+  const params = useSearchParams();
+  const game = params.get("game");
   const title = sport === "padel" ? "پدل" : game === "volley" ? "والیبال ساحلی" : game === "tennis" ? "تنیس ساحلی" : "ساحلی";
-  const [date, setDate] = useState(() => dayKey(new Date()));
-  const [hour, setHour] = useState<number | null>(null);
+  // ?date=yyyy-MM-dd&hour=18 preselects a slot (links from the home page).
+  const [date, setDate] = useState(() => params.get("date") ?? dayKey(new Date()));
+  const [hour, setHour] = useState<number | null>(() => (params.get("hour") ? Number(params.get("hour")) : null));
   const [weeks, setWeeks] = useState(1); // weekly repeat count
   const { cart, toggleCart, user, setAfterLogin } = useSession();
   const router = useRouter();
   const { data: slots = [] } = useQuery({ queryKey: ["slots", sport, date], queryFn: () => getSlots(sport, date) });
   const { data: courts = COURTS.filter((c) => c.sport === sport) } = useQuery({ queryKey: ["courts", sport], queryFn: () => getCourts(sport) });
   const mapRef = useRef<HTMLDivElement>(null);
+  // Arriving with a preselected hour: jump straight to the court map.
+  useEffect(() => {
+    if (!params.get("hour")) return;
+    const t = setTimeout(() => mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 400);
+    return () => clearTimeout(t);
+  }, [params]);
 
   const pickHour = (h: number) => {
     setHour(h);

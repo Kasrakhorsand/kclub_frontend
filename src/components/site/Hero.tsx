@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useSession } from "@/lib/store";
 import { Button3D } from "../ui/Buttons";
 import { Icon3D } from "../ui/Icon3D";
+import { CountUp } from "../ui/CountUp";
 
 const Logo3D = dynamic(() => import("../three/Logo3D"), { ssr: false, loading: () => <div className="klogo3" /> });
 
@@ -103,21 +104,21 @@ export function Hero() {
           <div className="f3i">
             <Icon3D name="court" />
             <span>
-              <b>۳</b>
+              <b><CountUp to={3} /></b>
               <span>زمین پدل سرپوشیده</span>
             </span>
           </div>
           <div className="f3i">
             <Icon3D name="racket" />
             <span>
-              <b>۳</b>
+              <b><CountUp to={3} /></b>
               <span>زمین تنیس ساحلی و والیبال ساحلی</span>
             </span>
           </div>
           <div className="f3i">
             <Icon3D name="clock" />
             <span>
-              <b>۸ تا ۲۴</b>
+              <b><CountUp to={8} /> تا <CountUp to={24} from={8} /></b>
               <span>هر روز هفته</span>
             </span>
           </div>

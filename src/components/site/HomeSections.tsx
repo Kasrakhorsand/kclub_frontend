@@ -5,6 +5,7 @@ import { CANCEL_RULES, MAX_DAYS_AHEAD } from "@/lib/mock";
 import { fa } from "@/lib/format";
 import { Icon3D } from "../ui/Icon3D";
 import type { Icon3DName } from "../ui/icons3d";
+import { CONTACT, SHOW_PLACEHOLDERS } from "@/lib/content";
 
 const SPORTS = [
   { href: "/book/padel", img: "/media/card-padel.jpg", pos: "50% 60%", lat: "Padel", name: "پدل", alt: "راکت و توپ پدل روی زمین آبی", text: "۳ زمین سرپوشیده؛ ۲ چمن آبی، ۱ چمن مشکی." },
@@ -14,7 +15,7 @@ const SPORTS = [
 
 export function SportCards() {
   return (
-    <section className="sports3">
+    <section className="sports3" data-reveal>
       <div className="wrap">
         <div className="s3hd">
           <span className="lat eyebrow">Choose your game</span>
@@ -54,15 +55,19 @@ const AMENITIES: [Icon3DName, string, string][] = [
   ["cal", "رزرو آنلاین", "بدون تماس تلفنی"],
 ];
 
-// Address and front-desk phone go here once the club confirms them.
-const INFO: [Icon3DName, string, string][] = [
-  ["clock", "ساعت کاری", "هر روز، ۸ صبح تا ۱۲ شب"],
-  ["insta", "اینستاگرام", "@kclub.padel"],
-];
+type InfoItem = { icon: Icon3DName; title: string; text?: string; href?: string };
+
+/** Hours and contact details; address and phone come from lib/content.ts once filled in. */
+const INFO: InfoItem[] = ([
+  { icon: "clock", title: "ساعت کاری", text: "هر روز، ۸ صبح تا ۱۲ شب" },
+  { icon: "pin", title: "آدرس", text: CONTACT.address, href: CONTACT.mapUrl },
+  { icon: "phone", title: "تماس با پذیرش", text: CONTACT.phone && fa(CONTACT.phone), href: CONTACT.phone && `tel:${CONTACT.phone}` },
+  { icon: "insta", title: "اینستاگرام", text: `@${CONTACT.instagram}`, href: `https://instagram.com/${CONTACT.instagram}` },
+] satisfies InfoItem[]).filter((item) => item.text || SHOW_PLACEHOLDERS);
 
 export function About() {
   return (
-    <section className="about">
+    <section className="about" data-reveal>
       <div className="wrap">
         <div className="abt">
           <span className="lat eyebrow">The Club</span>
@@ -81,15 +86,22 @@ export function About() {
       </div>
       <div className="wrap infow">
         <div className="info3">
-          {INFO.map(([i, t, d]) => (
-            <div className="inf" key={t}>
-              <Icon3D name={i} />
-              <span>
-                <b>{t}</b>
-                <span>{d}</span>
-              </span>
-            </div>
-          ))}
+          {INFO.map((item) => {
+            const body = (
+              <>
+                <Icon3D name={item.icon} />
+                <span>
+                  <b>{item.title}</b>
+                  <span>{item.text ?? "جای خالی · lib/content.ts"}</span>
+                </span>
+              </>
+            );
+            return item.href && item.text ? (
+              <a className="inf" key={item.title} href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">{body}</a>
+            ) : (
+              <div className={item.text ? "inf" : "inf ph"} key={item.title}>{body}</div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -114,7 +126,7 @@ const FAQ = [
 
 export function HowTo() {
   return (
-    <section className="how" id="how">
+    <section className="how" id="how" data-reveal>
       <div className="wrap">
         <div className="howhd">
           <span className="lat eyebrow">How to book</span>
