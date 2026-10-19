@@ -1,11 +1,11 @@
 "use client";
-/** Profile page for every role: personal details and the password that enables password login. */
-import { useSession } from "@/engine/store";
-import { useSetPassword } from "@/engine/auth/useSetPassword";
+/** Profile — every role: personal details and the password that enables password login. */
 import { PASSWORD_MIN } from "@/engine/auth/password";
+import { useSetPassword } from "@/engine/auth/useSetPassword";
 import { fa } from "@/engine/format";
-import { PageHead } from "@/ui/panel/PanelShell";
+import { useSession } from "@/engine/store";
 import { toast } from "@/ui/kit/Toast";
+import { PageHead } from "@/ui/panel/shell/PageHead";
 
 const ErrorText = ({ children }: { children?: string }) =>
   children ? <span className="small" role="alert" style={{ color: "var(--busy)" }}>{children}</span> : null;

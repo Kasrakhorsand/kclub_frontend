@@ -1,16 +1,17 @@
 "use client";
+/** Panel frame for every role: side menu with role switch and badges, top bar, and the page area. */
+import clsx from "clsx";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import clsx from "clsx";
-import { jFull, dayKey, fa } from "@/engine/format";
-import { Brand } from "@/ui/layout/Brand";
-import { ArrowIcon } from "@/ui/kit/Buttons";
-import { ThemeButton } from "@/ui/kit/ThemeButton";
-import { MENU_ICON } from "@/ui/panel/menus";
+import { dayKey, fa, jFull } from "@/engine/format";
 import { ROLE_EN, ROLE_FA } from "@/engine/panel/menus";
 import { usePanelSession } from "@/engine/panel/usePanelSession";
-import { Icon3D } from "@/ui/kit/Icon3D";
 import { SITE } from "@/config/site";
+import { ArrowIcon } from "@/ui/kit/Buttons";
+import { Icon3D } from "@/ui/kit/Icon3D";
+import { ThemeButton } from "@/ui/kit/ThemeButton";
+import { Brand } from "@/ui/layout/Brand";
+import { MENU_ICON } from "@/ui/panel/shell/menuIcons";
 
 /** Side-navigation shell shared by the player, front-desk and admin panels. */
 export function PanelShell({ children }: { children: React.ReactNode }) {
@@ -90,14 +91,3 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-/** Panel page header: title, optional subtitle and an action on the opposite side. */
-export const PageHead = ({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) => (
-  <div className="ph">
-    <div>
-      <h2>{title}</h2>
-      {sub && <p className="small muted">{sub}</p>}
-    </div>
-    {action}
-  </div>
-);

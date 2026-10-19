@@ -11,7 +11,13 @@
 @import "../ui/styles/booking.css";
 @import "../ui/styles/auth.css";
 @import "../ui/styles/coaches.css";
-@import "../ui/styles/panel.css";
+/* Members' panel: frame, shared parts, then one file per role (next to its pages). */
+@import "../ui/panel/shell/shell.css";
+@import "../ui/panel/parts/parts.css";
+@import "../ui/panel/common/common.css";
+@import "../ui/panel/player/player.css";
+@import "../ui/panel/secretary/secretary.css";
+@import "../ui/panel/admin/admin.css";
 
 html { scroll-behavior: smooth; }
 body { margin: 0; }

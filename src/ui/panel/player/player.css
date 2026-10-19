@@ -1,0 +1,14 @@
+/* Player pages: dashboard cards, wallet card, bookings.
+   Colours come from src/config/theme.css. */
+.wallet-card .muted{color:var(--onblack-mute)}
+.wallet-card .btn{background:var(--gold);color:#0D0D0E;border-color:var(--gold)}
+.wcard{position:relative;border-radius:10px;padding:22px 24px;min-height:190px;color:#ECEAE4;overflow:hidden;background:linear-gradient(140deg,#1D1D1F 0%,#0B0B0C 55%,#2A2418 100%);border:1px solid #3A3427;display:flex;flex-direction:column;justify-content:space-between;isolation:isolate;aspect-ratio:1.586/1;max-width:420px}
+.wcard::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(100deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px);z-index:-1}
+.wcard .emb{position:absolute;inset-inline-end:-20px;bottom:-30px;width:180px;opacity:.22;z-index:-1}
+.wcard .top{display:flex;justify-content:space-between;align-items:center}
+.wcard .chipg{width:40px;height:30px;border-radius:5px;background:linear-gradient(135deg,#E3C994,#9E7A36);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
+.wcard .lbl{font-size:.76rem;color:#9C978E}
+.wcard .bal{font-size:2rem;font-weight:200;line-height:1.2;margin-top:4px;color:var(--gold-2);font-variant-numeric:tabular-nums}
+.wcard .bal small{font-size:.86rem;color:#9C978E}
+.wcard .own{display:flex;justify-content:space-between;font-size:.78rem;color:#9C978E;direction:rtl}
+@keyframes grow{from{transform:scaleY(0)}}

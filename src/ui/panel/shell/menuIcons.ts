@@ -1,4 +1,4 @@
-/** K Club panel icons: menu key → Steel Edition 3D icon. Menus themselves live in the engine. */
+/** K Club panel icons: menu key → Steel Edition 3D icon. Menu items themselves live in the engine (engine/panel/menus.ts). */
 import type { Icon3DName } from "@/ui/kit/icons3d";
 
 export const MENU_ICON: Record<string, Icon3DName> = {

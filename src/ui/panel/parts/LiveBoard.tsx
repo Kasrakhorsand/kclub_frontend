@@ -1,12 +1,13 @@
 "use client";
+/** Court × hour board for one day (front-desk and admin dashboards, schedule page). */
+import clsx from "clsx";
 import Link from "next/link";
 import { Fragment } from "react";
-import clsx from "clsx";
 import { isPast } from "@/engine/api";
-import { useDayBoard, visibleHours } from "@/engine/panel/stats";
-import { SPORTS, courtsOf, sportTitle } from "@/engine/venue";
 import { dayKey, hm, jFull } from "@/engine/format";
+import { useDayBoard, visibleHours } from "@/engine/panel/stats";
 import type { Booking, Court } from "@/engine/types";
+import { courtsOf, SPORTS, sportTitle } from "@/engine/venue";
 import { toast } from "@/ui/kit/Toast";
 
 type CourtRowProps = {

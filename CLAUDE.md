@@ -8,8 +8,8 @@ Next.js 15 (App Router) + TypeScript front end for K Club court booking (padel, 
 - `npm run lint` — ESLint
 
 ## Structure
-- `src/engine/` is the shared, UI-free logic used by several club sites (K Club, Noor Club): types, venue rules, format, store, API, mock data and hooks (`useBookingFlow`, `useCart`, `useCheckout`, `useOpenSlots`, `useOtpLogin`, `usePanelSession`, panel stats). No components, CSS or brand copy; ESLint blocks imports of `@/ui`, `@/app`, `@/config/site`, `@/config/home` and CSS from it. See `src/engine/README.md`.
-- `src/ui/` is K Club's own look: components, pages, 3D, and `styles/` (one CSS file per section: base, layout, three, home, booking, auth, coaches, panel; imported in that order from `src/app/globals.css`). Another site must not reuse it.
+- `src/engine/` is the shared, UI-free logic used by several club sites (K Club, Noor Club): types, venue rules, format, store, API, mock data and hooks (`useBookingFlow`, `useCart`, `useCheckout`, `useOpenSlots`, `useLogin`, `useSetPassword`, `usePanelSession`, panel stats). No components, CSS or brand copy; ESLint blocks imports of `@/ui`, `@/app`, `@/config/site`, `@/config/home` and CSS from it. See `src/engine/README.md`.
+- `src/ui/` is K Club's own look: components, pages, 3D, and `styles/` (one CSS file per section: base, layout, three, home, booking, auth, coaches). The panel is split by role: `src/ui/panel/{shell,parts,common,player,secretary,admin}/`, one file per page with that folder's CSS beside it; `src/ui/panel/README.md` maps every menu item to its file. All CSS is imported in order from `src/app/globals.css`. Another site must not reuse it.
 - `src/config/`: `venue.ts` and `content.ts` feed the engine; `site.ts`, `home.tsx`, `theme.css` are K Club UI config.
 - `src/app/` routes stay thin and render `src/ui` pages.
 - Put new business logic in an engine hook first, then render it in `src/ui`.

@@ -1,0 +1,7 @@
+/* Pages for every role: tickets, notifications, profile, coming soon.
+   Colours come from src/config/theme.css. */
+.msg{padding:10px 14px;margin-bottom:8px;max-width:85%}
+.msg.u{background:var(--surface-2);border:1px solid var(--line);align-self:flex-start}
+.msg.s{background:var(--info-bg);align-self:flex-end}
+.msg.a{background:var(--warn-bg);align-self:flex-end}
+.soonbox{text-align:center;padding:48px 20px;display:flex;flex-direction:column;gap:12px;align-items:center}
