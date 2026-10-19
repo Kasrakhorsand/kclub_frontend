@@ -1,8 +1,6 @@
 /**
- * Brand and site-wide text for this club. Modules read names, logos,
- * navigation and footer from here, so another club changes this file
- * (plus `venue.ts`, `home.ts`, `content.ts` and `theme.css`) and keeps
- * the modules untouched.
+ * K Club brand and site-wide text, read by the K Club UI (src/ui).
+ * The shared engine never reads this file; another club writes its own.
  */
 
 export const SITE = {

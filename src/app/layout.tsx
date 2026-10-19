@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "@/app/globals.css";
-import Providers from "@/modules/layout/Providers";
+import Providers from "@/ui/layout/Providers";
 import { SITE } from "@/config/site";
 
 /** Self-hosted fonts (no Google Fonts, for reliability inside Iran). */

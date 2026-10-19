@@ -8,17 +8,18 @@ Next.js 15 (App Router) + TypeScript front end for K Club court booking (padel, 
 - `npm run lint` — ESLint
 
 ## Structure
-- `src/modules/` is reusable across clubs: no club names, colours, sports or prices in module code. See `src/modules/README.md`.
-- `src/config/` holds everything club-specific: `site.ts` (brand, nav, footer), `venue.ts` (sports, courts, prices, hours, rules), `home.tsx` (home copy), `content.ts` (photos, reviews, contact), `theme.css` (colour tokens).
-- `src/app/` routes stay thin and render module components.
-- Modules read venue data through `@/modules/core/venue`, never `@/config/venue` directly.
+- `src/engine/` is the shared, UI-free logic used by several club sites (K Club, Noor Club): types, venue rules, format, store, API, mock data and hooks (`useBookingFlow`, `useCart`, `useCheckout`, `useOpenSlots`, `useOtpLogin`, `usePanelSession`, panel stats). No components, CSS or brand copy; ESLint blocks imports of `@/ui`, `@/app`, `@/config/site`, `@/config/home` and CSS from it. See `src/engine/README.md`.
+- `src/ui/` is K Club's own look: components, pages, 3D, `styles.css`. Another site must not reuse it.
+- `src/config/`: `venue.ts` and `content.ts` feed the engine; `site.ts`, `home.tsx`, `theme.css` are K Club UI config.
+- `src/app/` routes stay thin and render `src/ui` pages.
+- Put new business logic in an engine hook first, then render it in `src/ui`.
 
 ## Conventions
-- UI copy is Persian; numbers shown to users go through `fa()` / `toman()` in `src/modules/core/format.ts`, dates through the Jalali helpers there.
-- Styles: tokens in `src/config/theme.css`, shared styles in `src/modules/styles.css`; use tokens rather than new hard-coded colours.
+- UI copy is Persian; numbers shown to users go through `fa()` / `toman()` in `src/engine/format.ts`, dates through the Jalali helpers there.
+- Styles: tokens in `src/config/theme.css`, K Club styles in `src/ui/styles.css`; use tokens rather than new hard-coded colours.
 - No external CDNs or Google Fonts: everything (fonts, three.js, media) is served from the project so the site works on Iranian internet.
-- Data goes through `src/modules/core/api.ts` only; it uses mock data until `NEXT_PUBLIC_API_URL` is set. Don't import `core/mock.ts` for new data reads.
-- 3D icons: `<Icon3D name="..." />` from `src/modules/ui/Icon3D.tsx`.
+- Data goes through `src/engine/api.ts` only; it uses mock data until `NEXT_PUBLIC_API_URL` is set. Don't import `engine/mock.ts` for new data reads.
+- 3D icons: `<Icon3D name="..." />` from `src/ui/kit/Icon3D.tsx`.
 - Test logins (mock): 09121234567 player, 09120000001 front desk, 09120000002 admin; any 5-digit code.
 
 ## Don't

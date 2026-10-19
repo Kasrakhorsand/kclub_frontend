@@ -1,7 +1,5 @@
 /*
- * Brand colours and fonts for this club. Modules only use these variables,
- * so a different club changes the values here (light and dark) and keeps
- * src/modules/styles.css as it is.
+ * K Club colours and fonts (light and dark), used by src/ui/styles.css.
  */
 :root{
   --bg:#EFEDE8; --surface:#FFFFFF; --surface-2:#F6F5F1; --ink:#121214; --muted:#6B6862; --line:#DCD8CF;

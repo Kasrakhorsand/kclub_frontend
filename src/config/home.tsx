@@ -1,10 +1,10 @@
 /**
- * Home page text, cards and lists for this club. The home modules only lay
+ * Home page text, cards and lists for this club. The home components in src/ui/home only lay
  * these out; change the words, images and items here.
  */
-import { CANCEL_RULES, MAX_DAYS_AHEAD } from "./venue";
-import { fa } from "@/modules/core/format";
-import type { Icon3DName } from "@/modules/ui/icons3d";
+import { CANCEL_RULES, MAX_DAYS_AHEAD } from "@/config/venue";
+import { fa } from "@/engine/format";
+import type { Icon3DName } from "@/ui/kit/icons3d";
 
 export const HERO = {
   eyebrow: "Padel · Beach Tennis · Beach Volley",

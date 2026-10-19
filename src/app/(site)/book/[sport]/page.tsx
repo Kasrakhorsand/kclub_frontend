@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Booking } from "@/modules/booking/Booking";
-import { SPORTS, sportById, sportTitle } from "@/modules/core/venue";
+import { Booking } from "@/ui/booking/Booking";
+import { SPORTS, sportById, sportTitle } from "@/engine/venue";
 import { SITE } from "@/config/site";
 
 export function generateStaticParams() {

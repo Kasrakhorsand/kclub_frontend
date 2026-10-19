@@ -4,7 +4,7 @@
 
 /* Brand tokens (per club), then shared module styles. */
 @import "../config/theme.css";
-@import "../modules/styles.css";
+@import "../ui/styles.css";
 
 html { scroll-behavior: smooth; }
 body { margin: 0; }

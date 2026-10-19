@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CoachesPage } from "@/modules/coaches/CoachesPage";
+import { CoachesPage } from "@/ui/coaches/CoachesPage";
 import { SITE } from "@/config/site";
 
 export const metadata: Metadata = {

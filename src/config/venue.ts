@@ -1,9 +1,9 @@
 /**
  * Venue setup for this club: sports, courts, prices, opening hours and
- * booking rules. Everything the booking modules need about the physical
- * venue comes from here; a different club only edits this file.
+ * booking rules. The shared engine reads the physical venue from here;
+ * each club has its own copy of this file.
  */
-import type { Court, PriceBand, SportDef } from "@/modules/core/types";
+import type { Court, PriceBand, SportDef } from "@/engine/types";
 
 export const OPEN_HOUR = 8;
 /** Last session ends at this hour (24 = midnight). */

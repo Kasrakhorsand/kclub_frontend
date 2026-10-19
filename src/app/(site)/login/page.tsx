@@ -1,4 +1,4 @@
 "use client";
-import { LoginPage } from "@/modules/auth/LoginPage";
+import { LoginPage } from "@/ui/auth/LoginPage";
 
 export default LoginPage;
