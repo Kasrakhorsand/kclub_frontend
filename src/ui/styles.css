@@ -985,3 +985,7 @@ a.inf{transition:transform .2s}a.inf:hover{transform:translateY(-2px)}
 .stepper button{width:30px;height:30px;border:0;background:var(--surface-2);color:var(--ink);font-size:1.05rem;cursor:pointer}
 .stepper button:disabled{opacity:.35;cursor:not-allowed}
 .stepper b{min-width:30px;text-align:center;font-weight:600}
+/* Hero stats: numbers are spans inside <b> (CountUp); keep them big and gold, not the label style. */
+.facts3 b{font-weight:300;letter-spacing:.5px;font-variant-numeric:tabular-nums;color:var(--gold-2)}
+.facts3 b span{font-size:inherit;color:inherit;font-weight:inherit}
+.facts3 .f3i>span>span{font-size:.82rem;color:#A9A59D;margin-top:2px}
