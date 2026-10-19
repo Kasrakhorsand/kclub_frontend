@@ -45,3 +45,23 @@ export const jDate = (k: string) => fa(jFormat(fromKey(k), "yyyy/MM/dd"));
 
 /** Convert Persian digits to Latin digits (for phone numbers and codes typed on a Persian keyboard). */
 export const toLatinDigits = (s: string) => s.replace(/[۰-۹]/g, (d) => String(FA_DIGITS.indexOf(d)));
+
+/**
+ * Time left until a session starts, e.g. "۲ روز و ۳ ساعت", "۴ ساعت و ۱۰ دقیقه",
+ * "۱۵ دقیقه"; null once it has started.
+ */
+export function timeUntil(date: string, hour: number, now = Date.now()) {
+  const ms = new Date(`${date}T${pad2(hour)}:00:00`).getTime() - now;
+  if (ms <= 0) return null;
+  const minutes = Math.floor(ms / 60_000);
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const mins = minutes % 60;
+  if (days) return hours ? `${fa(days)} روز و ${fa(hours)} ساعت` : `${fa(days)} روز`;
+  if (hours) return mins ? `${fa(hours)} ساعت و ${fa(mins)} دقیقه` : `${fa(hours)} ساعت`;
+  return `${fa(Math.max(1, mins))} دقیقه`;
+}
+
+/** Greeting for the time of day. */
+export const greeting = (hour = new Date().getHours()) =>
+  hour < 5 ? "شب بخیر" : hour < 12 ? "صبح بخیر" : hour < 17 ? "روز بخیر" : hour < 21 ? "عصر بخیر" : "شب بخیر";
