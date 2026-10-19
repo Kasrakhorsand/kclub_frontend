@@ -93,8 +93,8 @@ export function WalletView() {
         <label className="pw-custom">
           <span>یا مبلغ دلخواه</span>
           <span className="pw-custom-field">
-            <input className="input ltr" inputMode="numeric" placeholder="مثلاً ۷۵۰۰۰۰" value={w.customText} onChange={(e) => w.setCustom(e.target.value)} aria-invalid={!!w.error} />
-            <em>تومان</em>
+            <input className="input ltr" inputMode="numeric" placeholder="تومان ۷۵۰۰۰۰" value={w.customText} onChange={(e) => w.setCustom(e.target.value)} aria-invalid={!!w.error} />
+            <em>مثلاً</em>
           </span>
         </label>
         {w.error && <p className="small" role="alert" style={{ color: "var(--busy)" }}>{w.error}</p>}

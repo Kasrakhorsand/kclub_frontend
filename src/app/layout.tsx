@@ -1,5 +1,23 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+// Stylesheets, in cascade order (later wins): Tailwind, K Club colour tokens,
+// one file per site section, the panel (frame, shared parts, then one file per role),
+// and the last global tweaks.
+import "@/app/tailwind.css";
+import "@/config/theme.css";
+import "@/ui/styles/base.css";
+import "@/ui/styles/layout.css";
+import "@/ui/styles/three.css";
+import "@/ui/styles/home.css";
+import "@/ui/styles/booking.css";
+import "@/ui/styles/auth.css";
+import "@/ui/styles/coaches.css";
+import "@/ui/panel/shell/shell.css";
+import "@/ui/panel/parts/parts.css";
+import "@/ui/panel/common/common.css";
+import "@/ui/panel/player/player.css";
+import "@/ui/panel/secretary/secretary.css";
+import "@/ui/panel/admin/admin.css";
 import "@/app/globals.css";
 import Providers from "@/ui/layout/Providers";
 import { SITE } from "@/config/site";
