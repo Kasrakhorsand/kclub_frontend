@@ -157,8 +157,8 @@
 .pw-preset.on{border-color:var(--gold);background:var(--court-soft);box-shadow:inset 0 0 0 1px var(--gold)}
 .pw-custom{display:flex;flex-direction:column;gap:6px;font-size:.84rem;color:var(--muted)}
 .pw-custom-field{position:relative;max-width:320px}
-.pw-custom-field .input{width:100%;padding-right:60px;border-radius:12px}
-.pw-custom-field em{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:.8rem;color:var(--muted)}
+.pw-custom-field .input{width:100%;padding-left:62px;text-align:left;border-radius:12px;font-variant-numeric:tabular-nums}
+.pw-custom-field em{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-style:normal;font-size:.8rem;color:var(--muted)}
 .pw-pay{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--line)}
 .pw-pay>span{display:flex;flex-direction:column}
 .pw-pay small{font-size:.76rem;color:var(--muted)}
