@@ -17,6 +17,8 @@ interface SessionState {
   loginMethod: "otp" | "password" | null;
   setUser: (u: User | null, role?: Role | null, loginMethod?: "otp" | "password" | null) => void;
   setRole: (r: Role) => void;
+  /** Update the signed-in user's details, keeping role and login method. */
+  updateUser: (patch: Partial<User>) => void;
   toggleTheme: () => void;
   /** Add the item, or remove it if the same court-hour is already in the cart. */
   toggleCart: (item: CartItem) => void;
@@ -37,6 +39,10 @@ export const useSession = create<SessionState>()(
       loginMethod: null,
       setUser: (user, role = user?.roles[0] ?? null, loginMethod = null) => set({ user, role, loginMethod: user ? loginMethod : null }),
       setRole: (role) => set({ role }),
+      updateUser: (patch) => {
+        const user = get().user;
+        if (user) set({ user: { ...user, ...patch } });
+      },
       toggleTheme: () => set({ theme: get().theme === "dark" ? "light" : "dark" }),
       toggleCart: (item) => {
         const cart = get().cart;

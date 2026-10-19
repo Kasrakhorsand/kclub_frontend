@@ -77,6 +77,8 @@ export interface User {
   phone: string;
   first: string;
   last: string;
+  /** Optional, for receipts. */
+  email?: string;
   /** First role is the default panel after login. */
   roles: Role[];
   /** Wallet balance in toman. */

@@ -258,6 +258,17 @@ export async function setTicketStatus(id: string, status: TicketStatus): Promise
   await wait(null, 150);
 }
 
+/** Save the user's name and email. */
+export async function updateProfile(phone: string, patch: Pick<User, "first" | "last" | "email">): Promise<void> {
+  if (API) {
+    const res = await fetch(`${API}/profile`, { method: "PUT", body: JSON.stringify({ phone, ...patch }) });
+    if (!res.ok) throw new Error("ذخیره‌ی پروفایل انجام نشد");
+    return;
+  }
+  if (USERS[phone]) Object.assign(USERS[phone], patch);
+  await wait(null, 350);
+}
+
 /** Coach profiles for the coaches page. */
 export async function getCoaches() {
   if (API) return (await fetch(`${API}/coaches`)).json();

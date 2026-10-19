@@ -9,3 +9,15 @@ export const passwordRule = z
   .min(PASSWORD_MIN, `رمز عبور حداقل ${PASSWORD_MIN.toLocaleString("fa-IR")} کاراکتر باشد`)
   .regex(/[A-Za-z؀-ۿ]/, "رمز عبور باید حرف داشته باشد")
   .regex(/[0-9۰-۹]/, "رمز عبور باید عدد داشته باشد");
+
+/** 0–4 strength score with a Persian label, for a meter under the password field. */
+export function passwordStrength(pw: string): { score: 0 | 1 | 2 | 3 | 4; label: string } {
+  if (!pw) return { score: 0, label: "" };
+  let score = 0;
+  if (pw.length >= PASSWORD_MIN) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Za-z؀-ۿ]/.test(pw) && /[0-9۰-۹]/.test(pw)) score++;
+  if (/[^A-Za-z0-9؀-ۿ۰-۹]/.test(pw) || (/[a-z]/.test(pw) && /[A-Z]/.test(pw))) score++;
+  const s = Math.min(4, score) as 0 | 1 | 2 | 3 | 4;
+  return { score: s, label: ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "قوی"][s] };
+}
