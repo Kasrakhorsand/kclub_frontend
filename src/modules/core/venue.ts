@@ -1,0 +1,34 @@
+/**
+ * Venue helpers built on `config/venue.ts`. Modules import venue data from
+ * here, never from the config file directly, so the config stays plain data.
+ */
+import { CANCEL_RULES, CLOSE_HOUR, COURTS, HOLD_MINUTES, MAX_DAYS_AHEAD, OPEN_HOUR, PRICING, SPORTS } from "@/config/venue";
+import type { Court, GameDef, Sport, SportDef } from "./types";
+
+export { CANCEL_RULES, CLOSE_HOUR, COURTS, HOLD_MINUTES, MAX_DAYS_AHEAD, OPEN_HOUR, PRICING, SPORTS };
+
+/** Session start hours, OPEN_HOUR … CLOSE_HOUR - 1. */
+export const HOURS = Array.from({ length: CLOSE_HOUR - OPEN_HOUR }, (_, i) => i + OPEN_HOUR);
+
+/** Session price (toman) for a sport at a start hour. */
+export const priceOf = (sport: Sport, hour: number) =>
+  PRICING[sport]?.find((b) => hour >= b.from && hour < b.to)?.price ?? 0;
+
+export const sportById = (id: Sport): SportDef | undefined => SPORTS.find((s) => s.id === id);
+
+export const courtById = (id: string): Court | undefined => COURTS.find((c) => c.id === id);
+
+export const courtsOf = (sport: Sport) => COURTS.filter((c) => c.sport === sport);
+
+/** A game of a sport by id, or the sport's first game. */
+export const gameOf = (sport: SportDef, gameId?: string | null): GameDef =>
+  sport.games.find((g) => g.id === gameId) ?? sport.games[0];
+
+/** Display name for a sport: its only game's name, or the joined game names. */
+export const sportTitle = (sport: SportDef) => sport.games.map((g) => g.name).join(" و ");
+
+/** Booking page URL for a sport, optionally for one game. */
+export const bookingHref = (sport: Sport, gameId?: string) => {
+  const s = sportById(sport);
+  return s && gameId && s.games.length > 1 ? `/book/${sport}?game=${gameId}` : `/book/${sport}`;
+};

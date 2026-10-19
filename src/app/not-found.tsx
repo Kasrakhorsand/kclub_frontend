@@ -1,6 +1,6 @@
-import { Button3D } from "@/components/ui/Buttons";
-import { Navbar } from "@/components/site/Navbar";
-import { Footer } from "@/components/site/Footer";
+import { Button3D } from "@/modules/ui/Buttons";
+import { Navbar } from "@/modules/layout/Navbar";
+import { Footer } from "@/modules/layout/Footer";
 
 export default function NotFound() {
   return (

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PanelShell } from "@/components/panel/PanelShell";
+import { PanelShell } from "@/modules/panel/PanelShell";
 
 export const metadata: Metadata = { title: "پنل کاربری", robots: { index: false } };
 

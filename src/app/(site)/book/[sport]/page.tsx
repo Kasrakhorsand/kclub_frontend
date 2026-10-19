@@ -1,26 +1,31 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Booking } from "@/components/site/Booking";
 import type { Metadata } from "next";
-import type { Sport } from "@/lib/types";
+import { Booking } from "@/modules/booking/Booking";
+import { SPORTS, sportById, sportTitle } from "@/modules/core/venue";
+import { SITE } from "@/config/site";
 
 export function generateStaticParams() {
-  return [{ sport: "padel" }, { sport: "beach" }];
+  return SPORTS.map((s) => ({ sport: s.id }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ sport: string }> }): Promise<Metadata> {
-  const { sport } = await params;
-  return sport === "padel"
-    ? { title: "رزرو زمین پدل", description: "سانس‌های خالی زمین‌های پدل کی کلاب را ببینید و آنلاین رزرو کنید." }
-    : { title: "رزرو زمین ساحلی", description: "رزرو آنلاین زمین ماسه‌ای برای تنیس ساحلی و والیبال ساحلی در کی کلاب." };
+  const sport = sportById((await params).sport);
+  if (!sport) return {};
+  const title = sportTitle(sport);
+  return {
+    title: `رزرو زمین ${sport.name}`,
+    description: `سانس‌های خالی ${title} در ${SITE.name} را ببینید و آنلاین رزرو کنید.`,
+  };
 }
 
+/** /book/<sport>: the booking flow for one sport from the venue config. */
 export default async function BookPage({ params }: { params: Promise<{ sport: string }> }) {
   const { sport } = await params;
-  if (sport !== "padel" && sport !== "beach") notFound();
+  if (!sportById(sport)) notFound();
   return (
     <Suspense>
-      <Booking sport={sport as Sport} />
+      <Booking sport={sport} />
     </Suspense>
   );
 }

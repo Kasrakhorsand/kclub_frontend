@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { PanelView } from "@/components/panel/views";
+import { PanelView } from "@/modules/panel/views";
 
 /** /panel/<section>: the role-aware router decides what to render. */
 export default async function PanelSection({ params }: { params: Promise<{ section: string }> }) {

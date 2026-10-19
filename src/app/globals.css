@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens and component styles ported 1:1 from the approved prototype. */
-@import "./kclub.css";
+/* Brand tokens (per club), then shared module styles. */
+@import "../config/theme.css";
+@import "../modules/styles.css";
 
 html { scroll-behavior: smooth; }
 body { margin: 0; }

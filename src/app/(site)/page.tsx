@@ -1,13 +1,15 @@
-import { Hero } from "@/components/site/Hero";
-import { About, HowTo, SportCards } from "@/components/site/HomeSections";
-import { FreeSlotsToday } from "@/components/site/home/FreeSlotsToday";
-import { Pricing } from "@/components/site/home/Pricing";
-import { Gallery } from "@/components/site/home/Gallery";
-import { CoachesStrip } from "@/components/site/home/CoachesStrip";
-import { Reviews } from "@/components/site/home/Reviews";
-import { FinalCta } from "@/components/site/home/FinalCta";
-import { MobileBookBar } from "@/components/site/home/MobileBookBar";
-import { RevealOnScroll } from "@/components/site/home/RevealOnScroll";
+import { Hero } from "@/modules/home/Hero";
+import { SportCards } from "@/modules/home/SportCards";
+import { About } from "@/modules/home/About";
+import { HowTo } from "@/modules/home/HowTo";
+import { FreeSlotsToday } from "@/modules/home/FreeSlotsToday";
+import { Pricing } from "@/modules/home/Pricing";
+import { Gallery } from "@/modules/home/Gallery";
+import { CoachesStrip } from "@/modules/home/CoachesStrip";
+import { Reviews } from "@/modules/home/Reviews";
+import { FinalCta } from "@/modules/home/FinalCta";
+import { MobileBookBar } from "@/modules/home/MobileBookBar";
+import { RevealOnScroll } from "@/modules/home/RevealOnScroll";
 
 /**
  * Home, top to bottom: hero, open slots, sports, prices, the club and

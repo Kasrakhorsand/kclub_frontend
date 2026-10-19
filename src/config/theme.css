@@ -1,0 +1,23 @@
+/*
+ * Brand colours and fonts for this club. Modules only use these variables,
+ * so a different club changes the values here (light and dark) and keeps
+ * src/modules/styles.css as it is.
+ */
+:root{
+  --bg:#EFEDE8; --surface:#FFFFFF; --surface-2:#F6F5F1; --ink:#121214; --muted:#6B6862; --line:#DCD8CF;
+  --court:#8E6D2F; --court-ink:#FFFFFF; --court-soft:#F3EBDA; --navy:#0D0D0E; --ball:#B08A45; --clay:#8E6D2F;
+  --gold:#C9A45C; --gold-2:#E3C994; --silver:#B9BCC0; --black:#0D0D0E; --onblack:#ECEAE4; --onblack-mute:#8F8C86; --blackline:#2A2926;
+  --free:#2E7A55; --free-bg:#E5F1EA; --busy:#A63A2F; --busy-bg:#F6E4E1; --past-bg:#ECEAE5; --warn:#8C6716; --warn-bg:#F6EDD7;
+  --info:#46505C; --info-bg:#E8EBEE; --shadow:0 1px 0 rgba(18,18,20,.04);
+  --grad:linear-gradient(120deg,#A9823F 0%,#D9B771 55%,#B38B45 100%);
+  --glow:none;
+  --font:var(--font-vazir),Tahoma,sans-serif; --display:var(--font-vazir),Tahoma,sans-serif; --latin:var(--font-jost),var(--font-vazir),sans-serif;
+  --c1:#B08A45;--c1d:#7C5F28;--c1l:#D9BE85;--c2:#2B2B2E;--c2d:#111113;--c2l:#6E6E73;--c3:#9A968E;
+  color-scheme:light}
+:root[data-theme="dark"]{
+  --bg:#0B0B0C; --surface:#141415; --surface-2:#1A1A1C; --ink:#ECEAE4; --muted:#8F8C86; --line:#2A2926;
+  --court:#C9A45C; --court-ink:#0B0B0C; --court-soft:#231F17; --ball:#D3B06A; --clay:#C9A45C;
+  --free:#7DC59E; --free-bg:#13211A; --busy:#E08074; --busy-bg:#2A1715; --past-bg:#111112; --warn:#D9B45A; --warn-bg:#262013;
+  --info:#B5BEC8; --info-bg:#1A1C1F; --shadow:none;
+  --c1:#C9A45C;--c1d:#8A6C30;--c1l:#E8CF98;--c2:#9EA2A8;--c2d:#5E6166;--c2l:#D2D5D9;--c3:#6F6C66;
+  color-scheme:dark}
