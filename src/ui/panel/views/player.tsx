@@ -126,22 +126,3 @@ export function WalletView() {
     </>
   );
 }
-
-export function ProfileView() {
-  const user = useSession((s) => s.user)!;
-  return (
-    <>
-      <PageHead title="پروفایل" />
-      <div className="card stack" style={{ maxWidth: 560 }}>
-        <label className="f">نام<input className="input" defaultValue={user.first} /></label>
-        <label className="f">نام خانوادگی<input className="input" defaultValue={user.last} /></label>
-        <label className="f">موبایل<input className="input ltr" defaultValue={user.phone} disabled /></label>
-        <label className="f">
-          سطح بازی
-          <select className="input"><option>مبتدی</option><option>متوسط</option><option>پیشرفته</option></select>
-        </label>
-        <div><button className="btn" onClick={() => toast("پروفایل ذخیره شد")}>ذخیره</button></div>
-      </div>
-    </>
-  );
-}

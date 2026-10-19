@@ -68,7 +68,8 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   /** Toggle a court at the chosen hour, for every repeated week that is free and inside the booking window. */
   const pickCourt = (court: Court): PickResult | null => {
     if (hour === null) return null;
-    const item = (d: string) => ({ date: d, hour, courtId: court.id, price: priceOf(sport, hour) });
+    const playedGame = game ?? (sportDef.games.length === 1 ? sportDef.games[0].id : undefined);
+    const item = (d: string) => ({ date: d, hour, courtId: court.id, price: priceOf(sport, hour), game: playedGame });
     if (inCart(court)) {
       let removed = 0;
       for (let w = 0; w < weeks; w++) {

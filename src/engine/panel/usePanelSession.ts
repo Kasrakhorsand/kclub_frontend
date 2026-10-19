@@ -23,7 +23,7 @@ export function usePanelSession() {
 
   useEffect(() => setReady(true), []);
   useEffect(() => {
-    if (ready && !user) router.replace("/login");
+    if (ready && !useSession.getState().user) router.replace("/login");
   }, [ready, user, router]);
 
   const section = path.split("/")[2] ?? "dash";

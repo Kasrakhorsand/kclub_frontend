@@ -3,7 +3,7 @@
  * booking rules. The shared engine reads the physical venue from here;
  * each club has its own copy of this file.
  */
-import type { Court, PriceBand, SportDef } from "@/engine/types";
+import type { Court, PriceBand, RentalDef, SportDef } from "@/engine/types";
 
 export const OPEN_HOUR = 8;
 /** Last session ends at this hour (24 = midnight). */
@@ -70,3 +70,8 @@ export const PRICING: Record<string, PriceBand[]> = {
     { from: 12, to: 24, price: 600_000 },
   ],
 };
+
+/** Equipment rentable with a court. Default prices; the admin can change them under Pricing. */
+export const RENTALS: RentalDef[] = [
+  { id: "racket", name: "اجاره‌ی راکت", unit: "راکت", games: ["padel", "tennis"], maxPerBooking: 4, price: 100_000 },
+];

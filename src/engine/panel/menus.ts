@@ -19,7 +19,7 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "cafe", label: "کافه", soon: true },
     { key: "shop", label: "فروشگاه", soon: true },
     { key: "tickets", label: "تیکت‌ها" },
-    { key: "profile", label: "پروفایل" },
+    { key: "profile", label: "پروفایل و رمز عبور" },
   ],
   secretary: [
     { key: "dash", label: "داشبورد" },
@@ -30,6 +30,7 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "tickets", label: "تیکت‌ها" },
     { key: "notif", label: "اعلان‌ها" },
     { key: "cash", label: "گزارش صندوق روزانه" },
+    { key: "profile", label: "پروفایل و رمز عبور" },
   ],
   admin: [
     { key: "dash", label: "داشبورد" },
@@ -45,6 +46,7 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "tickets", label: "تیکت‌ها" },
     { key: "audit", label: "تاریخچه تغییرات" },
     { key: "notif", label: "اعلان‌ها" },
+    { key: "profile", label: "پروفایل و رمز عبور" },
   ],
 };
 

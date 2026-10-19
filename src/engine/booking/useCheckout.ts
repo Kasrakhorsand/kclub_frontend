@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createBookings } from "@/engine/api";
 import { cartTotal, useSession } from "@/engine/store";
-import { courtById, sportById } from "@/engine/venue";
+import { courtById, rentalsFor, sportById } from "@/engine/venue";
+import { itemTotal, rentalPriceOf, useRentalPrices } from "@/engine/pricing";
 import type { CartItem } from "@/engine/types";
 import { CHECKOUT_PATH, LOGIN_PATH } from "./useCart";
 
@@ -22,26 +23,36 @@ export function useCheckout() {
   const toggleCart = useSession((s) => s.toggleCart);
   const clearCart = useSession((s) => s.clearCart);
   const setAfterLogin = useSession((s) => s.setAfterLogin);
+  const setRentals = useSession((s) => s.setRentals);
+  const rentalPrices = useRentalPrices();
 
   const [method, setMethod] = useState<PaymentMethod>("gateway");
   const [confirmation, setConfirmation] = useState<{ tracking: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  // Guests log in first and come straight back here.
+  // Guests log in first and come straight back here. Read the store directly:
+  // during hydration the hook still returns the empty server-side state.
   useEffect(() => {
-    if (!user) {
+    if (!useSession.getState().user) {
       setAfterLogin(CHECKOUT_PATH);
       router.replace(LOGIN_PATH);
     }
   }, [user, router, setAfterLogin]);
 
-  const total = cartTotal(cart);
+  const total = cartTotal(cart, rentalPrices);
   const canUseWallet = !!user && user.wallet >= total;
 
+  /** Cart lines for display: the item, its court and sport, rental choices and line total. */
   const items = cart.map((item) => {
     const court = courtById(item.courtId);
-    return { ...item, court, sport: court ? sportById(court.sport) : undefined };
+    // Rentals this booking can add, with the current price and chosen quantity.
+    const rentalOptions = rentalsFor(item.courtId, item.game).map((r) => ({
+      ...r,
+      price: rentalPriceOf(r.id, rentalPrices),
+      quantity: item.rentals?.[r.id] ?? 0,
+    }));
+    return { item, court, sport: court ? sportById(court.sport) : undefined, rentalOptions, total: itemTotal(item, rentalPrices) };
   });
 
   return {
@@ -50,6 +61,11 @@ export function useCheckout() {
     items,
     total,
     remove: (item: CartItem) => toggleCart(item),
+    /** Set how many of a rental this item takes, clamped to 0…maxPerBooking. */
+    setRental: (item: CartItem, rentalId: string, quantity: number) => {
+      const max = rentalsFor(item.courtId, item.game).find((r) => r.id === rentalId)?.maxPerBooking ?? 0;
+      setRentals(item, { ...item.rentals, [rentalId]: Math.max(0, Math.min(max, quantity)) });
+    },
     method,
     setMethod: (m: PaymentMethod) => (m === "wallet" && !canUseWallet ? undefined : setMethod(m)),
     canUseWallet,

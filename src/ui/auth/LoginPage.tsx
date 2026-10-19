@@ -1,14 +1,14 @@
 "use client";
-/** K Club login card: phone, SMS code and one-step sign-up, driven by the engine's useOtpLogin. */
+/** K Club login card: phone, then password or SMS code, and one-step sign-up; driven by the engine's useLogin. */
 import { fa } from "@/engine/format";
-import { CODE_LENGTH, useOtpLogin } from "@/engine/auth/useOtpLogin";
+import { CODE_LENGTH, useLogin } from "@/engine/auth/useLogin";
 import { Button3D } from "@/ui/kit/Buttons";
 
 const ErrorText = ({ children }: { children?: string }) =>
-  children ? <span className="small" style={{ color: "var(--busy)" }}>{children}</span> : null;
+  children ? <span className="small" role="alert" style={{ color: "var(--busy)" }}>{children}</span> : null;
 
 export function LoginPage() {
-  const login = useOtpLogin();
+  const login = useLogin();
   const nameErrors = login.nameForm.formState.errors;
 
   return (
@@ -17,14 +17,34 @@ export function LoginPage() {
         {login.step === "phone" && (
           <form className="stack" onSubmit={login.submitPhone}>
             <h2>ورود یا ثبت‌نام</h2>
-            <p className="small muted">شماره‌ی موبایل را وارد کنید تا کد تأیید پیامک شود.</p>
+            <p className="small muted">شماره‌ی موبایل را وارد کنید. اگر رمز عبور گذاشته‌اید با رمز وارد می‌شوید، وگرنه کد تأیید پیامک می‌شود.</p>
             <label className="f" htmlFor="ph">
               شماره موبایل
               <input id="ph" className="input ltr" inputMode="numeric" autoComplete="tel" placeholder="09121234567" {...login.phoneForm.register("phone")} />
             </label>
-            <ErrorText>{login.phoneForm.formState.errors.phone?.message}</ErrorText>
-            <Button3D type="submit" block disabled={login.busy}>{login.busy ? "در حال ارسال…" : "دریافت کد"}</Button3D>
+            <ErrorText>{login.phoneForm.formState.errors.phone?.message ?? login.error}</ErrorText>
+            <Button3D type="submit" block disabled={login.busy}>{login.busy ? "لطفاً صبر کنید…" : "ادامه"}</Button3D>
             <p className="xs muted">نمونه برای تست: ۰۹۱۲۱۲۳۴۵۶۷ بازیکن، ۰۹۱۲۰۰۰۰۰۰۱ منشی، ۰۹۱۲۰۰۰۰۰۰۲ ادمین · هر کد ۵ رقمی</p>
+          </form>
+        )}
+
+        {login.step === "password" && (
+          <form className="stack" onSubmit={login.submitPassword}>
+            <h2>رمز عبور</h2>
+            <p className="small muted">رمز عبور حساب {fa(login.phone)} را وارد کنید.</p>
+            {/* Hidden username so password managers save the right account. */}
+            <input type="text" name="username" autoComplete="username" value={login.phone} readOnly hidden />
+            <label className="f" htmlFor="pw">
+              رمز عبور
+              <input id="pw" className="input ltr" type="password" autoComplete="current-password" autoFocus {...login.passwordForm.register("password")} />
+            </label>
+            <ErrorText>{login.passwordForm.formState.errors.password?.message ?? login.error}</ErrorText>
+            <Button3D type="submit" block disabled={login.busy}>{login.busy ? "در حال ورود…" : "ورود"}</Button3D>
+            <div className="row between">
+              <button type="button" className="btn ghost sm" onClick={login.changePhone}>تغییر شماره</button>
+              <button type="button" className="btn ghost sm" onClick={login.switchToSms} disabled={login.busy}>ورود با کد پیامکی</button>
+            </div>
+            <p className="xs muted">رمز را فراموش کرده‌اید؟ با کد پیامکی وارد شوید و از پروفایل رمز تازه بگذارید.</p>
           </form>
         )}
 
@@ -46,19 +66,22 @@ export function LoginPage() {
             <Button3D type="submit" block disabled={login.busy}>تأیید و ورود</Button3D>
             <div className="row between">
               <button type="button" className="btn ghost sm" onClick={login.changePhone}>تغییر شماره</button>
-              <button type="button" className="btn ghost sm" disabled={login.resendIn > 0} onClick={login.resend}>
+              <button type="button" className="btn ghost sm" disabled={login.resendIn > 0 || login.busy} onClick={login.resend}>
                 {login.resendIn > 0 ? `ارسال دوباره تا ${fa(login.resendIn)} ثانیه` : "ارسال دوباره‌ی کد"}
               </button>
             </div>
+            {login.hasPassword && (
+              <button type="button" className="btn ghost sm" onClick={login.switchToPassword}>ورود با رمز عبور</button>
+            )}
           </form>
         )}
 
         {login.step === "register" && (
           <form className="stack" onSubmit={login.submitName}>
             <h2>خوش آمدید</h2>
-            <p className="small muted">برای ساخت حساب فقط نام و نام خانوادگی لازم است.</p>
-            <label className="f">نام<input className="input" {...login.nameForm.register("first")} /></label>
-            <label className="f">نام خانوادگی<input className="input" {...login.nameForm.register("last")} /></label>
+            <p className="small muted">برای ساخت حساب فقط نام و نام خانوادگی لازم است. بعداً از پروفایل می‌توانید رمز عبور هم بگذارید.</p>
+            <label className="f">نام<input className="input" autoComplete="given-name" {...login.nameForm.register("first")} /></label>
+            <label className="f">نام خانوادگی<input className="input" autoComplete="family-name" {...login.nameForm.register("last")} /></label>
             <ErrorText>{nameErrors.first?.message ?? nameErrors.last?.message}</ErrorText>
             <Button3D type="submit" block>ساخت حساب</Button3D>
           </form>

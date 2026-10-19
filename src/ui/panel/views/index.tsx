@@ -8,7 +8,8 @@ import { useSession } from "@/engine/store";
 import type { Role } from "@/engine/types";
 import { SITE } from "@/config/site";
 import { ComingSoon, NotificationsView, TicketsView } from "@/ui/panel/views/shared";
-import { MyBookingsView, PlayerDashboard, ProfileView, WalletView } from "@/ui/panel/views/player";
+import { MyBookingsView, PlayerDashboard, WalletView } from "@/ui/panel/views/player";
+import { ProfileView } from "@/ui/panel/views/profile";
 import { AllTransactionsView, DailyCashView, FrontDeskDashboard, NewBookingView, ScheduleView, UsersView } from "@/ui/panel/views/staff";
 import { AdminDashboard, AuditLogView, CloseCourtView, CourtsView, FinanceReportsView, PricingView, SettingsView } from "@/ui/panel/views/admin";
 
@@ -26,6 +27,7 @@ type Routes = Record<string, () => ReactNode>;
 const COMMON: Routes = {
   tickets: () => <TicketsView />,
   notif: () => <NotificationsView />,
+  profile: () => <ProfileView />,
 };
 
 const BY_ROLE: Record<Role, Routes> = {
@@ -33,7 +35,6 @@ const BY_ROLE: Record<Role, Routes> = {
     dash: () => <PlayerDashboard />,
     res: () => <MyBookingsView />,
     wallet: () => <WalletView />,
-    profile: () => <ProfileView />,
   },
   secretary: {
     dash: () => <FrontDeskDashboard />,

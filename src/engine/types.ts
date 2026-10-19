@@ -65,7 +65,9 @@ export interface Booking {
   hour: number; // start hour
   userPhone: string;
   userName: string;
+  /** Total paid: court plus rentals. */
   price: number;
+  rentals?: Record<string, number>;
   /** "staff" = entered by the front desk. */
   source: "online" | "staff";
   status: "active" | "cancelled";
@@ -87,6 +89,25 @@ export interface CartItem {
   date: string;
   hour: number;
   courtId: string;
+  /** Court price for this hour, fixed when added. */
+  price: number;
+  /** Game played (e.g. "tennis" on a beach court); decides which rentals are offered. */
+  game?: string;
+  /** Rented equipment: rental id → quantity. */
+  rentals?: Record<string, number>;
+}
+
+/** Equipment players can rent with a court (e.g. rackets), priced per item per session. */
+export interface RentalDef {
+  id: string;
+  /** e.g. "اجاره‌ی راکت" */
+  name: string;
+  /** e.g. "راکت" */
+  unit: string;
+  /** Game ids that can rent it (e.g. padel and beach tennis, not beach volley). */
+  games: string[];
+  maxPerBooking: number;
+  /** Default price in toman; the admin can override it in the panel. */
   price: number;
 }
 

@@ -32,12 +32,26 @@ export function CheckoutPage() {
           <h3>سانس‌های انتخاب‌شده</h3>
           {!checkout.items.length && <p className="muted">سبد خالی است.</p>}
           <div className="tix">
-            {checkout.items.map((item) => (
+            {checkout.items.map(({ item, court, sport, rentalOptions, total }) => (
               <div className="tk" key={`${item.date}${item.hour}${item.courtId}`}>
-                <span className="sp" style={{ background: item.court?.floor }}>{item.sport?.name}</span>
-                <span><b>{item.court?.name}</b><br /><span className="when">{jFull(item.date)} · {hm(item.hour)} تا {hm(item.hour + 1)}</span></span>
+                <span className="sp" style={{ background: court?.floor }}>{sport?.name}</span>
+                <span>
+                  <b>{court?.name}</b>
+                  <br />
+                  <span className="when">{jFull(item.date)} · {hm(item.hour)} تا {hm(item.hour + 1)}</span>
+                  {rentalOptions.map((rental) => (
+                    <span className="rent" key={rental.id}>
+                      <span className="small">{rental.name} <span className="muted">({toman(rental.price)} هر {rental.unit})</span></span>
+                      <span className="stepper" role="group" aria-label={rental.name}>
+                        <button type="button" onClick={() => checkout.setRental(item, rental.id, rental.quantity - 1)} disabled={rental.quantity === 0} aria-label={`یک ${rental.unit} کمتر`}>−</button>
+                        <b aria-live="polite">{fa(rental.quantity)}</b>
+                        <button type="button" onClick={() => checkout.setRental(item, rental.id, rental.quantity + 1)} disabled={rental.quantity >= rental.maxPerBooking} aria-label={`یک ${rental.unit} بیشتر`}>+</button>
+                      </span>
+                    </span>
+                  ))}
+                </span>
                 <span className="stack" style={{ gap: 2, alignItems: "flex-end" }}>
-                  <span className="pr">{toman(item.price)}</span>
+                  <span className="pr">{toman(total)}</span>
                   <button className="x" onClick={() => checkout.remove(item)}>حذف</button>
                 </span>
               </div>
