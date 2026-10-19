@@ -1,7 +1,7 @@
 "use client";
 /**
  * Profile — every role (/panel/profile): identity header, personal details
- * (name, optional email; the phone is the login), sign-in methods, and
+ * (name, optional email and national ID; the phone is the login), sign-in methods, and
  * setting or changing the password. Styles: common.css ("pf-").
  */
 /* eslint-disable @next/next/no-img-element */
@@ -86,6 +86,11 @@ function DetailsCard() {
         ایمیل <span className="pf-opt">(اختیاری)</span>
         <input className="input ltr" type="email" autoComplete="email" placeholder="name@example.com" {...p.form.register("email")} />
         <ErrorText>{errors.email?.message}</ErrorText>
+      </label>
+      <label className="f">
+        کد ملی <span className="pf-opt">(برای صدور فاکتور رسمی و ثبت در مسابقات)</span>
+        <input className="input ltr" inputMode="numeric" maxLength={10} autoComplete="off" placeholder="۰۰۱۲۳۴۵۶۷۸" {...p.form.register("nationalId")} />
+        <ErrorText>{errors.nationalId?.message}</ErrorText>
       </label>
       <label className="f">
         شماره موبایل

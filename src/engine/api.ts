@@ -258,8 +258,8 @@ export async function setTicketStatus(id: string, status: TicketStatus): Promise
   await wait(null, 150);
 }
 
-/** Save the user's name and email. */
-export async function updateProfile(phone: string, patch: Pick<User, "first" | "last" | "email">): Promise<void> {
+/** Save the user's name, email and national ID. */
+export async function updateProfile(phone: string, patch: Pick<User, "first" | "last" | "email" | "nationalId">): Promise<void> {
   if (API) {
     const res = await fetch(`${API}/profile`, { method: "PUT", body: JSON.stringify({ phone, ...patch }) });
     if (!res.ok) throw new Error("ذخیره‌ی پروفایل انجام نشد");

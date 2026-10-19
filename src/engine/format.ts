@@ -65,3 +65,19 @@ export function timeUntil(date: string, hour: number, now = Date.now()) {
 /** Greeting for the time of day. */
 export const greeting = (hour = new Date().getHours()) =>
   hour < 5 ? "شب بخیر" : hour < 12 ? "صبح بخیر" : hour < 17 ? "روز بخیر" : hour < 21 ? "عصر بخیر" : "شب بخیر";
+
+/**
+ * Iranian national ID (کد ملی) check: 10 digits with a valid check digit.
+ * Accepts Persian or Latin digits; all-same-digit codes are rejected.
+ */
+export function isValidNationalId(input: string) {
+  const code = toLatinDigits(input).replace(/\D/g, "");
+  if (!/^\d{10}$/.test(code) || new Set(code).size === 1) return false;
+  const sum = code
+    .slice(0, 9)
+    .split("")
+    .reduce((acc, d, i) => acc + Number(d) * (10 - i), 0);
+  const rem = sum % 11;
+  const check = Number(code[9]);
+  return rem < 2 ? check === rem : check === 11 - rem;
+}

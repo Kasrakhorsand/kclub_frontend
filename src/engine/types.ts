@@ -79,6 +79,8 @@ export interface User {
   last: string;
   /** Optional, for receipts. */
   email?: string;
+  /** Iranian national ID (کد ملی), 10 digits. */
+  nationalId?: string;
   /** First role is the default panel after login. */
   roles: Role[];
   /** Wallet balance in toman. */
