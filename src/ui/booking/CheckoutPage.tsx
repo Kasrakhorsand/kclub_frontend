@@ -49,6 +49,12 @@ export function CheckoutPage() {
                       </span>
                     </span>
                   ))}
+                  <span className="bill">
+                    <span><span>اجاره‌ی زمین · ۱ ساعت</span><span>{toman(item.price)}</span></span>
+                    {rentalOptions.filter((r) => r.quantity > 0).map((r) => (
+                      <span key={r.id}><span>{fa(r.quantity)} {r.unit} × {toman(r.price)}</span><span>{toman(r.quantity * r.price)}</span></span>
+                    ))}
+                  </span>
                 </span>
                 <span className="stack" style={{ gap: 2, alignItems: "flex-end" }}>
                   <span className="pr">{toman(total)}</span>
@@ -57,6 +63,16 @@ export function CheckoutPage() {
               </div>
             ))}
           </div>
+          {(() => {
+            const courts = checkout.items.reduce((sum, x) => sum + x.item.price, 0);
+            const rentals = checkout.total - courts;
+            return (
+              <div className="bill-total">
+                <span><span>اجاره‌ی زمین ({fa(checkout.items.length)} سانس)</span><span>{toman(courts)}</span></span>
+                {rentals > 0 && <span><span>اجاره‌ی تجهیزات</span><span>{toman(rentals)}</span></span>}
+              </div>
+            );
+          })()}
           <div className="sum"><span>جمع کل</span><b>{toman(checkout.total)}</b></div>
         </div>
         <div className="card stack">

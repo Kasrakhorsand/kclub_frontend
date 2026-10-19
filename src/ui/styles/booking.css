@@ -241,3 +241,20 @@
 .stepper button{width:30px;height:30px;border:0;background:var(--surface-2);color:var(--ink);font-size:1.05rem;cursor:pointer}
 .stepper button:disabled{opacity:.35;cursor:not-allowed}
 .stepper b{min-width:30px;text-align:center;font-weight:600}
+/* ===== booking: equipment rental picker ===== */
+.rentpick{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding:16px 18px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.rentpick-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.rentpick-row .i3{width:44px;height:44px;flex:none}
+.rentpick-text{display:flex;flex-direction:column;flex:1;min-width:180px}
+.rentpick-text b{font-size:.95rem}
+.rentpick-text small{font-size:.78rem;color:var(--muted)}
+.rentpick-qty{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rentpick-qty button{min-width:40px;border:0;background:transparent;color:var(--ink);font-size:.86rem;padding:7px 10px;border-radius:9px;cursor:pointer;transition:background .2s,color .2s}
+.rentpick-qty button:hover{background:var(--surface)}
+.rentpick-qty button.on{background:var(--black);color:var(--gold-2);font-weight:600}
+.rentpick-sum{font-size:.8rem;color:var(--court);margin:0}
+/* ===== checkout: invoice breakdown ===== */
+.tk .bill,.bill-total{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:.78rem;color:var(--muted)}
+.tk .bill>span,.bill-total>span{display:flex;justify-content:space-between;gap:12px}
+.tk .bill>span>span:last-child,.bill-total>span>span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bill-total{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:.84rem}

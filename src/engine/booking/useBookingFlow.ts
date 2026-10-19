@@ -8,7 +8,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { freeCountSync, getCourts, getSlots, isPast, takenSync } from "@/engine/api";
 import { addDays, dayKey } from "@/engine/format";
-import { MAX_DAYS_AHEAD, courtsOf, gameOf, priceOf, sportById } from "@/engine/venue";
+import { MAX_DAYS_AHEAD, courtsOf, gameOf, priceOf, rentalsForSport, sportById } from "@/engine/venue";
+import { rentalPriceOf, useRentalPrices } from "@/engine/pricing";
 import { useSession } from "@/engine/store";
 import type { Court, CourtState, Sport } from "@/engine/types";
 
@@ -37,10 +38,14 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   if (!sportDef) throw new Error(`Unknown sport "${sport}"`);
   const cart = useSession((s) => s.cart);
   const toggleCart = useSession((s) => s.toggleCart);
+  const setRentals = useSession((s) => s.setRentals);
+  const rentalPrices = useRentalPrices();
 
   const [date, setDate] = useState(() => initialDate ?? dayKey(new Date()));
   const [hour, setHour] = useState<number | null>(initialHour ?? null);
   const [weeks, setWeeks] = useState(1);
+  /** Equipment to rent with the courts picked at this hour: rental id → quantity. */
+  const [rentalQty, setRentalQty] = useState<Record<string, number>>({});
 
   const { data: slots = [] } = useQuery({ queryKey: ["slots", sport, date], queryFn: () => getSlots(sport, date) });
   const { data: courts = courtsOf(sport) } = useQuery({ queryKey: ["courts", sport], queryFn: () => getCourts(sport) });
@@ -57,6 +62,17 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
     [sport, cart],
   );
 
+  const playedGame = game ?? (sportDef.games.length === 1 ? sportDef.games[0].id : undefined);
+  const rentalOptions = rentalsForSport(sport, playedGame).map((r) => ({
+    ...r,
+    price: rentalPriceOf(r.id, rentalPrices),
+    quantity: rentalQty[r.id] ?? 0,
+  }));
+  /** Non-zero rentals, as stored on cart items. */
+  const chosenRentals = Object.fromEntries(Object.entries(rentalQty).filter(([, q]) => q > 0));
+  /** Rental cost for one session (one hour) at the current choice. */
+  const rentalCostPerSession = rentalOptions.reduce((sum, r) => sum + r.quantity * r.price, 0);
+
   const selectedSlot = slots.find((s) => s.hour === hour) ?? null;
   const inCart = (court: Court, d = date, h = hour) => cart.some((x) => x.date === d && x.hour === h && x.courtId === court.id);
   /** True if any court at this hour of the chosen day is in the cart. */
@@ -68,8 +84,7 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   /** Toggle a court at the chosen hour, for every repeated week that is free and inside the booking window. */
   const pickCourt = (court: Court): PickResult | null => {
     if (hour === null) return null;
-    const playedGame = game ?? (sportDef.games.length === 1 ? sportDef.games[0].id : undefined);
-    const item = (d: string) => ({ date: d, hour, courtId: court.id, price: priceOf(sport, hour), game: playedGame });
+    const item = (d: string) => ({ date: d, hour, courtId: court.id, price: priceOf(sport, hour), game: playedGame, rentals: chosenRentals });
     if (inCart(court)) {
       let removed = 0;
       for (let w = 0; w < weeks; w++) {
@@ -114,5 +129,21 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
     courtState,
     pickCourt,
     priceAt: (court: Court) => (hour === null ? 0 : priceOf(court.sport, hour)),
+
+    /** Rentals offered for this sport/game, with current price and chosen quantity. */
+    rentalOptions,
+    rentalCostPerSession,
+    /**
+     * Choose how many of a rental to take (0…maxPerBooking). Also updates
+     * courts already in the cart at the chosen hour, across repeated weeks.
+     */
+    setRental: (rentalId: string, quantity: number) => {
+      const max = rentalOptions.find((r) => r.id === rentalId)?.maxPerBooking ?? 0;
+      const next = { ...rentalQty, [rentalId]: Math.max(0, Math.min(max, quantity)) };
+      setRentalQty(next);
+      if (hour === null) return;
+      const dates = Array.from({ length: weeks }, (_, w) => plusWeeks(date, w));
+      cart.filter((x) => x.hour === hour && dates.includes(x.date) && courtsOf(sport).some((c) => c.id === x.courtId)).forEach((x) => setRentals(x, next));
+    },
   };
 }

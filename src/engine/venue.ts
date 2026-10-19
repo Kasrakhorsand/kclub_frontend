@@ -46,7 +46,12 @@ export function refundPercent(date: string, hour: number, now = Date.now()) {
  */
 export function rentalsFor(courtId: string, game?: string) {
   const court = courtById(courtId);
-  const sport = court && sportById(court.sport);
+  return court ? rentalsForSport(court.sport, game) : [];
+}
+
+/** Rentals offered when booking a sport (optionally one game of it). */
+export function rentalsForSport(sportId: Sport, game?: string | null) {
+  const sport = sportById(sportId);
   if (!sport) return [];
   const games = game ? [game] : sport.games.map((g) => g.id);
   return RENTALS.filter((r) => r.games.some((g) => games.includes(g)));

@@ -4,11 +4,12 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { fa, hm, jDay, jFull, jMonth, toman, weekday } from "@/engine/format";
-import { MAX_DAYS_AHEAD } from "@/engine/venue";
+import { MAX_DAYS_AHEAD, RENTALS } from "@/engine/venue";
 import { REPEAT_WEEKS, useBookingFlow, type DayAvailability } from "@/engine/booking/useBookingFlow";
 import { useCart } from "@/engine/booking/useCart";
 import type { Sport } from "@/engine/types";
 import { ArrowIcon, BackButton, Button3D } from "@/ui/kit/Buttons";
+import { Icon3D } from "@/ui/kit/Icon3D";
 import { CourtMap3D } from "@/ui/booking/CourtMap3D";
 import { toast } from "@/ui/kit/Toast";
 
@@ -53,6 +54,43 @@ function DateStrip({ days, value, onChange }: { days: DayAvailability[]; value: 
   );
 }
 
+/** "۲ راکت" for a cart line's rentals, or "" when none. */
+function rentalSummary(rentals?: Record<string, number>) {
+  return Object.entries(rentals ?? {})
+    .filter(([, q]) => q > 0)
+    .map(([id, q]) => `${fa(q)} ${RENTALS.find((r) => r.id === id)?.unit ?? id}`)
+    .join("، ");
+}
+
+/** Rent equipment with the court: quantity per item, priced per hour; applies to courts picked at this hour. */
+function RentalPicker({ flow }: { flow: ReturnType<typeof useBookingFlow> }) {
+  return (
+    <div className="rentpick">
+      {flow.rentalOptions.map((r) => (
+        <div className="rentpick-row" key={r.id}>
+          <Icon3D name="racket" />
+          <span className="rentpick-text">
+            <b>{r.name}</b>
+            <small>{toman(r.price)} برای هر {r.unit} در هر ساعت · حداکثر {fa(r.maxPerBooking)}</small>
+          </span>
+          <span className="rentpick-qty" role="radiogroup" aria-label={`تعداد ${r.unit}`}>
+            {Array.from({ length: r.maxPerBooking + 1 }, (_, n) => (
+              <button key={n} type="button" role="radio" aria-checked={r.quantity === n} className={r.quantity === n ? "on" : undefined} onClick={() => flow.setRental(r.id, n)}>
+                {n === 0 ? "ندارم" : fa(n)}
+              </button>
+            ))}
+          </span>
+        </div>
+      ))}
+      {flow.rentalCostPerSession > 0 && (
+        <p className="rentpick-sum">
+          +{toman(flow.rentalCostPerSession)} به ازای هر سانس{flow.weeks > 1 ? `، در هر یک از ${fa(flow.weeks)} هفته` : ""}؛ روی فاکتور جدا نوشته می‌شود.
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** Sticky bottom bar with the cart total; expands to list and remove items. */
 function CartBar() {
   const cart = useCart();
@@ -73,7 +111,10 @@ function CartBar() {
           <div className="list">
             {cart.lines.map((line) => (
               <div className="li" key={`${line.date}${line.hour}${line.courtId}`}>
-                <span>{jFull(line.date)} · {hm(line.hour)} · <b>{line.courtName}</b></span>
+                <span>
+                  {jFull(line.date)} · {hm(line.hour)} · <b>{line.courtName}</b>
+                  {rentalSummary(line.rentals) && <small className="muted"> · {rentalSummary(line.rentals)}</small>}
+                </span>
                 <span className="row">{toman(line.price)}<button className="btn ghost sm" onClick={() => cart.remove(line)}>حذف</button></span>
               </div>
             ))}
@@ -187,6 +228,7 @@ export function Booking({ sport }: { sport: Sport }) {
           <div ref={mapRef} style={{ scrollMarginTop: 110 }}>
             <div className="step"><span className="sn2">۳</span><div><h3>انتخاب زمین</h3></div></div>
             <CourtMap3D courts={flow.courts} date={flow.date} hour={flow.hour} priceOf={flow.priceAt} stateOf={flow.courtState} onPick={pickCourt} />
+            {flow.rentalOptions.length > 0 && <RentalPicker flow={flow} />}
           </div>
         )}
         {cart.count > 0 && (
