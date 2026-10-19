@@ -1,0 +1,4 @@
+/* Login card.
+   Colours and fonts come from src/config/theme.css. */
+.auth{max-width:440px;margin:56px auto;padding-inline:20px}
+.otp{letter-spacing:.6em;text-align:center;font-size:1.5rem;font-weight:300;direction:ltr}

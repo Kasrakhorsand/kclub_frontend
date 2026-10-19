@@ -2,9 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Brand tokens (per club), then shared module styles. */
+/* K Club colour tokens, then one stylesheet per UI section (order matters: base first). */
 @import "../config/theme.css";
-@import "../ui/styles.css";
+@import "../ui/styles/base.css";
+@import "../ui/styles/layout.css";
+@import "../ui/styles/three.css";
+@import "../ui/styles/home.css";
+@import "../ui/styles/booking.css";
+@import "../ui/styles/auth.css";
+@import "../ui/styles/coaches.css";
+@import "../ui/styles/panel.css";
 
 html { scroll-behavior: smooth; }
 body { margin: 0; }

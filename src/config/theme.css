@@ -1,5 +1,5 @@
 /*
- * K Club colours and fonts (light and dark), used by src/ui/styles.css.
+ * K Club colours and fonts (light and dark), used by the files in src/ui/styles/.
  */
 :root{
   --bg:#EFEDE8; --surface:#FFFFFF; --surface-2:#F6F5F1; --ink:#121214; --muted:#6B6862; --line:#DCD8CF;
