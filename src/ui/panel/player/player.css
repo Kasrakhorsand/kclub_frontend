@@ -181,7 +181,7 @@
 .pw-tx-amount{font-size:.98rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pw-day li.charge .pw-tx-amount{color:var(--free)}
 .pw-day li.refund .pw-tx-amount{color:var(--court)}
-.pw-day li.pay .pw-tx-amount{color:var(--ink)}
+.pw-day li.pay .pw-tx-amount{color:var(--busy)}
 .pw-empty{padding:24px 0;text-align:center}
 
 @media (max-width:900px){.pw-top{grid-template-columns:1fr}.pw-month{flex-direction:row;flex-wrap:wrap}.pw-month-title{width:100%}.pw-month-row{flex:1 1 150px}}
