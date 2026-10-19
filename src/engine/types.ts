@@ -151,14 +151,30 @@ export interface Tx {
   actor: string;
 }
 
+export type TicketStatus = "open" | "answered" | "escalated" | "closed";
+export type TicketCategory = "booking" | "payment" | "facility" | "other";
+
+export interface TicketMessage {
+  by: "user" | "staff" | "admin";
+  text: string;
+  /** "HH:mm" when it was sent. */
+  time?: string;
+  /** Day key when it was sent (defaults to the ticket date). */
+  date?: string;
+}
+
 export interface Ticket {
   id: string;
   phone: string;
   title: string;
-  status: "open" | "answered" | "escalated" | "closed";
+  status: TicketStatus;
+  category?: TicketCategory;
   date: string;
-  messages: { by: "user" | "staff" | "admin"; text: string }[];
+  messages: TicketMessage[];
 }
+
+/** What a notification is about; decides its icon and grouping. */
+export type NotifKind = "booking" | "wallet" | "ticket" | "system";
 
 export interface Notif {
   id: string;
@@ -166,6 +182,11 @@ export interface Notif {
   text: string;
   read: boolean;
   date: string;
+  kind?: NotifKind;
+  /** "HH:mm" */
+  time?: string;
+  /** Where tapping it should go, e.g. "/panel/res". */
+  href?: string;
 }
 
 /** Audit-log entry for an admin or staff change. */

@@ -1,7 +1,96 @@
-/* Pages for every role: tickets, notifications, profile, coming soon.
+/* Pages for every role: notifications (nt-), tickets (tc-), coming soon.
    Colours come from src/config/theme.css. */
-.msg{padding:10px 14px;margin-bottom:8px;max-width:85%}
-.msg.u{background:var(--surface-2);border:1px solid var(--line);align-self:flex-start}
-.msg.s{background:var(--info-bg);align-self:flex-end}
-.msg.a{background:var(--warn-bg);align-self:flex-end}
 .soonbox{text-align:center;padding:48px 20px;display:flex;flex-direction:column;gap:12px;align-items:center}
+
+/* ===== shared segmented tabs ===== */
+.nt-tabs,.tc-filters{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.nt-tabs button,.tc-filters button{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--muted);font-size:.84rem;padding:7px 14px;border-radius:10px;cursor:pointer;transition:background .2s,color .2s}
+.nt-tabs button i,.tc-filters button i{font-style:normal;font-size:.7rem;min-width:20px;padding:0 6px;border-radius:999px;background:var(--surface-2);color:var(--muted);text-align:center}
+.nt-tabs button.on,.tc-filters button.on{background:var(--black);color:#fff;font-weight:600}
+.nt-tabs button.on i,.tc-filters button.on i{background:var(--gold);color:#0D0D0E}
+
+/* ===== notifications (nt-) ===== */
+.nt{display:flex;flex-direction:column;gap:16px;max-width:860px}
+.nt .i3{flex:none}
+.nt-day h4{font-size:.78rem;font-weight:600;color:var(--muted);margin:0 0 8px}
+.nt-day ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.nt-item{position:relative;width:100%;display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:right;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s}
+.nt-item .i3{width:40px;height:40px;opacity:.6}
+.nt-item:hover{border-color:var(--gold);transform:translateY(-1px);box-shadow:0 12px 24px -18px rgba(0,0,0,.4)}
+.nt-item.unread{background:linear-gradient(90deg,var(--surface) 0%,var(--court-soft) 100%);border-color:color-mix(in srgb,var(--gold) 45%,var(--line))}
+.nt-item.unread .i3{opacity:1}
+.nt-body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.nt-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.nt-top b{font-size:.95rem}
+.nt-item:not(.unread) .nt-top b{font-weight:500}
+.nt-top small{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.nt-text{font-size:.84rem;color:var(--muted);line-height:1.8}
+.nt-dot{position:absolute;top:16px;inset-inline-end:14px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 25%,transparent)}
+.nt-item.unread .nt-top{padding-inline-end:16px}
+.nt-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 20px;border-radius:20px;border:1px dashed var(--line);background:var(--surface);text-align:center}
+.nt-empty .i3{width:60px;height:60px}
+
+/* ===== tickets (tc-) ===== */
+.tc{display:flex;flex-direction:column;gap:16px}
+.tc .i3{flex:none}
+.tc-layout{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:16px;align-items:start}
+.tc-inbox{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:20px;background:var(--surface);border:1px solid var(--line);position:sticky;top:76px;max-height:calc(100vh - 110px);overflow:auto}
+.tc-filters{background:var(--surface-2)}
+.tc-filters button{padding:6px 10px;font-size:.78rem}
+.tc-inbox ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tc-row{width:100%;display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:14px;border:1px solid transparent;background:transparent;color:var(--ink);text-align:right;cursor:pointer;transition:background .2s,border-color .2s}
+.tc-row:hover{background:var(--surface-2)}
+.tc-row.on{background:var(--court-soft);border-color:color-mix(in srgb,var(--gold) 50%,var(--line))}
+.tc-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tc-row-top b{font-size:.9rem;line-height:1.5}
+.tc-row-last{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-row small{font-size:.7rem;color:var(--muted)}
+.tc-none{padding:16px 4px}
+
+.tc-status{flex:none;font-size:.68rem;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tc-status.warn{color:var(--warn);background:var(--warn-bg)}
+.tc-status.ok{color:var(--free);background:var(--free-bg)}
+.tc-status.hot{color:var(--busy);background:var(--busy-bg)}
+.tc-status.off{color:var(--muted);background:var(--surface-2)}
+
+.tc-pane{display:flex;flex-direction:column;gap:14px;min-height:420px;padding:18px 20px;border-radius:20px;background:var(--surface);border:1px solid var(--line)}
+.tc-pane-head{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.tc-pane-head>div{flex:1;min-width:0}
+.tc-pane-head h3{font-size:1.05rem}
+.tc-pane-head small{font-size:.74rem;color:var(--muted)}
+.tc-back{display:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer}
+
+.tc-thread{list-style:none;margin:0;padding:4px 0;display:flex;flex-direction:column;gap:10px;flex:1}
+.tc-msg{max-width:78%;display:flex;flex-direction:column;gap:4px;padding:10px 14px;border-radius:16px;line-height:1.8}
+.tc-msg p{margin:0;font-size:.9rem}
+.tc-msg small{font-size:.68rem;opacity:.7}
+.tc-who{font-size:.7rem;font-weight:600;opacity:.8}
+.tc-msg.mine{align-self:flex-start;background:var(--black);color:#ECEAE4;border-start-start-radius:4px}
+.tc-msg.mine .tc-who{color:var(--gold-2)}
+.tc-msg.theirs{align-self:flex-end;background:var(--surface-2);border:1px solid var(--line);border-start-end-radius:4px}
+.tc-msg.theirs.admin{background:var(--warn-bg)}
+.tc-closed{font-size:.8rem;color:var(--muted);text-align:center;padding:8px;border-radius:10px;background:var(--surface-2)}
+
+.tc-reply{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.tc-reply textarea,.tc-new textarea{border-radius:14px;resize:vertical}
+.tc-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
+
+.tc-new{display:flex;flex-direction:column;gap:14px}
+.tc-new .input{border-radius:12px}
+.tc-cats{display:flex;flex-wrap:wrap;gap:6px}
+.tc-cats button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:.8rem;padding:6px 12px;border-radius:999px;cursor:pointer;transition:border-color .2s,background .2s}
+.tc-cats button.on{border-color:var(--gold);background:var(--court-soft);font-weight:600}
+
+.tc-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--ink)}
+.tc-placeholder .i3{width:64px;height:64px}
+
+/* phones: inbox first, conversation replaces it when one is open */
+@media (max-width:860px){
+  .tc-layout{grid-template-columns:1fr}
+  .tc-inbox{position:static;max-height:none}
+  .tc-layout.has-open .tc-inbox{display:none}
+  .tc-layout:not(.has-open) .tc-pane{display:none}
+  .tc-back{display:grid;place-items:center}
+  .tc-msg{max-width:90%}
+}
+@media (prefers-reduced-motion:reduce){.nt-item,.tc-row{transition:none}}

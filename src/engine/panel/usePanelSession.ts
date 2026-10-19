@@ -7,7 +7,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "@/engine/store";
-import { NOTIFS, TICKETS } from "@/engine/mock";
+import { useUnreadNotifications } from "@/engine/notifications/useNotifications";
+import { usePendingTickets } from "@/engine/tickets/useTickets";
 import type { Role } from "@/engine/types";
 import { MENUS, sectionHref } from "./menus";
 
@@ -29,13 +30,10 @@ export function usePanelSession() {
   const section = path.split("/")[2] ?? "dash";
   const menu = role ? MENUS[role] : [];
 
+  const unreadNotifs = useUnreadNotifications();
+  const pendingTickets = usePendingTickets();
   /** Badge number for a menu item (unread notifications, tickets waiting for this role). */
-  const badgeFor = (key: string) => {
-    if (key === "notif") return NOTIFS.filter((n) => !n.read).length;
-    if (key === "tickets" && role && role !== "player")
-      return TICKETS.filter((t) => (role === "admin" ? t.status === "escalated" : t.status === "open")).length;
-    return 0;
-  };
+  const badgeFor = (key: string) => (key === "notif" ? unreadNotifs : key === "tickets" ? pendingTickets : 0);
 
   return {
     /** False until the session is loaded and a user with a role is present; render nothing until then. */

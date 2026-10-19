@@ -21,7 +21,6 @@ src/ui/panel/
 |---|---|---|
 | داشبورد | `/panel` | `player/DashboardPage.tsx` |
 | رزروهای من | `/panel/res` | `player/MyBookingsPage.tsx` |
-| فهرست رزروها (در داشبورد و رزروهای من) | — | `player/BookingList.tsx` |
 | کیف پول | `/panel/wallet` | `player/WalletPage.tsx` |
 | استایل‌ها | | `player/player.css` |
 

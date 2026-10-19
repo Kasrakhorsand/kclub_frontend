@@ -4,9 +4,9 @@
  * NEXT_PUBLIC_API_URL and replace each function body with a fetch() call —
  * the components only depend on these signatures.
  */
-import { seedBookings, TXS, USERS, COACHES } from "@/engine/mock";
-import { COURTS, HOURS, priceOf } from "@/engine/venue";
-import type { Booking, CartItem, Court, Slot, Sport, Tx, User } from "@/engine/types";
+import { COACHES, NOTIFS, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
+import { COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
+import type { Booking, CartItem, Court, Notif, Role, Slot, Sport, Ticket, TicketCategory, TicketMessage, TicketStatus, Tx, User } from "@/engine/types";
 import { dayKey } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -173,6 +173,89 @@ export async function getTransactions(phone: string): Promise<Tx[]> {
 export async function startTopUp(phone: string, amount: number): Promise<{ gatewayUrl: string | null }> {
   if (API) return (await fetch(`${API}/wallet/topup`, { method: "POST", body: JSON.stringify({ phone, amount }) })).json();
   return wait({ gatewayUrl: null }, 600);
+}
+
+/** "HH:mm" for now, used to stamp mock messages. */
+const nowTime = () => new Date().toTimeString().slice(0, 5);
+
+/**
+ * Cancel a booking. The refund follows CANCEL_RULES and goes to the wallet;
+ * returns the percent and amount refunded.
+ */
+export async function cancelBooking(booking: Booking): Promise<{ refundPercent: number; refundAmount: number }> {
+  if (API) return (await fetch(`${API}/bookings/${booking.id}/cancel`, { method: "POST" })).json();
+  const percent = refundPercent(booking.date, booking.hour);
+  const stored = db().find((b) => b.id === booking.id);
+  if (stored) stored.status = "cancelled";
+  return wait({ refundPercent: percent, refundAmount: Math.round((booking.price * percent) / 100) }, 400);
+}
+
+/** A user's notifications, newest first. */
+export async function getNotifications(phone: string): Promise<Notif[]> {
+  if (API) return (await fetch(`${API}/notifications?phone=${phone}`)).json();
+  // Copies, like a real response: the mock mutates NOTIFS and React Query must see new objects.
+  return wait(structuredClone(NOTIFS).sort((a, b) => b.date.localeCompare(a.date) || (b.time ?? "").localeCompare(a.time ?? "")));
+}
+
+/** Mark notifications as read (all of them when `ids` is omitted). */
+export async function markNotificationsRead(phone: string, ids?: string[]): Promise<void> {
+  if (API) {
+    await fetch(`${API}/notifications/read`, { method: "POST", body: JSON.stringify({ phone, ids }) });
+    return;
+  }
+  NOTIFS.forEach((n) => {
+    if (!ids || ids.includes(n.id)) n.read = true;
+  });
+  await wait(null, 80);
+}
+
+/** Tickets visible to a role: players see their own, staff see everyone's. */
+export async function getTickets(phone: string, role: Role): Promise<Ticket[]> {
+  if (API) return (await fetch(`${API}/tickets?phone=${phone}&role=${role}`)).json();
+  const list = role === "player" ? TICKETS.filter((t) => t.phone === phone) : TICKETS;
+  return wait(structuredClone(list).sort((a, b) => b.date.localeCompare(a.date)));
+}
+
+/** Open a new ticket with its first message. */
+export async function createTicket(phone: string, title: string, category: TicketCategory, text: string): Promise<Ticket> {
+  if (API) return (await fetch(`${API}/tickets`, { method: "POST", body: JSON.stringify({ phone, title, category, text }) })).json();
+  const ticket: Ticket = {
+    id: `T-${1060 + TICKETS.length}`,
+    phone,
+    title,
+    category,
+    status: "open",
+    date: dayKey(new Date()),
+    messages: [{ by: "user", text, time: nowTime() }],
+  };
+  TICKETS.unshift(ticket);
+  return wait(structuredClone(ticket), 300);
+}
+
+/** Add a message to a ticket and update its status. */
+export async function replyTicket(id: string, by: TicketMessage["by"], text: string): Promise<void> {
+  if (API) {
+    await fetch(`${API}/tickets/${id}/reply`, { method: "POST", body: JSON.stringify({ by, text }) });
+    return;
+  }
+  const t = TICKETS.find((x) => x.id === id);
+  if (!t) throw new Error("تیکت پیدا نشد");
+  t.messages.push({ by, text, time: nowTime(), date: dayKey(new Date()) });
+  // A player's message reopens the ticket (an escalated one stays with management); a staff reply answers it.
+  if (by !== "user") t.status = "answered";
+  else if (t.status !== "escalated") t.status = "open";
+  await wait(null, 250);
+}
+
+/** Change a ticket's status (escalate to admin, close, reopen). */
+export async function setTicketStatus(id: string, status: TicketStatus): Promise<void> {
+  if (API) {
+    await fetch(`${API}/tickets/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
+    return;
+  }
+  const t = TICKETS.find((x) => x.id === id);
+  if (t) t.status = status;
+  await wait(null, 150);
 }
 
 /** Coach profiles for the coaches page. */

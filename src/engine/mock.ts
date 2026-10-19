@@ -82,14 +82,17 @@ export const TXS: Tx[] = [
   { id: "TX-11", date: k(-21), phone: "09121234567", type: "pay", amount: -800_000, desc: "رزرو پدل ۲ · ۱۹:۰۰", method: "درگاه", actor: "کاربر" },
 ];
 export const TICKETS: Ticket[] = [
-  { id: "T-1042", phone: "09121234567", title: "روشنایی زمین پدل ۳ کم است", status: "answered", date: k(-4), messages: [{ by: "user", text: "دیشب نور زمین ۳ کم بود." }, { by: "staff", text: "ممنون از گزارش؛ لامپ‌ها تعویض شد." }] },
-  { id: "T-1051", phone: "09125556677", title: "اضافه شدن نوشیدنی ورزشی به منوی کافه", status: "open", date: k(0), messages: [{ by: "user", text: "امکانش هست نوشیدنی ورزشی هم داشته باشید؟" }] },
-  { id: "T-1053", phone: "09121234567", title: "درخواست بازگشت کامل وجه", status: "escalated", date: k(-1), messages: [{ by: "user", text: "۵ ساعت قبل لغو کردم. امکان بازگشت کامل هست؟" }] },
+  { id: "T-1042", phone: "09121234567", title: "روشنایی زمین پدل ۳ کم است", status: "answered", category: "facility", date: k(-4), messages: [{ by: "user", text: "دیشب نور زمین ۳ کم بود.", time: "22:10" }, { by: "staff", text: "ممنون از گزارش؛ لامپ‌ها تعویض شد.", time: "10:35", date: k(-3) }] },
+  { id: "T-1051", phone: "09125556677", title: "اضافه شدن نوشیدنی ورزشی به منوی کافه", status: "open", category: "other", date: k(0), messages: [{ by: "user", text: "امکانش هست نوشیدنی ورزشی هم داشته باشید؟", time: "09:20" }] },
+  { id: "T-1053", phone: "09121234567", title: "درخواست بازگشت کامل وجه", status: "escalated", category: "payment", date: k(-1), messages: [{ by: "user", text: "۵ ساعت قبل لغو کردم. امکان بازگشت کامل هست؟", time: "18:05" }, { by: "staff", text: "درخواست شما برای تصمیم به مدیریت ارجاع شد.", time: "18:40" }] },
 ];
 export const NOTIFS: Notif[] = [
-  { id: "n1", title: "یادآوری رزرو", text: "فردا ساعت ۱۸ زمین پدل ۲ برای شما رزرو شده است.", read: false, date: k(0) },
-  { id: "n2", title: "رزرو تکراری ثبت شد", text: "۴ جلسه پدل، شنبه‌ها ساعت ۱۹ تا ۲۰.", read: false, date: k(-1) },
-  { id: "n3", title: "شارژ کیف پول", text: "کیف پول شما توسط منشی ۱٬۰۰۰٬۰۰۰ تومان شارژ شد.", read: true, date: k(-2) },
+  { id: "n1", kind: "booking", title: "یادآوری رزرو", text: "فردا ساعت ۱۸ زمین پدل ۲ برای شما رزرو شده است.", read: false, date: k(0), time: "09:00", href: "/panel/res" },
+  { id: "n2", kind: "booking", title: "رزرو تکراری ثبت شد", text: "۴ جلسه پدل، شنبه‌ها ساعت ۱۹ تا ۲۰.", read: false, date: k(-1), time: "20:14", href: "/panel/res" },
+  { id: "n4", kind: "ticket", title: "پاسخ تیکت", text: "پذیرش به تیکت «روشنایی زمین پدل ۳ کم است» پاسخ داد.", read: false, date: k(-3), time: "10:35", href: "/panel/tickets" },
+  { id: "n3", kind: "wallet", title: "شارژ کیف پول", text: "کیف پول شما توسط منشی ۱٬۰۰۰٬۰۰۰ تومان شارژ شد.", read: true, date: k(-2), time: "17:42", href: "/panel/wallet" },
+  { id: "n5", kind: "wallet", title: "بازگشت وجه", text: "۶۰۰٬۰۰۰ تومان بابت لغو رزرو ساحلی ۲ به کیف پول برگشت.", read: true, date: k(-8), time: "12:03", href: "/panel/wallet" },
+  { id: "n6", kind: "system", title: "ساعت کاری جدید", text: "از هفته‌ی آینده زمین‌ها از ساعت ۷ صبح باز هستند.", read: true, date: k(-10), time: "08:00" },
 ];
 export const AUDIT: Audit[] = [
   { date: k(0), actor: "مریم احمدی (منشی)", action: "ثبت رزرو", target: "ساحلی ۱ · ۱۰:۰۰", detail: "برای علی رضایی · کارتخوان" },

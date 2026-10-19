@@ -126,3 +126,15 @@ export function usePlayerSummary(): PlayerSummary {
     favoriteCourt: mostCommon(played.map((b) => b.courtId)),
   };
 }
+
+/** Signed-in player's played games in the last `days` days, newest first (sample data until the API is connected). */
+export function usePastBookings(days = 30) {
+  const user = useSession((s) => s.user);
+  const past = useMemo(() => [-30, -16, -2].flatMap((d) => seedBookings(addDays(new Date(), d))), []);
+  if (!user) return [];
+  const today = todayKey();
+  const from = dayKey(addDays(new Date(), -days));
+  return asPlayerHistory(past, user.first, user.last)
+    .filter((b) => b.date < today && b.date >= from)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.hour - a.hour);
+}
