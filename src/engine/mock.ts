@@ -74,6 +74,12 @@ export const TXS: Tx[] = [
   { id: "TX-3", date: k(-3), phone: "09125556677", type: "refund", amount: 400_000, desc: "بازگشت وجه لغو ساحلی ۱", method: "کیف پول", actor: "سیستم" },
   { id: "TX-4", date: k(0), phone: "09125556677", type: "pay", amount: -600_000, desc: "رزرو ساحلی ۳ · ۱۹:۰۰", method: "کارتخوان", actor: "منشی: مریم احمدی" },
   { id: "TX-5", date: k(0), phone: "09121234567", type: "charge", amount: 500_000, desc: "شارژ حضوری", method: "کارتخوان", actor: "منشی: مریم احمدی" },
+  { id: "TX-6", date: k(-5), phone: "09121234567", type: "pay", amount: -500_000, desc: "رزرو پدل ۱ · ۱۰:۰۰", method: "کیف پول", actor: "کاربر" },
+  { id: "TX-7", date: k(-8), phone: "09121234567", type: "refund", amount: 600_000, desc: "بازگشت وجه لغو ساحلی ۲", method: "کیف پول", actor: "سیستم" },
+  { id: "TX-8", date: k(-9), phone: "09121234567", type: "pay", amount: -600_000, desc: "رزرو ساحلی ۲ · ۲۰:۰۰", method: "کیف پول", actor: "کاربر" },
+  { id: "TX-9", date: k(-12), phone: "09121234567", type: "charge", amount: 2_000_000, desc: "شارژ کیف پول", method: "درگاه", actor: "کاربر" },
+  { id: "TX-10", date: k(-15), phone: "09121234567", type: "pay", amount: -1_000_000, desc: "رزرو پدل ۳ · ۲۱:۰۰ + ۲ راکت", method: "کیف پول", actor: "کاربر" },
+  { id: "TX-11", date: k(-21), phone: "09121234567", type: "pay", amount: -800_000, desc: "رزرو پدل ۲ · ۱۹:۰۰", method: "درگاه", actor: "کاربر" },
 ];
 export const TICKETS: Ticket[] = [
   { id: "T-1042", phone: "09121234567", title: "روشنایی زمین پدل ۳ کم است", status: "answered", date: k(-4), messages: [{ by: "user", text: "دیشب نور زمین ۳ کم بود." }, { by: "staff", text: "ممنون از گزارش؛ لامپ‌ها تعویض شد." }] },

@@ -1,16 +1,6 @@
-/* Player pages: dashboard (pd-), wallet card (wcard), bookings.
+/* Player pages: dashboard (pd-), wallet (pw-), bookings.
    Colours come from src/config/theme.css. */
 
-/* ===== wallet page: bank-card style balance ===== */
-.wcard{position:relative;border-radius:10px;padding:22px 24px;min-height:190px;color:#ECEAE4;overflow:hidden;background:linear-gradient(140deg,#1D1D1F 0%,#0B0B0C 55%,#2A2418 100%);border:1px solid #3A3427;display:flex;flex-direction:column;justify-content:space-between;isolation:isolate;aspect-ratio:1.586/1;max-width:420px}
-.wcard::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(100deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px);z-index:-1}
-.wcard .emb{position:absolute;inset-inline-end:-20px;bottom:-30px;width:180px;opacity:.22;z-index:-1}
-.wcard .top{display:flex;justify-content:space-between;align-items:center}
-.wcard .chipg{width:40px;height:30px;border-radius:5px;background:linear-gradient(135deg,#E3C994,#9E7A36);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
-.wcard .lbl{font-size:.76rem;color:#9C978E}
-.wcard .bal{font-size:2rem;font-weight:200;line-height:1.2;margin-top:4px;color:var(--gold-2);font-variant-numeric:tabular-nums}
-.wcard .bal small{font-size:.86rem;color:#9C978E}
-.wcard .own{display:flex;justify-content:space-between;font-size:.78rem;color:#9C978E;direction:rtl}
 
 /* ===== dashboard (pd-) ===== */
 .pd{display:flex;flex-direction:column;gap:18px}
@@ -126,3 +116,74 @@
 @media (max-width:980px){.pd-hero{grid-template-columns:1fr;padding:24px 20px}.pd-grid{grid-template-columns:1fr}}
 @media (max-width:520px){.pd-stats{gap:10px}.pd-stat{padding:12px;gap:8px;flex-direction:column;align-items:flex-start}.pd-stat .i3{width:36px;height:36px}.pd-stat b{font-size:1.1rem;white-space:normal;overflow:visible}.pd-card{padding:16px}.pd-ticket-body{gap:12px}.pd-date{min-width:64px}}
 @media (prefers-reduced-motion:reduce){.pd-stat,.pd-quick-item,.pd-quick-item i{transition:none}}
+
+/* ===== wallet page (pw-) ===== */
+.pw{display:flex;flex-direction:column;gap:18px}
+.pw .i3{flex:none}
+.pw-top{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:stretch}
+
+/* balance card */
+.pw-card{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:20px;min-height:220px;padding:24px 26px;border-radius:22px;color:#ECEAE4;background:radial-gradient(120% 140% at 100% 0%,#3A3020 0%,#151517 42%,#0A0A0B 100%);border:1px solid #3A3427;box-shadow:0 22px 44px -26px rgba(0,0,0,.7)}
+.pw-card::after{content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(100deg,rgba(255,255,255,.028) 0 1px,transparent 1px 5px)}
+.pw-emb{position:absolute;z-index:-1;inset-inline-end:-30px;bottom:-50px;width:230px;opacity:.12}
+.pw-card-head{display:flex;justify-content:space-between;align-items:center;font-size:.86rem;color:#B9B5AD}
+.pw-chip{width:44px;height:32px;border-radius:7px;background:linear-gradient(135deg,#F3DFAE,#9E7A36);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3),inset 10px 0 0 -9px rgba(0,0,0,.25)}
+.pw-card small{font-size:.78rem;color:#9C978E}
+.pw-balance{display:block;font-size:clamp(2rem,4vw,2.7rem);font-weight:200;line-height:1.15;color:var(--gold-2);font-variant-numeric:tabular-nums}
+.pw-balance span{font-size:.9rem;color:#9C978E}
+.pw-card-foot{display:flex;justify-content:space-between;gap:12px;font-size:.84rem;color:#B9B5AD;letter-spacing:.5px}
+
+/* this month */
+.pw-month{display:flex;flex-direction:column;gap:10px;padding:18px 20px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
+.pw-month-title{font-size:.8rem;font-weight:600;color:var(--muted)}
+.pw-month-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--surface-2)}
+.pw-month-row .i3{width:36px;height:36px}
+.pw-month-row span{display:flex;flex-direction:column}
+.pw-month-row small{font-size:.74rem;color:var(--muted)}
+.pw-month-row b{font-size:1.2rem;font-weight:400;font-variant-numeric:tabular-nums}
+.pw-month-row.in b{color:var(--free)}
+.pw-month-row.back b{color:var(--court)}
+
+/* panels */
+.pw-panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+.pw-panel h3{font-size:1.05rem;font-weight:600}
+
+/* top-up */
+.pw-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.pw-preset{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;transition:border-color .2s,background .2s,transform .2s}
+.pw-preset b{font-size:1.1rem;font-weight:500}
+.pw-preset small{font-size:.72rem;color:var(--muted)}
+.pw-preset:hover{border-color:var(--gold);transform:translateY(-1px)}
+.pw-preset.on{border-color:var(--gold);background:var(--court-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.pw-custom{display:flex;flex-direction:column;gap:6px;font-size:.84rem;color:var(--muted)}
+.pw-custom-field{position:relative;max-width:320px}
+.pw-custom-field .input{width:100%;padding-right:60px;border-radius:12px}
+.pw-custom-field em{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:.8rem;color:var(--muted)}
+.pw-pay{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--line)}
+.pw-pay>span{display:flex;flex-direction:column}
+.pw-pay small{font-size:.76rem;color:var(--muted)}
+.pw-pay b{font-size:1.15rem;font-weight:500;font-variant-numeric:tabular-nums}
+
+/* history */
+.pw-hist-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pw-filters{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.pw-filters button{border:0;background:transparent;color:var(--muted);font-size:.8rem;padding:6px 12px;border-radius:9px;cursor:pointer;transition:background .2s,color .2s}
+.pw-filters button:hover{color:var(--ink)}
+.pw-filters button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12);font-weight:600}
+.pw-day h4{font-size:.78rem;font-weight:600;color:var(--muted);margin:2px 0 8px}
+.pw-day ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.pw-day li{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;border:1px solid transparent;transition:border-color .2s,background .2s}
+.pw-day li:hover{background:var(--surface-2);border-color:var(--line)}
+.pw-day li .i3{width:38px;height:38px}
+.pw-tx-main{display:flex;flex-direction:column;flex:1;min-width:0}
+.pw-tx-main b{font-size:.9rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pw-tx-main small{font-size:.74rem;color:var(--muted)}
+.pw-tx-amount{font-size:.98rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pw-day li.charge .pw-tx-amount{color:var(--free)}
+.pw-day li.refund .pw-tx-amount{color:var(--court)}
+.pw-day li.pay .pw-tx-amount{color:var(--ink)}
+.pw-empty{padding:24px 0;text-align:center}
+
+@media (max-width:900px){.pw-top{grid-template-columns:1fr}.pw-month{flex-direction:row;flex-wrap:wrap}.pw-month-title{width:100%}.pw-month-row{flex:1 1 150px}}
+@media (max-width:560px){.pw-presets{grid-template-columns:repeat(2,minmax(0,1fr))}.pw-panel{padding:16px}.pw-card{padding:20px;min-height:200px}.pw-pay .b3d{width:100%}}
+@media (prefers-reduced-motion:reduce){.pw-preset,.pw-day li{transition:none}}

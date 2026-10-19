@@ -4,9 +4,9 @@
  * NEXT_PUBLIC_API_URL and replace each function body with a fetch() call —
  * the components only depend on these signatures.
  */
-import { seedBookings, USERS, COACHES } from "@/engine/mock";
+import { seedBookings, TXS, USERS, COACHES } from "@/engine/mock";
 import { COURTS, HOURS, priceOf } from "@/engine/venue";
-import type { Booking, CartItem, Court, Slot, Sport, User } from "@/engine/types";
+import type { Booking, CartItem, Court, Slot, Sport, Tx, User } from "@/engine/types";
 import { dayKey } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -158,6 +158,21 @@ export async function createBookings(user: User, items: CartItem[], method: "wal
   }));
   db().push(...created);
   return wait({ ok: true, tracking: String(Math.floor(100000 + Math.random() * 899999)), bookings: created }, 600);
+}
+
+/** A user's wallet transactions, newest first. */
+export async function getTransactions(phone: string): Promise<Tx[]> {
+  if (API) return (await fetch(`${API}/wallet/transactions?phone=${phone}`)).json();
+  return wait(TXS.filter((t) => t.phone === phone).sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)));
+}
+
+/**
+ * Start a wallet top-up. The backend returns the bank gateway URL to send the
+ * user to; the wallet is credited after the gateway confirms payment.
+ */
+export async function startTopUp(phone: string, amount: number): Promise<{ gatewayUrl: string | null }> {
+  if (API) return (await fetch(`${API}/wallet/topup`, { method: "POST", body: JSON.stringify({ phone, amount }) })).json();
+  return wait({ gatewayUrl: null }, 600);
 }
 
 /** Coach profiles for the coaches page. */
