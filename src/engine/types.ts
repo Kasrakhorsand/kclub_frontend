@@ -156,10 +156,11 @@ export interface Tx {
 }
 
 export type TicketStatus = "open" | "answered" | "escalated" | "closed";
-export type TicketCategory = "booking" | "payment" | "facility" | "other";
+/** "tech" goes to the website's technical support team instead of the front desk. */
+export type TicketCategory = "booking" | "payment" | "facility" | "tech" | "other";
 
 export interface TicketMessage {
-  by: "user" | "staff" | "admin";
+  by: "user" | "staff" | "admin" | "support";
   text: string;
   /** "HH:mm" when it was sent. */
   time?: string;
@@ -175,6 +176,16 @@ export interface Ticket {
   category?: TicketCategory;
   date: string;
   messages: TicketMessage[];
+  /** Device details attached to a technical ticket, shown to the user before sending. */
+  tech?: TechContext;
+}
+
+/** What the support team needs to reproduce a website problem. No personal data. */
+export interface TechContext {
+  page: string;
+  browser: string;
+  screen: string;
+  theme?: string;
 }
 
 /** What a notification is about; decides its icon and grouping. */

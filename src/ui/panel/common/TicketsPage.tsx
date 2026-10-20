@@ -2,13 +2,14 @@
 /**
  * Tickets — every role (/panel/tickets). Inbox on one side with a status
  * filter, the conversation as chat bubbles on the other, a reply box, and a
- * new-ticket form for players. Front desk can escalate; staff can close.
+ * new-ticket form for players (including "website problem" tickets for the
+ * technical support team). Front desk can escalate; staff can close.
  * Styles: common.css ("tc-").
  */
 import clsx from "clsx";
 import { fa, jDate, jFull } from "@/engine/format";
 import { TEXT_MAX, TICKET_CATEGORIES, TITLE_MAX, useTickets, type TicketFilter } from "@/engine/tickets/useTickets";
-import type { Ticket, TicketMessage, TicketStatus } from "@/engine/types";
+import type { TechContext, Ticket, TicketMessage, TicketStatus } from "@/engine/types";
 import { Button3D } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
 import { PageHead } from "@/ui/panel/shell/PageHead";
@@ -28,9 +29,20 @@ const FILTERS: { id: TicketFilter; label: string }[] = [
   { id: "closed", label: "بسته" },
 ];
 
-const AUTHOR_LABEL: Record<TicketMessage["by"], string> = { user: "کاربر", staff: "پذیرش", admin: "مدیریت" };
+const AUTHOR_LABEL: Record<TicketMessage["by"], string> = { user: "کاربر", staff: "پذیرش", admin: "مدیریت", support: "پشتیبانی فنی" };
 
 const categoryLabel = (t: Ticket) => TICKET_CATEGORIES.find((c) => c.id === t.category)?.label;
+
+/** Page, browser and screen attached to a technical ticket. */
+function TechInfo({ tech }: { tech: TechContext }) {
+  return (
+    <dl className="tc-techinfo">
+      <div><dt>صفحه</dt><dd dir="ltr">{tech.page}</dd></div>
+      <div><dt>مرورگر</dt><dd dir="ltr">{tech.browser}</dd></div>
+      <div><dt>اندازه‌ی صفحه</dt><dd dir="ltr">{tech.screen}</dd></div>
+    </dl>
+  );
+}
 
 export function TicketsView() {
   const t = useTickets();
@@ -43,7 +55,16 @@ export function TicketsView() {
       <PageHead
         title="تیکت‌ها"
         sub={isPlayer ? "پیام به پذیرش مجموعه؛ معمولاً در چند ساعت پاسخ می‌دهیم" : "درخواست‌ها و پیام‌های کاربران"}
-        action={t.canCreate ? <Button3D size="sm" onClick={t.startCompose}>تیکت جدید</Button3D> : undefined}
+        action={
+          t.canCreate ? (
+            <div className="tc-head-actions">
+              <button type="button" className="btn ghost sm tc-techbtn" onClick={() => t.startCompose("tech")}>
+                <Icon3D name="gear" /> گزارش مشکل فنی سایت
+              </button>
+              <Button3D size="sm" onClick={() => t.startCompose()}>تیکت جدید</Button3D>
+            </div>
+          ) : undefined
+        }
       />
 
       <div className={clsx("tc-layout", (t.selected || t.composing) && "has-open")}>
@@ -101,9 +122,16 @@ export function TicketsView() {
                   </button>
                 ))}
               </div>
+              {t.techPreview && (
+                <div className="tc-tech">
+                  <b>این تیکت برای تیم پشتیبانی فنی سایت ارسال می‌شود</b>
+                  <p>برای خطا، کندی، مشکل ورود یا پرداخت در سایت. بنویسید چه کاری می‌کردید و چه اتفاقی افتاد. این اطلاعات فنی هم همراه تیکت فرستاده می‌شود:</p>
+                  <TechInfo tech={t.techPreview} />
+                </div>
+              )}
               <label className="f">
                 پیام
-                <textarea className="input" rows={5} maxLength={TEXT_MAX} value={t.draft.text} onChange={(e) => t.setDraft({ text: e.target.value })} placeholder="جزئیات را بنویسید؛ اگر درباره‌ی رزرو است، تاریخ و ساعت را هم بگویید." />
+                <textarea className="input" rows={5} maxLength={TEXT_MAX} value={t.draft.text} onChange={(e) => t.setDraft({ text: e.target.value })} placeholder={t.draft.category === "tech" ? "مثلاً: روی دکمه‌ی پرداخت زدم ولی صفحه‌ی بانک باز نشد و پیام خطا آمد." : "جزئیات را بنویسید؛ اگر درباره‌ی رزرو است، تاریخ و ساعت را هم بگویید."} />
               </label>
               {t.error && <p className="small" role="alert" style={{ color: "var(--busy)" }}>{t.error}</p>}
               <div className="tc-actions">
@@ -121,6 +149,13 @@ export function TicketsView() {
                 </div>
                 <span className={clsx("tc-status", STATUS[t.selected.status].tone)}>{STATUS[t.selected.status].label}</span>
               </header>
+
+              {t.selected.tech && (
+                <div className="tc-tech compact">
+                  <b>اطلاعات فنی گزارش</b>
+                  <TechInfo tech={t.selected.tech} />
+                </div>
+              )}
 
               <ol className="tc-thread">
                 {t.selected.messages.map((m, i) => (

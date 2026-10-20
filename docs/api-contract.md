@@ -64,7 +64,7 @@
 | متد و مسیر | ورودی | خروجی |
 |---|---|---|
 | `GET /tickets` | — | `Ticket[]`؛ بازیکن فقط تیکت‌های خودش را می‌بیند. |
-| `POST /tickets` | `{ title, category, text }` | `Ticket` |
+| `POST /tickets` | `{ title, category, text, tech? }` | `Ticket`. `category` یکی از `booking`، `payment`، `facility`، `tech` و `other` است. تیکت‌های `tech` (مشکل فنی سایت) باید به تیم پشتیبانی فنی سایت برسند، نه به پذیرش. پاسخ آن تیم با `by: "support"` برمی‌گردد. `tech` شامل `{ page, browser, screen, theme? }` است؛ بک‌اند طول هر فیلد را محدود کند. |
 | `POST /tickets/{id}/messages` | `{ text }` | `204`. فرستنده (کاربر، پذیرش یا مدیریت) را بک‌اند از نشست تعیین می‌کند. |
 | `PATCH /tickets/{id}` | `{ status }` | `204`؛ فقط برای پذیرش و مدیریت. |
 

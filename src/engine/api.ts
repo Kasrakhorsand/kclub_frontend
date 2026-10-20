@@ -17,7 +17,7 @@ import { ApiError, http } from "@/engine/http";
 import { COACHES, NOTIFS, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Booking, CartItem, Coach, Court, Notif, Role, Slot, Sport, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
+import type { Booking, CartItem, Coach, Court, Notif, Role, Slot, Sport, TechContext, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
 import { addDays, dayKey } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -341,13 +341,14 @@ export async function getTickets(role: Role): Promise<Ticket[]> {
 }
 
 /** Open a new ticket with its first message (players). */
-export async function createTicket(title: string, category: TicketCategory, text: string): Promise<Ticket> {
-  if (!USE_MOCK) return http("/tickets", { method: "POST", body: { title, category, text } });
+export async function createTicket(title: string, category: TicketCategory, text: string, tech?: TechContext): Promise<Ticket> {
+  if (!USE_MOCK) return http("/tickets", { method: "POST", body: { title, category, text, tech } });
   const ticket: Ticket = {
     id: `T-${1060 + TICKETS.length}`,
     phone: sessionPhone(),
     title,
     category,
+    ...(tech && { tech }),
     status: "open",
     date: dayKey(new Date()),
     messages: [{ by: "user", text, time: nowTime() }],

@@ -153,3 +153,16 @@
 
 @media (max-width:900px){.pf-cols{grid-template-columns:1fr}}
 @media (max-width:520px){.pf-hero{flex-direction:column;text-align:center}.pf-who p{text-align:center}.pf-roles{justify-content:center}.pf-grid,.pf-methods{grid-template-columns:1fr}.pf-card{padding:16px}}
+/* ===== tickets: website technical problem reports ===== */
+.tc-head-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tc-techbtn{display:inline-flex;align-items:center;gap:6px}
+.tc-techbtn .i3{width:22px;height:22px}
+.tc-tech{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:var(--court-soft);border:1px solid var(--gold)}
+.tc-tech>b{font-size:.9rem}
+.tc-tech p{margin:0;font-size:.8rem;color:var(--muted);line-height:1.8}
+.tc-tech.compact{margin:10px 0;padding:10px 14px}
+.tc-techinfo{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0;font-size:.76rem}
+.tc-techinfo>div{display:flex;gap:6px}
+.tc-techinfo dt{color:var(--muted)}
+.tc-techinfo dd{margin:0;font-family:var(--latin);font-weight:600}
+.tc-msg.support .tc-who{color:var(--court)}
