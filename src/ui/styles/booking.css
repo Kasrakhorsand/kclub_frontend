@@ -188,7 +188,10 @@
 .ts.on .dots i.f{background:var(--gold)}
 .ts.incart:not(.on){border-color:var(--gold);background:var(--court-soft)}
 .ts .ck{position:absolute;top:-7px;inset-inline-start:-7px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#141210;font-size:.72rem;display:grid;place-items:center;font-weight:700}
-.ts.full,.ts.past{opacity:.5;cursor:not-allowed;background:transparent;grid-template-areas:"t to st"}
+.ts.full,.ts.past{cursor:not-allowed;background:transparent;grid-template-areas:"t to st";padding:7px 14px;border-radius:12px}
+.ts.full b,.ts.past b{font-size:.98rem;font-weight:500;color:var(--muted)}
+.ts.full{border-style:dashed}
+.ts.past{opacity:.45;border-color:transparent;background:var(--past-bg)}
 .ts.full b{text-decoration:line-through;text-decoration-thickness:1px}
 .lg2 i{border-radius:4px}
 .lg2 .lf{background:var(--surface-2);border:1px solid var(--line)}
@@ -258,3 +261,12 @@
 .tk .bill>span,.bill-total>span{display:flex;justify-content:space-between;gap:12px}
 .tk .bill>span>span:last-child,.bill-total>span>span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
 .bill-total{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:.84rem}
+/* ===== booking: hour-grid group counts, past groups, weekly repeat ===== */
+.tgh .rng{margin-inline-start:0}
+.tgc{margin-inline-start:auto;font-size:.68rem;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--free-bg);color:var(--free)}
+.tgc.none{background:var(--past-bg);color:var(--muted)}
+.tgrp.gone{opacity:.6}
+.tg-gone{margin:0;padding:14px 4px;font-size:.8rem;color:var(--muted);text-align:center}
+.repeat{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.8rem}
+.repeat span{padding-inline:10px 4px;color:var(--muted)}
+.repeat select{border:0;border-radius:999px;background:var(--black);color:var(--gold-2);font:inherit;font-weight:600;padding:6px 14px;cursor:pointer;outline-offset:2px}

@@ -175,9 +175,9 @@ export function Booking({ sport }: { sport: Sport }) {
             <BackButton href="/sport">تغییر رشته</BackButton>
             <h2>رزرو زمین {flow.title}</h2>
           </div>
-          <label className="row small">
-            تکرار هفتگی:
-            <select className="input" style={{ width: 130 }} value={flow.weeks} onChange={(e) => flow.setWeeks(Number(e.target.value))}>
+          <label className="repeat">
+            <span>تکرار هفتگی</span>
+            <select value={flow.weeks} onChange={(e) => flow.setWeeks(Number(e.target.value))}>
               {REPEAT_WEEKS.map((w) => (
                 <option key={w} value={w}>{w === 1 ? "فقط همین هفته" : `${fa(w)} هفته`}</option>
               ))}
@@ -191,11 +191,22 @@ export function Booking({ sport }: { sport: Sport }) {
 
           <div className="step"><span className="sn2">۲</span><div><h3>ساعت بازی · {jFull(flow.date)}</h3><p className="small muted">هر سانس یک ساعت · صبح‌ها ارزان‌تر</p></div></div>
           <div className="tgrid">
-            {DAY_PARTS.map((part) => (
-              <div className="tgrp" key={part.label}>
-                <div className="tgh"><span>{part.label}</span><span className="lat">{part.latin}</span><span className="rng">{hm(part.from)} تا {hm(part.to)}</span></div>
+            {DAY_PARTS.map((part) => {
+              const partSlots = flow.slots.filter((s) => s.hour >= part.from && s.hour < part.to);
+              const openCount = partSlots.filter((s) => !s.past && s.freeCourts.length).length;
+              const allPast = partSlots.length > 0 && partSlots.every((s) => s.past);
+              return (
+              <div className={clsx("tgrp", allPast && "gone")} key={part.label}>
+                <div className="tgh">
+                  <span>{part.label}</span><span className="lat">{part.latin}</span>
+                  <span className="rng">{hm(part.from)} تا {hm(part.to)}</span>
+                  <span className={clsx("tgc", !openCount && "none")}>{openCount ? `${fa(openCount)} سانس آزاد` : allPast ? "گذشته" : "پر"}</span>
+                </div>
+                {allPast ? (
+                  <p className="tg-gone">سانس‌های این بازه برای امروز گذشته است.</p>
+                ) : (
                 <div className="tsg">
-                  {flow.slots.filter((s) => s.hour >= part.from && s.hour < part.to).map((s) => {
+                  {partSlots.map((s) => {
                     const freeCount = s.freeCourts.length;
                     if (s.past || !freeCount)
                       return (
@@ -214,8 +225,10 @@ export function Booking({ sport }: { sport: Sport }) {
                     );
                   })}
                 </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
           <div className="legend lg2">
             <span><i className="lf" />قابل رزرو</span><span><i className="ls" />انتخاب شما</span><span><i className="lx" />تکمیل</span><span><i className="lp" />گذشته</span>

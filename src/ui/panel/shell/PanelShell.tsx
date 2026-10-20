@@ -7,31 +7,36 @@ import { dayKey, fa, jFull } from "@/engine/format";
 import { ROLE_EN, ROLE_FA } from "@/engine/panel/menus";
 import { usePanelSession } from "@/engine/panel/usePanelSession";
 import { SITE } from "@/config/site";
-import { ArrowIcon } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
 import { ThemeButton } from "@/ui/kit/ThemeButton";
 import { Brand } from "@/ui/layout/Brand";
 import { MENU_ICON } from "@/ui/panel/shell/menuIcons";
 
-/** Side-navigation shell shared by the player, front-desk and admin panels. */
+/** Drawer-navigation shell shared by the player, front-desk and admin panels. */
 export function PanelShell({ children }: { children: React.ReactNode }) {
   const panel = usePanelSession();
-  const [mini, setMini] = useState(false); // collapsed desktop sidebar
-  const [open, setOpen] = useState(false); // mobile drawer
+  const [open, setOpen] = useState(false); // menu drawer, opened from the top-bar button
   useEffect(() => setOpen(false), [panel.path]);
+  // Esc closes the drawer.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   if (!panel.ready) return null;
   const user = panel.user!;
   const role = panel.role!;
 
   return (
-    <div className={clsx("pnl2", mini && "mini", open && "open")}>
-      <aside className="sb" aria-label="منوی پنل">
+    <div className={clsx("pnl2", open && "open")}>
+      <aside className="sb" id="panel-menu" aria-label="منوی پنل">
         <div className="sb-top">
           <Link className="logo" href="/" aria-label="بازگشت به سایت">
             <Brand sub={SITE.panelTagline} />
           </Link>
-          <button className="sb-col" onClick={() => setMini(!mini)} aria-label={mini ? "باز کردن منو" : "جمع کردن منو"}>
-            <ArrowIcon />
+          <button className="sb-col" onClick={() => setOpen(false)} aria-label="بستن منو">
+            ✕
           </button>
         </div>
         <span className="rolebadge sb-hide">{ROLE_EN[role]}</span>
@@ -76,7 +81,7 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
       {open && <div className="sb-scrim" onClick={() => setOpen(false)} />}
       <div className="pmain">
         <header className="pbar">
-          <button className="sb-burger" onClick={() => setOpen(true)} aria-label="باز کردن منو">
+          <button className="sb-burger" onClick={() => setOpen(!open)} aria-label={open ? "بستن منو" : "باز کردن منو"} aria-expanded={open} aria-controls="panel-menu">
             <span />
             <span />
             <span />
