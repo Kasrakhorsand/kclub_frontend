@@ -5,7 +5,10 @@
  */
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ApiError } from "@/engine/http";
 import { createBookings } from "@/engine/api";
+import { useWalletBalance } from "@/engine/wallet/useWallet";
 import { cartTotal, useSession } from "@/engine/store";
 import { courtById, rentalsFor, sportById } from "@/engine/venue";
 import { itemTotal, rentalPriceOf, useRentalPrices } from "@/engine/pricing";
@@ -26,6 +29,8 @@ export function useCheckout() {
   const setAfterLogin = useSession((s) => s.setAfterLogin);
   const setRentals = useSession((s) => s.setRentals);
   const rentalPrices = useRentalPrices();
+  const client = useQueryClient();
+  const wallet = useWalletBalance();
 
   const [method, setMethod] = useState<PaymentMethod>("gateway");
   const [confirmation, setConfirmation] = useState<{ tracking: string } | null>(null);
@@ -42,7 +47,8 @@ export function useCheckout() {
   }, [user, router, setAfterLogin]);
 
   const total = cartTotal(cart, rentalPrices);
-  const canUseWallet = !!user && user.wallet >= total;
+  // Shown as a hint only; the backend checks the balance again when charging.
+  const canUseWallet = !!user && wallet.balance >= total;
 
   /** Cart lines for display: the item, its court and sport, rental choices and line total. */
   const items = cart.map((item) => {
@@ -86,8 +92,16 @@ export function useCheckout() {
         }
         clearCart();
         setConfirmation({ tracking: result.tracking });
-      } catch {
-        setError(PAYMENT_FAILED);
+        // Money and slots moved on the server.
+        for (const key of [["wallet"], ["transactions"], ["my-bookings"], ["slots"], ["availability"]]) client.invalidateQueries({ queryKey: key });
+      } catch (ex) {
+        if (ex instanceof ApiError && ex.code === "SLOT_TAKEN") {
+          client.invalidateQueries({ queryKey: ["slots"] });
+          setError("یکی از سانس‌ها همین الان رزرو شد. آن را از سبد حذف کنید و دوباره پرداخت کنید.");
+        } else if (ex instanceof ApiError && ex.code === "LOW_BALANCE") {
+          client.invalidateQueries({ queryKey: ["wallet"] });
+          setError("موجودی کیف پول کافی نیست؛ پرداخت با درگاه را انتخاب کنید.");
+        } else setError(PAYMENT_FAILED);
       } finally {
         setBusy(false);
       }

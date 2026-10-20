@@ -17,7 +17,7 @@ import { ApiError, http } from "@/engine/http";
 import { COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Booking, CartItem, Coach, Court, NewSupportTicket, Notif, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
+import type { Booking, CartItem, Coach, Court, NewSupportTicket, Notif, PaymentResult, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
 import { addDays, dayKey } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -33,6 +33,12 @@ const wait = <T,>(v: T, ms = 120) => new Promise<T>((r) => setTimeout(() => r(v)
 /** The signed-in user's phone, as the backend would read it from the session. */
 const sessionPhone = () => useSession.getState().user?.phone ?? "";
 const sessionUser = () => useSession.getState().user;
+/** Mock wallet balances per phone, starting from the signed-in user's cached balance. */
+const wallets = new Map<string, number>();
+const mockWallet = (phone = sessionPhone()) => {
+  if (!wallets.has(phone)) wallets.set(phone, USERS[phone]?.wallet ?? sessionUser()?.wallet ?? 0);
+  return wallets.get(phone)!;
+};
 /** "HH:mm" for now, used to stamp mock messages. */
 const nowTime = () => new Date().toTimeString().slice(0, 5);
 const seg = encodeURIComponent;
@@ -286,6 +292,11 @@ export async function createBookings(items: CartItem[], method: "wallet" | "gate
     source: "online",
     status: "active",
   }));
+  if (method === "wallet") {
+    const total = created.reduce((a, b) => a + b.price, 0);
+    if (mockWallet() < total) throw new ApiError("موجودی کیف پول کافی نیست", 422, "LOW_BALANCE");
+    wallets.set(user.phone, mockWallet() - total);
+  }
   db().push(...created);
   return wait({ tracking: String(Math.floor(100000 + Math.random() * 899999)), gatewayUrl: null }, 600);
 }
@@ -296,7 +307,9 @@ export async function cancelBooking(booking: Booking): Promise<{ refundPercent: 
   const percent = refundPercent(booking.date, booking.hour);
   const stored = db().find((b) => b.id === booking.id);
   if (stored) stored.status = "cancelled";
-  return wait({ refundPercent: percent, refundAmount: Math.round((booking.price * percent) / 100) }, 400);
+  const refundAmount = Math.round((booking.price * percent) / 100);
+  wallets.set(sessionPhone(), mockWallet() + refundAmount); // refunds go to the wallet
+  return wait({ refundPercent: percent, refundAmount }, 400);
 }
 
 /** The signed-in user's wallet transactions, newest first. */
@@ -304,6 +317,12 @@ export async function getTransactions(): Promise<Tx[]> {
   if (!USE_MOCK) return http("/me/transactions");
   const phone = sessionPhone();
   return wait(TXS.filter((t) => t.phone === phone).sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)));
+}
+
+/** The signed-in user's wallet balance (toman), always from the server. */
+export async function getWalletBalance(): Promise<number> {
+  if (!USE_MOCK) return (await http<{ balance: number }>("/me/wallet")).balance;
+  return wait(mockWallet(), 80);
 }
 
 /** Start a wallet top-up; returns the bank gateway URL to send the user to. */
@@ -437,4 +456,21 @@ export async function closeSupportTicket(id: string): Promise<void> {
   const t = SUPPORT.find((x) => x.id === id && x.phone === sessionPhone());
   if (t) t.status = "closed";
   await wait(null, 150);
+}
+/* ------------------------------------------------------------------ */
+/* Bank gateway return                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Result of a gateway payment. The bank calls the backend, the backend
+ * verifies the payment with the bank and then sends the user to
+ * /payment/return?ref=<ref>. Only this server answer decides what is shown;
+ * nothing in the return URL is trusted.
+ */
+export async function getPaymentResult(ref: string): Promise<PaymentResult> {
+  if (!USE_MOCK) return http(`/payments/${seg(ref)}`);
+  // Sample data: refs starting with "F" failed, "P" are still being verified, the rest are paid.
+  const status = ref.startsWith("F") ? "failed" : ref.startsWith("P") ? "pending" : "paid";
+  const kind = ref.includes("TOP") ? "topup" : "booking";
+  return wait({ ref, status, kind, amount: 800_000, tracking: status === "paid" && kind === "booking" ? "482139" : undefined, bankRef: "72834910563", wallet: mockWallet() }, 500);
 }

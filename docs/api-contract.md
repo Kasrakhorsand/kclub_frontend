@@ -46,6 +46,7 @@
 | `PUT /me/profile` | `{ first, last, email?, nationalId? }` | `User` |
 | `GET /me/bookings` | `?scope=upcoming\|past` | `Booking[]` |
 | `POST /me/bookings/{id}/cancel` | — | `{ refundPercent, refundAmount }` |
+| `GET /me/wallet` | — | `{ balance }`؛ موجودی کیف پول همیشه از سرور خوانده می‌شود (بعد از پرداخت، لغو، شارژ و برگشتن به تب). |
 | `GET /me/transactions` | — | `Tx[]` |
 | `POST /me/wallet/topup` | `{ amount }` | `{ gatewayUrl }` |
 | `GET /me/notifications` | — | `Notif[]` |
@@ -56,6 +57,15 @@
 | متد و مسیر | ورودی | خروجی |
 |---|---|---|
 | `POST /bookings` | `{ items: [{ courtId, date, hour, game?, rentals? }], method: "wallet"\|"gateway" }` | `{ tracking, gatewayUrl? }`. اگر سانس پر شده باشد `409` با `code: "SLOT_TAKEN"`. در پرداخت با درگاه، `gatewayUrl` برمی‌گردد. |
+
+- اگر موجودی کیف پول کافی نباشد: `422` با `code: "LOW_BALANCE"`.
+- `GET /slots` برای هر هفته‌ی تکرار هفتگی هم صدا زده می‌شود تا فقط هفته‌های خالی به سبد بروند.
+
+### برگشت از درگاه
+
+1. بانک به callback بک‌اند برمی‌گردد. بک‌اند پرداخت را با سرویس verify بانک تأیید می‌کند و رزرو یا شارژ را نهایی می‌کند.
+2. بک‌اند کاربر را به `{SITE}/payment/return?ref=<paymentRef>` می‌فرستد. به وضعیت یا مبلغ در آدرس اعتماد نمی‌شود.
+3. فرانت `GET /payments/{ref}` را صدا می‌زند: `{ ref, status: "paid"|"failed"|"pending", kind: "booking"|"topup", amount, tracking?, bankRef?, wallet?, message? }`. فقط صاحب پرداخت باید بتواند آن را بخواند. تا وقتی `pending` است، فرانت تا یک دقیقه هر ۳ ثانیه دوباره می‌پرسد.
 
 فرانت فقط به میزبان‌های درگاه که در `NEXT_PUBLIC_PAYMENT_HOSTS` آمده‌اند (و فقط با https) redirect می‌کند.
 

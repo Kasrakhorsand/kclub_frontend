@@ -293,3 +293,21 @@ export interface SupportTicket {
 export type NewSupportTicket = Pick<SupportTicket, "area" | "severity" | "subject" | "steps" | "actual" | "expected" | "when" | "whenTime" | "refCode" | "allowCall"> & {
   diagnostics?: SupportDiagnostics;
 };
+/* ===== Bank gateway payments ===== */
+
+/** What the backend says about a gateway payment after the bank sends the user back. */
+export interface PaymentResult {
+  ref: string;
+  status: "paid" | "failed" | "pending";
+  kind: "booking" | "topup";
+  /** Toman. */
+  amount: number;
+  /** Booking tracking code, for paid bookings. */
+  tracking?: string;
+  /** Bank reference number shown to the user. */
+  bankRef?: string;
+  /** Wallet balance after the payment, if it changed. */
+  wallet?: number;
+  /** Why it failed, in Persian, if the backend knows. */
+  message?: string;
+}

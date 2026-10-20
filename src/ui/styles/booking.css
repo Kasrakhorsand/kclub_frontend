@@ -270,3 +270,11 @@
 .repeat{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.8rem}
 .repeat span{padding-inline:10px 4px;color:var(--muted)}
 .repeat select{border:0;border-radius:999px;background:var(--black);color:var(--gold-2);font:inherit;font-weight:600;padding:6px 14px;cursor:pointer;outline-offset:2px}
+/* ===== payment return (/payment/return) ===== */
+.pr h2{font-size:1.4rem;font-weight:600}
+.pr-amount{font-size:2rem;font-weight:300;margin:0;font-variant-numeric:tabular-nums}
+.pr-ref{margin:0}
+.pr-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.pr-spin{width:64px;height:64px;margin:0 auto;border-radius:50%;border:4px solid var(--line);border-top-color:var(--gold);animation:prspin .9s linear infinite}
+@keyframes prspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pr-spin{animation-duration:3s}}

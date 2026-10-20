@@ -9,7 +9,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { fa, faNum, greeting, hm, jDay, jFull, jMonth, timeUntil, toman, weekday } from "@/engine/format";
-import { NOTIFS } from "@/engine/mock";
+import { useNotifications } from "@/engine/notifications/useNotifications";
+import { useWalletBalance } from "@/engine/wallet/useWallet";
 import { todayKey, usePlayerSummary } from "@/engine/panel/stats";
 import { useSession } from "@/engine/store";
 import { PRICING, SPORTS, bookingHref, courtById, sportById } from "@/engine/venue";
@@ -166,19 +167,23 @@ function WalletMini({ balance }: { balance: number }) {
 }
 
 function Notifications() {
+  const n = useNotifications();
+  const latest = n.days.flatMap((d) => d.items).slice(0, 3);
   return (
     <section className="pd-card">
       <header className="pd-card-head">
         <h3>اعلان‌ها</h3>
         <Link href="/panel/notif">همه</Link>
       </header>
+      {n.loading && <p className="muted small">در حال بارگذاری…</p>}
+      {!n.loading && !latest.length && <p className="muted small">اعلان تازه‌ای ندارید.</p>}
       <ul className="pd-notifs">
-        {NOTIFS.slice(0, 3).map((n) => (
-          <li key={n.id} className={clsx(!n.read && "unread")}>
+        {latest.map((item) => (
+          <li key={item.id} className={clsx(!item.read && "unread")}>
             <Icon3D name="bell" />
             <span>
-              <b>{n.title}</b>
-              <small>{n.text}</small>
+              <b>{item.title}</b>
+              <small>{item.text}</small>
             </span>
           </li>
         ))}
@@ -190,6 +195,7 @@ function Notifications() {
 export function PlayerDashboard() {
   const user = useSession((s) => s.user)!;
   const summary = usePlayerSummary();
+  const wallet = useWalletBalance();
 
   return (
     <div className="pd">
@@ -199,7 +205,7 @@ export function PlayerDashboard() {
         <Upcoming bookings={summary.upcoming} />
         <QuickBook />
         <div className="pd-col">
-          <WalletMini balance={user.wallet} />
+          <WalletMini balance={wallet.balance} />
           <Notifications />
         </div>
       </div>

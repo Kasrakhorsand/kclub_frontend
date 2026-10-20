@@ -52,6 +52,7 @@ export function useMyBookingsManager() {
         // The wallet balance and booking list changed on the server.
         client.invalidateQueries({ queryKey: myBookingsKey("upcoming") });
         client.invalidateQueries({ queryKey: ["transactions"] });
+        client.invalidateQueries({ queryKey: ["wallet"] });
         return result;
       } finally {
         setBusy(false);

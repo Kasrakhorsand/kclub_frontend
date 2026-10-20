@@ -5,8 +5,8 @@
  * Returns plain data and actions; the UI decides how it looks.
  */
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getAvailability, getCourts, getSlots, isPast, takenSync } from "@/engine/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getAvailability, getCourts, getSlots, isPast } from "@/engine/api";
 import { addDays, dayKey } from "@/engine/format";
 import { MAX_DAYS_AHEAD, courtsOf, gameOf, priceOf, rentalsForSport, sportById } from "@/engine/venue";
 import { rentalPriceOf, useRentalPrices } from "@/engine/pricing";
@@ -40,6 +40,9 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   const toggleCart = useSession((s) => s.toggleCart);
   const setRentals = useSession((s) => s.setRentals);
   const rentalPrices = useRentalPrices();
+  const client = useQueryClient();
+  /** True while checking the repeated weeks with the server. */
+  const [checking, setChecking] = useState(false);
 
   const [date, setDate] = useState(() => initialDate ?? dayKey(new Date()));
   const [hour, setHour] = useState<number | null>(initialHour ?? null);
@@ -85,8 +88,19 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   const courtState = (court: Court): CourtState =>
     inCart(court) ? "sel" : selectedSlot?.freeCourts.includes(court.id) ? "free" : "taken";
 
-  /** Toggle a court at the chosen hour, for every repeated week that is free and inside the booking window. */
-  const pickCourt = (court: Court): PickResult | null => {
+  /** Whether this court is free at this hour on day `d`, from that day's slots (cached for 30 s). */
+  const isFreeOn = async (court: Court, d: string, h: number) => {
+    if (d === date) return !!selectedSlot?.freeCourts.includes(court.id);
+    const daySlots = await client.fetchQuery({ queryKey: ["slots", sport, d], queryFn: () => getSlots(sport, d), staleTime: 30_000 });
+    return !!daySlots.find((s) => s.hour === h)?.freeCourts.includes(court.id);
+  };
+
+  /**
+   * Toggle a court at the chosen hour, for every repeated week that is free
+   * (asked from the server) and inside the booking window. The backend checks
+   * again when the order is placed.
+   */
+  const pickCourt = async (court: Court): Promise<PickResult | null> => {
     if (hour === null) return null;
     const item = (d: string) => ({ date: d, hour, courtId: court.id, price: priceOf(sport, hour), game: playedGame, rentals: chosenRentals });
     if (inCart(court)) {
@@ -101,15 +115,16 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
       return { action: "removed", count: removed, requested: weeks };
     }
     const lastDay = dayKey(addDays(new Date(), MAX_DAYS_AHEAD - 1));
-    let added = 0;
-    for (let w = 0; w < weeks; w++) {
-      const d = plusWeeks(date, w);
-      if (d > lastDay) break;
-      if (isPast(d, hour) || takenSync(d, court.id, hour) || inCart(court, d)) continue;
-      toggleCart(item(d));
-      added++;
+    const targets = Array.from({ length: weeks }, (_, w) => plusWeeks(date, w)).filter((d) => d <= lastDay && !isPast(d, hour) && !inCart(court, d));
+    setChecking(weeks > 1);
+    try {
+      const free = await Promise.all(targets.map((d) => isFreeOn(court, d, hour).catch(() => false)));
+      const add = targets.filter((_, i) => free[i]);
+      add.forEach((d) => toggleCart(item(d)));
+      return { action: "added", count: add.length, requested: weeks };
+    } finally {
+      setChecking(false);
     }
-    return { action: "added", count: added, requested: weeks };
   };
 
   return {
@@ -132,6 +147,7 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
     courts,
     courtState,
     pickCourt,
+    checking,
     priceAt: (court: Court) => (hour === null ? 0 : priceOf(court.sport, hour)),
 
     /** Rentals offered for this sport/game, with current price and chosen quantity. */

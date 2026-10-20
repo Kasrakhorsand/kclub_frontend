@@ -3,9 +3,9 @@
  * Player wallet: balance, transaction history with a type filter, this
  * month's totals, and top-up (preset or custom amount, then the bank gateway).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getTransactions, startTopUp } from "@/engine/api";
+import { getTransactions, getWalletBalance, startTopUp } from "@/engine/api";
 import { dayKey, jDate, toLatinDigits } from "@/engine/format";
 import { useSession } from "@/engine/store";
 import { redirectToPayment } from "@/engine/security";
@@ -18,11 +18,31 @@ export const TOPUP_MAX = 50_000_000;
 
 export type TxFilter = "all" | Tx["type"];
 
+/** Query key for the balance; invalidate it after anything that moves money. */
+export const walletKey = (phone: string) => ["wallet", phone];
+
+/**
+ * The wallet balance from the server (refetched when the tab regains focus,
+ * e.g. back from the bank). The cached session copy is only a first guess and
+ * is kept in sync so the rest of the UI shows the same number.
+ */
+export function useWalletBalance() {
+  const user = useSession((s) => s.user);
+  const updateUser = useSession((s) => s.updateUser);
+  const phone = user?.phone ?? "";
+  const { data, isFetching } = useQuery({ queryKey: walletKey(phone), queryFn: getWalletBalance, enabled: !!phone, staleTime: 10_000 });
+  useEffect(() => {
+    if (data !== undefined && data !== useSession.getState().user?.wallet) updateUser({ wallet: data });
+  }, [data, updateUser]);
+  return { balance: data ?? user?.wallet ?? 0, known: data !== undefined, refreshing: isFetching };
+}
+
 /** Transactions grouped by day, newest day first. */
 export type TxDay = { date: string; items: Tx[] };
 
 export function useWallet() {
   const user = useSession((s) => s.user);
+  const wallet = useWalletBalance();
   const phone = user?.phone ?? "";
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["transactions", phone],
@@ -67,7 +87,7 @@ export function useWallet() {
   const amountValid = amount >= TOPUP_MIN && amount <= TOPUP_MAX;
 
   return {
-    balance: user?.wallet ?? 0,
+    balance: wallet.balance,
     holder: user ? `${user.first} ${user.last}` : "",
     phone,
     loading: isLoading,

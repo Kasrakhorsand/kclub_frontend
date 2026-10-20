@@ -160,8 +160,9 @@ export function Booking({ sport }: { sport: Sport }) {
     scrollToMap(80);
   };
 
-  const pickCourt: typeof flow.pickCourt = (court) => {
-    const result = flow.pickCourt(court);
+  const pickCourt = async (court: Parameters<typeof flow.pickCourt>[0]) => {
+    if (flow.checking) return null;
+    const result = await flow.pickCourt(court);
     if (result?.action === "added" && result.requested > 1 && result.count < result.requested)
       toast(`${fa(result.count)} از ${fa(result.requested)} هفته اضافه شد؛ بقیه پر است یا خارج از بازه‌ی ${fa(MAX_DAYS_AHEAD)} روزه.`);
     return result;
@@ -244,6 +245,7 @@ export function Booking({ sport }: { sport: Sport }) {
         {flow.hour !== null && flow.selectedSlot && (
           <div ref={mapRef} style={{ scrollMarginTop: 110 }}>
             <div className="step"><span className="sn2">۳</span><div><h3>انتخاب زمین</h3></div></div>
+            {flow.checking && <p className="small muted" role="status">در حال بررسی خالی بودن هفته‌های بعد…</p>}
             <CourtMap3D courts={flow.courts} date={flow.date} hour={flow.hour} priceOf={flow.priceAt} stateOf={flow.courtState} onPick={pickCourt} />
             {flow.rentalOptions.length > 0 && <RentalPicker flow={flow} />}
           </div>
