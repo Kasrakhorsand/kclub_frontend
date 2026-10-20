@@ -82,11 +82,13 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
       <div className="pmain">
         <header className="pbar">
           <button className="sb-burger" onClick={() => setOpen(!open)} aria-label={open ? "بستن منو" : "باز کردن منو"} aria-expanded={open} aria-controls="panel-menu">
-            <span />
-            <span />
-            <span />
+            <span className="sb-lines"><span /><span /><span /></span>
+            <span className="sb-label">منو</span>
           </button>
-          <b>{panel.currentLabel}</b>
+          <div className="pbar-title">
+            <span className="lat">{ROLE_EN[role]}</span>
+            <b>{panel.currentLabel}</b>
+          </div>
           <span className="pbar-sp" />
           <span className="xs muted pbar-date">{jFull(dayKey(new Date()))}</span>
           <ThemeButton />
