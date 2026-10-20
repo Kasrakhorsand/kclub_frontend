@@ -96,7 +96,15 @@ export async function getAvailability(sport: Sport, days: number): Promise<{ dat
 /** All active bookings on a day (front desk / admin live board). */
 export async function getDayBoard(date: string): Promise<Booking[]> {
   if (!USE_MOCK) return http("/staff/board", { query: { date } });
-  return wait(db().filter((b) => b.date === date && b.status === "active"));
+  return wait(structuredClone(db().filter((b) => b.date === date && b.status === "active")));
+}
+
+/** Front desk: mark a booking's player as arrived. */
+export async function checkInBooking(id: string): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/bookings/${seg(id)}/checkin`, { method: "POST" });
+  const b = db().find((x) => x.id === id);
+  if (b) b.checkedIn = true;
+  await wait(null, 200);
 }
 
 /** Coach profiles for the coaches page. */

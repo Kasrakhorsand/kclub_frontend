@@ -71,6 +71,8 @@ export interface Booking {
   /** "staff" = entered by the front desk. */
   source: "online" | "staff";
   status: "active" | "cancelled";
+  /** The front desk marked the player as arrived. */
+  checkedIn?: boolean;
 }
 
 export interface User {
