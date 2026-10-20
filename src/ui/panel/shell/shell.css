@@ -27,15 +27,12 @@
 .sb-it .cnt{margin-inline-start:auto;background:var(--gold);color:#141210;border-radius:999px;font-size:.68rem;padding:0 7px;font-weight:700}
 .sb-it.on .cnt{background:#141210;color:var(--gold)}
 .sb-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:12px;border-top:1px solid #24221D}
-.sb-foot .themebtn{width:100%;height:auto;padding:9px 12px;display:flex;gap:12px;justify-content:flex-start;border-radius:12px;background:transparent;border-color:transparent;color:#BDB9B1}
-.sb-foot .themebtn:hover{background:rgba(255,255,255,.06)}
 .sb-it.out{color:#E08074}
-.mini .sb-hide,.mini .sb .brand>span,.mini .sb-it .pill,.mini .sb-foot .themebtn span{display:none}
+.mini .sb-hide,.mini .sb .brand>span,.mini .sb-it .pill{display:none}
 .mini .sb-top{flex-direction:column}
 .mini .sb-it{justify-content:center;padding:11px 0}
 .mini .sb-it .cnt{position:absolute;top:4px;inset-inline-end:8px;margin:0;font-size:.6rem;padding:0 5px}
 .mini .sb-me{justify-content:center;padding:8px}
-.mini .sb-foot .themebtn{justify-content:center}
 .pmain{min-width:0;display:flex;flex-direction:column}
 .pbar{position:sticky;top:0;z-index:15;display:flex;align-items:center;gap:12px;padding:14px clamp(16px,3vw,32px);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .pbar b{font-size:1rem}
@@ -51,7 +48,4 @@
 .sb-it .ic.i3{width:30px;height:30px}
 .sb-it:hover .ic.i3{transform:translateY(-2px) rotate(-6deg)}
 .sb-it.on .ic.i3{filter:drop-shadow(0 0 6px rgba(255,255,255,.35))}
-/* Theme toggle lives in the top bar on every panel page. */
-.pbar .themebtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
-.pbar .themebtn:hover{border-color:var(--gold);color:var(--court)}
 @media (max-width:520px){.pbar-date{display:none}}

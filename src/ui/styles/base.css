@@ -98,3 +98,28 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:4px 0}
 .i3{display:inline-grid;place-items:center;flex:none;transition:transform .3s cubic-bezier(.3,1.5,.5,1)}
 .i3 svg{width:100%;height:100%;overflow:visible}
 @media (prefers-reduced-motion:reduce){.i3{transition:none}}
+/* ===== light/dark switch (tswitch) ===== */
+.tswitch{--w:66px;--h:34px;--pad:4px;--knob:calc(var(--h) - var(--pad)*2);padding:0;border:0;background:none;cursor:pointer;border-radius:999px;flex:none;-webkit-tap-highlight-color:transparent}
+.tswitch:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.tswitch-track{position:relative;display:block;direction:ltr;width:var(--w);height:var(--h);border-radius:999px;overflow:hidden;background:linear-gradient(135deg,#FBEFD2 0%,#EBD3A0 100%);box-shadow:inset 0 1px 2px rgba(0,0,0,.18),0 0 0 1px rgba(176,138,69,.35);transition:background .45s ease,box-shadow .45s ease}
+.tswitch[data-mode="dark"] .tswitch-track{background:linear-gradient(135deg,#1C1C22 0%,#0B0B0F 100%);box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 0 0 1px rgba(227,201,148,.28)}
+/* faint stars on the night track */
+.tswitch-track::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .45s ease;background:radial-gradient(1px 1px at 38% 30%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 52% 68%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 64% 38%,#E3C994 50%,transparent 51%)}
+.tswitch[data-mode="dark"] .tswitch-track::before{opacity:.9}
+.tswitch-icon{position:absolute;top:50%;width:15px;height:15px;transform:translateY(-50%);transition:opacity .3s ease}
+.tswitch-icon svg,.tswitch-knob svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tswitch-icon.sun{left:9px;color:#B08A45;opacity:.0}
+.tswitch-icon.moon{right:9px;color:#8E6D2F;opacity:.75}
+.tswitch[data-mode="dark"] .tswitch-icon.sun{opacity:.7;color:#E3C994}
+.tswitch[data-mode="dark"] .tswitch-icon.moon{opacity:0}
+/* knob: sits on the left (sun) in light mode, slides right (moon) in dark mode */
+.tswitch-knob{position:absolute;top:var(--pad);left:var(--pad);width:var(--knob);height:var(--knob);border-radius:50%;display:grid;place-items:center;background:linear-gradient(160deg,#FFFFFF 0%,#F4E7C8 100%);color:#C08A1E;box-shadow:0 2px 6px rgba(0,0,0,.25),inset 0 -1px 2px rgba(0,0,0,.08);transition:transform .45s cubic-bezier(.34,1.4,.5,1),background .45s ease,color .45s ease}
+.tswitch[data-mode="dark"] .tswitch-knob{transform:translateX(calc(var(--w) - var(--knob) - var(--pad)*2));background:linear-gradient(160deg,#F3DFAE 0%,#B08A45 100%);color:#151517;box-shadow:0 2px 8px rgba(0,0,0,.5),0 0 10px rgba(227,201,148,.35)}
+.tswitch-knob>span{grid-area:1/1;width:15px;height:15px;transition:opacity .3s ease,transform .45s ease}
+.tswitch-knob .moon{opacity:0;transform:rotate(-90deg) scale(.6)}
+.tswitch[data-mode="dark"] .tswitch-knob .sun{opacity:0;transform:rotate(90deg) scale(.6)}
+.tswitch[data-mode="dark"] .tswitch-knob .moon{opacity:1;transform:none}
+.tswitch:hover .tswitch-knob{box-shadow:0 2px 10px rgba(0,0,0,.3),0 0 0 3px rgba(227,201,148,.3)}
+/* page cross-fade when switching themes */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
+@media (prefers-reduced-motion:reduce){.tswitch-track,.tswitch-knob,.tswitch-knob>span,.tswitch-icon{transition:none}}
