@@ -55,7 +55,8 @@ src/ui/panel/
 
 | صفحه | آدرس | فایل |
 |---|---|---|
-| تیکت‌ها | `/panel/tickets` | `common/TicketsPage.tsx` |
+| تیکت‌ها (امور مجموعه) | `/panel/tickets` | `common/TicketsPage.tsx` |
+| پشتیبانی فنی سایت | `/panel/support` | `common/SupportPage.tsx` (منطق: `src/engine/support/`) |
 | اعلان‌ها | `/panel/notif` | `common/NotificationsPage.tsx` |
 | پروفایل و رمز عبور | `/panel/profile` | `common/ProfilePage.tsx` |
 | بخش‌های «به‌زودی» (کافه، فروشگاه، …) | | `common/ComingSoonPage.tsx` و فهرستشان در `PanelRouter.tsx` |

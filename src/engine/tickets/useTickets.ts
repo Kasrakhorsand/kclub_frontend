@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createTicket, getTickets, replyTicket, setTicketStatus } from "@/engine/api";
 import { useSession } from "@/engine/store";
-import type { Role, TechContext, Ticket, TicketCategory, TicketStatus } from "@/engine/types";
+import type { Role, Ticket, TicketCategory, TicketStatus } from "@/engine/types";
 
 export type TicketFilter = "all" | TicketStatus;
 
@@ -21,22 +21,8 @@ export const TICKET_CATEGORIES: { id: TicketCategory; label: string }[] = [
   { id: "booking", label: "رزرو" },
   { id: "payment", label: "پرداخت و کیف پول" },
   { id: "facility", label: "امکانات مجموعه" },
-  { id: "tech", label: "مشکل فنی سایت" },
   { id: "other", label: "سایر" },
 ];
-
-/** Page, browser and screen size for a technical ticket; trimmed so it can't carry much. */
-export function techContext(): TechContext {
-  const ua = navigator.userAgent;
-  const browser = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Other";
-  const os = /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "Other";
-  return {
-    page: (document.referrer && new URL(document.referrer).origin === location.origin ? new URL(document.referrer).pathname : location.pathname).slice(0, 120),
-    browser: `${browser} · ${os}`,
-    screen: `${window.innerWidth}×${window.innerHeight}`,
-    theme: document.documentElement.dataset.theme,
-  };
-}
 
 export const ticketsKey = (phone: string, role: Role | null) => ["tickets", phone, role];
 
@@ -121,9 +107,7 @@ export function useTickets() {
     /** New ticket form (players). */
     canCreate: role === "player",
     composing,
-    /** Open the form, optionally on a category (e.g. "tech" from "report a website problem"). */
-    startCompose: (category?: TicketCategory) => {
-      if (category) setDraft((d) => ({ ...d, category }));
+    startCompose: () => {
       setComposing(true);
       setSelectedId(null);
       setError("");
@@ -131,14 +115,12 @@ export function useTickets() {
     cancelCompose: () => setComposing(false),
     draft,
     setDraft: (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch })),
-    /** Device details sent with a technical ticket (null for other categories). */
-    techPreview: draft.category === "tech" && composing ? techContext() : null,
     submitDraft: () =>
       run(async () => {
         if (draft.title.trim().length < 4) throw new Error("موضوع تیکت را کامل‌تر بنویسید");
         if (draft.text.trim().length < 10) throw new Error("متن پیام حداقل ۱۰ کاراکتر باشد");
         if (draft.title.trim().length > TITLE_MAX || draft.text.trim().length > TEXT_MAX) throw new Error("متن تیکت طولانی است");
-        const t = await createTicket(draft.title.trim(), draft.category, draft.text.trim(), draft.category === "tech" ? techContext() : undefined);
+        const t = await createTicket(draft.title.trim(), draft.category, draft.text.trim());
         setDraft({ title: "", category: "booking", text: "" });
         setComposing(false);
         setSelectedId(t.id);

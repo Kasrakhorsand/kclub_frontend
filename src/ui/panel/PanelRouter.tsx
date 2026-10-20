@@ -15,6 +15,7 @@ import { SettingsView } from "@/ui/panel/admin/SettingsPage";
 import { ComingSoon } from "@/ui/panel/common/ComingSoonPage";
 import { NotificationsView } from "@/ui/panel/common/NotificationsPage";
 import { ProfileView } from "@/ui/panel/common/ProfilePage";
+import { SupportView } from "@/ui/panel/common/SupportPage";
 import { TicketsView } from "@/ui/panel/common/TicketsPage";
 import { PlayerDashboard } from "@/ui/panel/player/DashboardPage";
 import { MyBookingsView } from "@/ui/panel/player/MyBookingsPage";
@@ -39,6 +40,7 @@ type Routes = Record<string, () => ReactNode>;
 
 const COMMON: Routes = {
   tickets: () => <TicketsView />,
+  support: () => <SupportView />,
   notif: () => <NotificationsView />,
   profile: () => <ProfileView />,
 };

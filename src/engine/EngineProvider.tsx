@@ -1,7 +1,8 @@
 "use client";
 /**
  * App-wide engine setup: data cache (React Query), the light/dark theme on
- * <html>, and keeping the client session in line with the server. Wrap each
+ * <html>, keeping the client session in line with the server, and capturing
+ * recent pages and errors for support reports. Wrap each
  * site's UI providers in this.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,6 +11,7 @@ import { getMe } from "@/engine/api";
 import { USE_MOCK } from "@/engine/config";
 import { onUnauthorized } from "@/engine/http";
 import { useSession } from "@/engine/store";
+import { useDiagnosticsCapture } from "@/engine/support/diagnostics";
 
 /**
  * The persisted session is only a cache. On load we ask the server who is
@@ -59,5 +61,6 @@ export function EngineProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
   useServerSession(queryClient);
+  useDiagnosticsCapture();
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

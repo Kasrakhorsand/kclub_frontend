@@ -64,9 +64,29 @@
 | متد و مسیر | ورودی | خروجی |
 |---|---|---|
 | `GET /tickets` | — | `Ticket[]`؛ بازیکن فقط تیکت‌های خودش را می‌بیند. |
-| `POST /tickets` | `{ title, category, text, tech? }` | `Ticket`. `category` یکی از `booking`، `payment`، `facility`، `tech` و `other` است. تیکت‌های `tech` (مشکل فنی سایت) باید به تیم پشتیبانی فنی سایت برسند، نه به پذیرش. پاسخ آن تیم با `by: "support"` برمی‌گردد. `tech` شامل `{ page, browser, screen, theme? }` است؛ بک‌اند طول هر فیلد را محدود کند. |
+| `POST /tickets` | `{ title, category, text }` | `Ticket` |
 | `POST /tickets/{id}/messages` | `{ text }` | `204`. فرستنده (کاربر، پذیرش یا مدیریت) را بک‌اند از نشست تعیین می‌کند. |
 | `PATCH /tickets/{id}` | `{ status }` | `204`؛ فقط برای پذیرش و مدیریت. |
+
+## پشتیبانی فنی سایت (همه‌ی نقش‌ها؛ برای تیم فنی سایت، نه پذیرش)
+
+هر کاربر فقط گزارش‌های خودش را می‌بیند. ارسال‌ها `multipart/form-data` هستند: بخش `data` شامل JSON فیلدها و تا ۴ بخش `files` (فقط PNG، JPEG یا WEBP، هر کدام تا ۵ مگابایت).
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /support/tickets` | — | `SupportTicket[]` |
+| `POST /support/tickets` | `data`: `{ area, severity, subject, steps, actual, expected?, when, whenTime?, refCode?, allowCall, diagnostics? }` + `files` | `SupportTicket` با `ref` (مثل `SUP-1024`) و `status: "new"` |
+| `POST /support/tickets/{id}/messages` | `data`: `{ text }` + `files` | `204`؛ وضعیت به `in_progress` برمی‌گردد. |
+| `POST /support/tickets/{id}/close` | — | `204` |
+
+- `area`: `login`، `booking`، `payment`، `wallet`، `panel`، `display`، `speed`، `other`
+- `severity`: `blocker`، `major`، `minor`
+- `when`: `now`، `today`، `yesterday`، `earlier`
+- `status`: `new`، `in_progress`، `need_info` (منتظر کاربر)، `resolved`، `closed`
+- `diagnostics` فقط اطلاعات فنی است: صفحه و صفحه‌های اخیر، مرورگر، سیستم‌عامل، دستگاه، اندازه‌ی صفحه، زبان، منطقه‌ی زمانی، وضعیت اینترنت، تم، نقش، نسخه‌ی سایت و حداکثر ۱۰ خطای اخیر مرورگر (فقط متن خطا). کاربر می‌تواند ارسالش را خاموش کند.
+- پاسخ‌های تیم فنی با `by: "support"` در `messages` می‌آیند و می‌توانند `attachments` داشته باشند.
+
+**بک‌اند حتماً:** نوع واقعی فایل را از محتوای آن تشخیص دهد (نه از نام یا Content-Type)، حجم و تعداد را دوباره چک کند، متادیتای EXIF (مثل موقعیت مکانی) را پاک کند، فایل‌ها را خارج از مسیر قابل‌اجرا ذخیره کند و فقط به صاحب گزارش و تیم فنی نشان دهد (با `Content-Disposition` و `X-Content-Type-Options: nosniff`)، و روی ثبت گزارش محدودیت تعداد بگذارد.
 
 ## کارکنان
 

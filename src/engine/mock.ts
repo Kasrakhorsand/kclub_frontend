@@ -2,7 +2,7 @@
  * Sample data used until the real backend is connected.
  * Everything here is replaceable by API calls in `api.ts`.
  */
-import type { Audit, Booking, Coach, Notif, Ticket, Tx, User } from "@/engine/types";
+import type { Audit, Booking, Coach, Notif, SupportTicket, Ticket, Tx, User } from "@/engine/types";
 import { COURTS, HOURS, priceOf } from "@/engine/venue";
 import { addDays, dayKey } from "@/engine/format";
 
@@ -98,4 +98,20 @@ export const AUDIT: Audit[] = [
   { date: k(0), actor: "مریم احمدی (منشی)", action: "ثبت رزرو", target: "ساحلی ۱ · ۱۰:۰۰", detail: "برای علی رضایی · کارتخوان" },
   { date: k(-1), actor: "مدیر مجموعه", action: "تغییر قیمت", target: "پدل · ۱۲ تا ۲۴", detail: "۷۵۰٬۰۰۰ ← ۸۰۰٬۰۰۰" },
   { date: k(-2), actor: "مدیر مجموعه", action: "بستن زمین", target: "پدل ۳", detail: "تعمیر چمن · ۸ تا ۱۲" },
+];
+
+/** Technical support reports (per phone), with one waiting on the player for more detail. */
+export const SUPPORT: (SupportTicket & { phone: string })[] = [
+  {
+    id: "s1", ref: "SUP-1018", phone: "09121234567", area: "payment", severity: "major",
+    subject: "بعد از پرداخت به صفحه‌ی سایت برنگشتم",
+    steps: "یک سانس پدل انتخاب کردم، روی پرداخت با درگاه زدم و پرداخت را تمام کردم.",
+    actual: "بانک پیام موفق داد ولی صفحه‌ی سایت باز نشد و رزرو در «رزروهای من» نیامد.",
+    expected: "برگشت به سایت و نمایش کد رهگیری",
+    when: "yesterday", whenTime: "21:40", refCode: "KC-48213", allowCall: true,
+    status: "need_info", date: k(-1), time: "21:52", attachments: [],
+    messages: [
+      { by: "support", text: "سلام، گزارش شما بررسی شد. لطفاً چهار رقم آخر کارت و ساعت دقیق پرداخت را بنویسید تا تراکنش را با بانک پیگیری کنیم. اگر از صفحه‌ی بانک عکس دارید، پیوست کنید.", date: k(0), time: "09:15" },
+    ],
+  },
 ];

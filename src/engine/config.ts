@@ -20,3 +20,14 @@ export const PAYMENT_HOSTS = (process.env.NEXT_PUBLIC_PAYMENT_HOSTS ?? "")
 
 /** Request timeout in milliseconds. */
 export const API_TIMEOUT_MS = 15_000;
+
+/** Build version shown in support reports (set from package.json in next.config.ts). */
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
+
+/** Screenshot uploads for support reports; the backend must enforce the same limits. */
+export const SUPPORT_UPLOAD = {
+  types: ["image/png", "image/jpeg", "image/webp"],
+  maxFiles: 4,
+  maxBytes: 5 * 1024 * 1024,
+  timeoutMs: 60_000,
+} as const;

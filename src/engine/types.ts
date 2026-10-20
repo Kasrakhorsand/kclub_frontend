@@ -156,11 +156,10 @@ export interface Tx {
 }
 
 export type TicketStatus = "open" | "answered" | "escalated" | "closed";
-/** "tech" goes to the website's technical support team instead of the front desk. */
-export type TicketCategory = "booking" | "payment" | "facility" | "tech" | "other";
+export type TicketCategory = "booking" | "payment" | "facility" | "other";
 
 export interface TicketMessage {
-  by: "user" | "staff" | "admin" | "support";
+  by: "user" | "staff" | "admin";
   text: string;
   /** "HH:mm" when it was sent. */
   time?: string;
@@ -176,16 +175,6 @@ export interface Ticket {
   category?: TicketCategory;
   date: string;
   messages: TicketMessage[];
-  /** Device details attached to a technical ticket, shown to the user before sending. */
-  tech?: TechContext;
-}
-
-/** What the support team needs to reproduce a website problem. No personal data. */
-export interface TechContext {
-  page: string;
-  browser: string;
-  screen: string;
-  theme?: string;
 }
 
 /** What a notification is about; decides its icon and grouping. */
@@ -212,3 +201,95 @@ export interface Audit {
   target: string;
   detail: string;
 }
+
+/* ===== Technical support (the website's own support team, not the venue) ===== */
+
+/** Part of the website the problem is in. */
+export type SupportArea = "login" | "booking" | "payment" | "wallet" | "panel" | "display" | "speed" | "other";
+/** blocker: can't continue at all · major: works with a workaround · minor: small or cosmetic. */
+export type SupportSeverity = "blocker" | "major" | "minor";
+/** new → in progress → (need info ↔ user replies) → resolved → closed. */
+export type SupportStatus = "new" | "in_progress" | "need_info" | "resolved" | "closed";
+/** When the user saw it. */
+export type SupportWhen = "now" | "today" | "yesterday" | "earlier";
+
+export interface SupportAttachment {
+  id: string;
+  name: string;
+  /** Bytes. */
+  size: number;
+  type: string;
+  /** Where to load the image from (backend URL, or a blob: URL in mock mode). */
+  url: string;
+}
+
+/** A browser error seen shortly before the report: message only, no stack or data. */
+export interface ClientErrorEntry {
+  time: string;
+  page: string;
+  message: string;
+}
+
+/** Device and app details collected (with the user's consent) to reproduce a problem. No personal data. */
+export interface SupportDiagnostics {
+  page: string;
+  /** The last few in-app pages, oldest first. */
+  recentPages: string[];
+  browser: string;
+  os: string;
+  device: "mobile" | "tablet" | "desktop";
+  screen: string;
+  viewport: string;
+  pixelRatio: number;
+  language: string;
+  timeZone: string;
+  online: boolean;
+  connection?: string;
+  theme?: string;
+  role?: Role;
+  appVersion: string;
+  /** ISO time when the report was made. */
+  reportedAt: string;
+  recentErrors: ClientErrorEntry[];
+}
+
+export interface SupportMessage {
+  by: "user" | "support";
+  text: string;
+  date: string;
+  time: string;
+  attachments?: SupportAttachment[];
+}
+
+export interface SupportTicket {
+  id: string;
+  /** Short reference shown to the user, e.g. "SUP-1024". */
+  ref: string;
+  area: SupportArea;
+  severity: SupportSeverity;
+  subject: string;
+  /** What the user was doing, step by step. */
+  steps: string;
+  /** What actually happened (error text, blank page, ...). */
+  actual: string;
+  /** What they expected instead. */
+  expected?: string;
+  when: SupportWhen;
+  /** "HH:mm" if they remember. */
+  whenTime?: string;
+  /** Booking tracking code or transaction id involved, if any. */
+  refCode?: string;
+  /** The user agrees to a phone call if support needs one. */
+  allowCall: boolean;
+  status: SupportStatus;
+  date: string;
+  time: string;
+  diagnostics?: SupportDiagnostics;
+  attachments: SupportAttachment[];
+  messages: SupportMessage[];
+}
+
+/** What the form sends; files go alongside as multipart parts. */
+export type NewSupportTicket = Pick<SupportTicket, "area" | "severity" | "subject" | "steps" | "actual" | "expected" | "when" | "whenTime" | "refCode" | "allowCall"> & {
+  diagnostics?: SupportDiagnostics;
+};

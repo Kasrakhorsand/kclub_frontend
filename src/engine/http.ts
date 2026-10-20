@@ -59,11 +59,13 @@ type Query = Record<string, string | number | boolean | undefined | null>;
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  /** Sent as JSON. */
+  /** Sent as JSON, or as multipart when it is a FormData (file uploads). */
   body?: unknown;
   /** Added to the URL, properly encoded; empty values are skipped. */
   query?: Query;
   signal?: AbortSignal;
+  /** Override the default timeout (uploads take longer). */
+  timeoutMs?: number;
   /** Don't fire the global 401 handler (e.g. for the "who am I" probe). */
   silent401?: boolean;
 };
@@ -81,16 +83,18 @@ function buildUrl(path: string, query?: Query) {
  * Call the backend and return the parsed JSON (undefined for 204).
  * Throws ApiError with a user-facing Persian message on any failure.
  */
-export async function http<T>(path: string, { method = "GET", body, query, signal, silent401 }: RequestOptions = {}): Promise<T> {
+export async function http<T>(path: string, { method = "GET", body, query, signal, silent401, timeoutMs = API_TIMEOUT_MS }: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
+  // Multipart: the browser sets Content-Type with the boundary itself.
+  if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
   if (method !== "GET") {
     const csrf = readCookie("csrf_token");
     if (csrf) headers["X-CSRF-Token"] = decodeURIComponent(csrf);
   }
 
   const timeout = new AbortController();
-  const timer = setTimeout(() => timeout.abort(), API_TIMEOUT_MS);
+  const timer = setTimeout(() => timeout.abort(), timeoutMs);
   signal?.addEventListener("abort", () => timeout.abort(), { once: true });
 
   let res: Response;
@@ -98,7 +102,7 @@ export async function http<T>(path: string, { method = "GET", body, query, signa
     res = await fetch(buildUrl(path, query), {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
       credentials: "include",
       cache: "no-store",
       signal: timeout.signal,

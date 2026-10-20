@@ -12,12 +12,12 @@
  *   rentals and top-ups itself.
  * - Path segments are URL-encoded; query values go through URLSearchParams.
  */
-import { USE_MOCK } from "@/engine/config";
+import { USE_MOCK, SUPPORT_UPLOAD } from "@/engine/config";
 import { ApiError, http } from "@/engine/http";
-import { COACHES, NOTIFS, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
+import { COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Booking, CartItem, Coach, Court, Notif, Role, Slot, Sport, TechContext, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
+import type { Booking, CartItem, Coach, Court, NewSupportTicket, Notif, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
 import { addDays, dayKey } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -341,14 +341,13 @@ export async function getTickets(role: Role): Promise<Ticket[]> {
 }
 
 /** Open a new ticket with its first message (players). */
-export async function createTicket(title: string, category: TicketCategory, text: string, tech?: TechContext): Promise<Ticket> {
-  if (!USE_MOCK) return http("/tickets", { method: "POST", body: { title, category, text, tech } });
+export async function createTicket(title: string, category: TicketCategory, text: string): Promise<Ticket> {
+  if (!USE_MOCK) return http("/tickets", { method: "POST", body: { title, category, text } });
   const ticket: Ticket = {
     id: `T-${1060 + TICKETS.length}`,
     phone: sessionPhone(),
     title,
     category,
-    ...(tech && { tech }),
     status: "open",
     date: dayKey(new Date()),
     messages: [{ by: "user", text, time: nowTime() }],
@@ -376,5 +375,66 @@ export async function setTicketStatus(id: string, status: TicketStatus): Promise
   if (!USE_MOCK) return http(`/tickets/${seg(id)}`, { method: "PATCH", body: { status } });
   const t = TICKETS.find((x) => x.id === id);
   if (t) t.status = status;
+  await wait(null, 150);
+}
+
+/* ===== Technical support: reports go to the website's support team ===== */
+
+/** Multipart body: the JSON fields as "data", each screenshot as a "files" part. */
+function supportForm(data: unknown, files: File[]) {
+  const form = new FormData();
+  form.append("data", JSON.stringify(data));
+  for (const f of files) form.append("files", f, f.name);
+  return form;
+}
+
+/** Mock rows carry the owner's phone; the API never returns it. */
+const withoutPhone = ({ phone, ...t }: SupportTicket & { phone: string }): SupportTicket => (void phone, structuredClone(t));
+
+/** Mock only: keep picked files viewable via blob: URLs. */
+const mockAttachments = (files: File[]): SupportAttachment[] =>
+  files.map((f, i) => ({ id: `${Date.now()}-${i}`, name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f) }));
+
+/** The signed-in user's own support reports, newest first. */
+export async function getSupportTickets(): Promise<SupportTicket[]> {
+  if (!USE_MOCK) return http("/support/tickets");
+  const phone = sessionPhone();
+  return wait(SUPPORT.filter((t) => t.phone === phone).map(withoutPhone).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)));
+}
+
+/** Send a new report with up to SUPPORT_UPLOAD.maxFiles screenshots. */
+export async function createSupportTicket(input: NewSupportTicket, files: File[]): Promise<SupportTicket> {
+  if (!USE_MOCK) return http("/support/tickets", { method: "POST", body: supportForm(input, files), timeoutMs: SUPPORT_UPLOAD.timeoutMs });
+  const now = new Date();
+  const ticket = {
+    ...input,
+    id: `s${SUPPORT.length + 1}-${now.getTime()}`,
+    ref: `SUP-${1019 + SUPPORT.length}`,
+    phone: sessionPhone(),
+    status: "new" as const,
+    date: dayKey(now),
+    time: nowTime(),
+    attachments: mockAttachments(files),
+    messages: [],
+  };
+  SUPPORT.unshift(ticket);
+  return wait(withoutPhone(ticket), 500);
+}
+
+/** Add a message (and screenshots) to one of the user's reports; reopens it for support. */
+export async function replySupportTicket(id: string, text: string, files: File[]): Promise<void> {
+  if (!USE_MOCK) return http(`/support/tickets/${seg(id)}/messages`, { method: "POST", body: supportForm({ text }, files), timeoutMs: SUPPORT_UPLOAD.timeoutMs });
+  const t = SUPPORT.find((x) => x.id === id && x.phone === sessionPhone());
+  if (!t) throw new ApiError("گزارش پیدا نشد", 404);
+  t.messages.push({ by: "user", text, date: dayKey(new Date()), time: nowTime(), attachments: mockAttachments(files) });
+  if (t.status !== "in_progress") t.status = "in_progress";
+  await wait(null, 300);
+}
+
+/** The user marks their report as solved or closes it. */
+export async function closeSupportTicket(id: string): Promise<void> {
+  if (!USE_MOCK) return http(`/support/tickets/${seg(id)}/close`, { method: "POST" });
+  const t = SUPPORT.find((x) => x.id === id && x.phone === sessionPhone());
+  if (t) t.status = "closed";
   await wait(null, 150);
 }

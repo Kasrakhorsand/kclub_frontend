@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import pkg from "./package.json";
 
 const isDev = process.env.NODE_ENV !== "production";
 const apiOrigin = (() => {
@@ -19,7 +20,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  // Support screenshots are served by the API.
+  `img-src 'self' data: blob:${apiOrigin ? ` ${apiOrigin}` : ""}`,
   "media-src 'self'",
   "font-src 'self' data:",
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
@@ -47,6 +49,8 @@ const nextConfig: NextConfig = {
   // Self-contained server output for Docker / PM2 deployment.
   output: "standalone",
   poweredByHeader: false,
+  // Shown in support reports so the team knows which build a user is on.
+  env: { NEXT_PUBLIC_APP_VERSION: pkg.version },
   images: { unoptimized: true },
   async headers() {
     return [
