@@ -7,7 +7,7 @@
  */
 import clsx from "clsx";
 import { fa, jDate, jFull } from "@/engine/format";
-import { TICKET_CATEGORIES, useTickets, type TicketFilter } from "@/engine/tickets/useTickets";
+import { TEXT_MAX, TICKET_CATEGORIES, TITLE_MAX, useTickets, type TicketFilter } from "@/engine/tickets/useTickets";
 import type { Ticket, TicketMessage, TicketStatus } from "@/engine/types";
 import { Button3D } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
@@ -92,7 +92,7 @@ export function TicketsView() {
               </header>
               <label className="f">
                 موضوع
-                <input className="input" value={t.draft.title} onChange={(e) => t.setDraft({ title: e.target.value })} placeholder="مثلاً مشکل در پرداخت رزرو" />
+                <input className="input" maxLength={TITLE_MAX} value={t.draft.title} onChange={(e) => t.setDraft({ title: e.target.value })} placeholder="مثلاً مشکل در پرداخت رزرو" />
               </label>
               <div className="tc-cats" role="radiogroup" aria-label="دسته">
                 {TICKET_CATEGORIES.map((c) => (
@@ -103,7 +103,7 @@ export function TicketsView() {
               </div>
               <label className="f">
                 پیام
-                <textarea className="input" rows={5} value={t.draft.text} onChange={(e) => t.setDraft({ text: e.target.value })} placeholder="جزئیات را بنویسید؛ اگر درباره‌ی رزرو است، تاریخ و ساعت را هم بگویید." />
+                <textarea className="input" rows={5} maxLength={TEXT_MAX} value={t.draft.text} onChange={(e) => t.setDraft({ text: e.target.value })} placeholder="جزئیات را بنویسید؛ اگر درباره‌ی رزرو است، تاریخ و ساعت را هم بگویید." />
               </label>
               {t.error && <p className="small" role="alert" style={{ color: "var(--busy)" }}>{t.error}</p>}
               <div className="tc-actions">
@@ -141,7 +141,7 @@ export function TicketsView() {
                   t.sendReply();
                 }}
               >
-                <textarea className="input" rows={2} value={t.reply} onChange={(e) => t.setReply(e.target.value)} placeholder={isPlayer ? "پیام خود را بنویسید" : "پاسخ به کاربر"} aria-label="متن پاسخ" />
+                <textarea className="input" rows={2} maxLength={TEXT_MAX} value={t.reply} onChange={(e) => t.setReply(e.target.value)} placeholder={isPlayer ? "پیام خود را بنویسید" : "پاسخ به کاربر"} aria-label="متن پاسخ" />
                 <div className="tc-actions">
                   {t.canEscalate && t.selected.status !== "escalated" && <button type="button" className="btn ghost sm" onClick={t.escalate} disabled={t.busy}>ارجاع به مدیریت</button>}
                   {t.canClose && t.selected.status !== "closed" && <button type="button" className="btn ghost sm" onClick={t.close} disabled={t.busy}>بستن تیکت</button>}

@@ -9,9 +9,13 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createTicket, getTickets, replyTicket, setTicketStatus } from "@/engine/api";
 import { useSession } from "@/engine/store";
-import type { Role, Ticket, TicketCategory, TicketMessage, TicketStatus } from "@/engine/types";
+import type { Role, Ticket, TicketCategory, TicketStatus } from "@/engine/types";
 
 export type TicketFilter = "all" | TicketStatus;
+
+/** Length limits, matched on the backend. */
+export const TITLE_MAX = 120;
+export const TEXT_MAX = 2000;
 
 export const TICKET_CATEGORIES: { id: TicketCategory; label: string }[] = [
   { id: "booking", label: "رزرو" },
@@ -20,16 +24,13 @@ export const TICKET_CATEGORIES: { id: TicketCategory; label: string }[] = [
   { id: "other", label: "سایر" },
 ];
 
-/** Who a reply is from, by role. */
-const AUTHOR: Record<Role, TicketMessage["by"]> = { player: "user", secretary: "staff", admin: "admin" };
-
 export const ticketsKey = (phone: string, role: Role | null) => ["tickets", phone, role];
 
 /** Tickets waiting on this role (panel menu badge): open for front desk, escalated for admin. */
 export function usePendingTickets() {
   const phone = useSession((s) => s.user?.phone ?? "");
   const role = useSession((s) => s.role);
-  const { data = [] } = useQuery({ queryKey: ticketsKey(phone, role), queryFn: () => getTickets(phone, role!), enabled: !!phone && !!role });
+  const { data = [] } = useQuery({ queryKey: ticketsKey(phone, role), queryFn: () => getTickets(role!), enabled: !!phone && !!role });
   if (role === "admin") return data.filter((t) => t.status === "escalated").length;
   if (role === "secretary") return data.filter((t) => t.status === "open").length;
   return 0;
@@ -39,7 +40,7 @@ export function useTickets() {
   const phone = useSession((s) => s.user?.phone ?? "");
   const role = useSession((s) => s.role);
   const client = useQueryClient();
-  const { data: all = [], isLoading } = useQuery({ queryKey: ticketsKey(phone, role), queryFn: () => getTickets(phone, role!), enabled: !!phone && !!role });
+  const { data: all = [], isLoading } = useQuery({ queryKey: ticketsKey(phone, role), queryFn: () => getTickets(role!), enabled: !!phone && !!role });
 
   const [filter, setFilter] = useState<TicketFilter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -91,7 +92,8 @@ export function useTickets() {
     sendReply: () =>
       run(async () => {
         if (!selected || !role || !reply.trim()) return;
-        await replyTicket(selected.id, AUTHOR[role], reply.trim());
+        if (reply.trim().length > TEXT_MAX) throw new Error("پیام طولانی است");
+        await replyTicket(selected.id, reply.trim());
         setReply("");
       }),
 
@@ -117,7 +119,8 @@ export function useTickets() {
       run(async () => {
         if (draft.title.trim().length < 4) throw new Error("موضوع تیکت را کامل‌تر بنویسید");
         if (draft.text.trim().length < 10) throw new Error("متن پیام حداقل ۱۰ کاراکتر باشد");
-        const t = await createTicket(phone, draft.title.trim(), draft.category, draft.text.trim());
+        if (draft.title.trim().length > TITLE_MAX || draft.text.trim().length > TEXT_MAX) throw new Error("متن تیکت طولانی است");
+        const t = await createTicket(draft.title.trim(), draft.category, draft.text.trim());
         setDraft({ title: "", category: "booking", text: "" });
         setComposing(false);
         setSelectedId(t.id);

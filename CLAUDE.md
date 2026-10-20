@@ -18,7 +18,8 @@ Next.js 15 (App Router) + TypeScript front end for K Club court booking (padel, 
 - UI copy is Persian; numbers shown to users go through `fa()` / `toman()` in `src/engine/format.ts`, dates through the Jalali helpers there.
 - Styles: tokens in `src/config/theme.css`, K Club styles in `src/ui/styles/<section>.css` (shared bits in `base.css`); use tokens rather than new hard-coded colours.
 - No external CDNs or Google Fonts: everything (fonts, three.js, media) is served from the project so the site works on Iranian internet.
-- Data goes through `src/engine/api.ts` only; it uses mock data until `NEXT_PUBLIC_API_URL` is set. Don't import `engine/mock.ts` for new data reads.
+- Data goes through `src/engine/api.ts` only; it uses mock data until `NEXT_PUBLIC_API_URL` is set. Don't import `engine/mock.ts` for new data reads. Real calls go through `engine/http.ts` (cookie session, CSRF header, timeouts, Persian errors); env lives in `engine/config.ts`. Endpoints are listed in `docs/api-contract.md`.
+- Security: redirects through `safeInternalPath`, gateway redirects through `redirectToPayment` (`engine/security.ts`); never send prices or user ids from the browser; keep PII out of persisted state. See `docs/security.md`.
 - 3D icons: `<Icon3D name="..." />` from `src/ui/kit/Icon3D.tsx`.
 - Test logins (mock): 09121234567 player, 09120000001 front desk, 09120000002 admin; any 5-digit code.
 

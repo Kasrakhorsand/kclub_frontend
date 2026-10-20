@@ -14,14 +14,14 @@ export const notificationsKey = (phone: string) => ["notifications", phone];
 /** Just the unread count (panel menu badge). */
 export function useUnreadNotifications() {
   const phone = useSession((s) => s.user?.phone ?? "");
-  const { data = [] } = useQuery({ queryKey: notificationsKey(phone), queryFn: () => getNotifications(phone), enabled: !!phone });
+  const { data = [] } = useQuery({ queryKey: notificationsKey(phone), queryFn: () => getNotifications(), enabled: !!phone });
   return data.filter((n) => !n.read).length;
 }
 
 export function useNotifications() {
   const phone = useSession((s) => s.user?.phone ?? "");
   const client = useQueryClient();
-  const { data: all = [], isLoading } = useQuery({ queryKey: notificationsKey(phone), queryFn: () => getNotifications(phone), enabled: !!phone });
+  const { data: all = [], isLoading } = useQuery({ queryKey: notificationsKey(phone), queryFn: () => getNotifications(), enabled: !!phone });
   const [filter, setFilter] = useState<NotifFilter>("all");
 
   const shown = filter === "unread" ? all.filter((n) => !n.read) : all;
@@ -42,11 +42,11 @@ export function useNotifications() {
     unread: all.filter((n) => !n.read).length,
     total: all.length,
     markRead: async (id: string) => {
-      await markNotificationsRead(phone, [id]);
+      await markNotificationsRead([id]);
       refresh();
     },
     markAllRead: async () => {
-      await markNotificationsRead(phone);
+      await markNotificationsRead();
       refresh();
     },
   };

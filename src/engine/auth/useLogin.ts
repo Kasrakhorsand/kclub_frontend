@@ -16,7 +16,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { loginWithPassword, lookupPhone, sendOtp, verifyOtp } from "@/engine/api";
+import { loginWithPassword, lookupPhone, register, sendOtp, verifyOtp } from "@/engine/api";
+import { safeInternalPath } from "@/engine/security";
 import { fa, toLatinDigits } from "@/engine/format";
 import { useSession } from "@/engine/store";
 import type { User } from "@/engine/types";
@@ -29,10 +30,10 @@ export const DEFAULT_AFTER_LOGIN = "/panel";
 const phoneSchema = z.object({
   phone: z.string().transform(toLatinDigits).pipe(z.string().regex(/^09\d{9}$/, "شماره موبایل را به شکل ۰۹۱۲۱۲۳۴۵۶۷ وارد کنید")),
 });
-const passwordSchema = z.object({ password: z.string().min(1, "رمز عبور را وارد کنید") });
+const passwordSchema = z.object({ password: z.string().min(1, "رمز عبور را وارد کنید").max(128, "رمز عبور طولانی است") });
 const nameSchema = z.object({
-  first: z.string().min(2, "نام را وارد کنید"),
-  last: z.string().min(2, "نام خانوادگی را وارد کنید"),
+  first: z.string().trim().min(2, "نام را وارد کنید").max(40, "نام طولانی است"),
+  last: z.string().trim().min(2, "نام خانوادگی را وارد کنید").max(60, "نام خانوادگی طولانی است"),
 });
 
 export type LoginStep = "phone" | "password" | "otp" | "register";
@@ -64,7 +65,8 @@ export function useLogin() {
 
   const finish = (user: User, method: "otp" | "password") => {
     setUser(user, undefined, method);
-    const to = afterLogin ?? DEFAULT_AFTER_LOGIN;
+    // Only ever continue to an in-app path (afterLogin lives in localStorage and could be tampered with).
+    const to = safeInternalPath(afterLogin, DEFAULT_AFTER_LOGIN);
     setAfterLogin(null);
     router.push(to);
   };
@@ -162,6 +164,10 @@ export function useLogin() {
     },
 
     /** Step 3 (new numbers): create the account with first and last name. */
-    submitName: nameForm.handleSubmit(({ first, last }) => finish({ phone, first, last, roles: ["player"], wallet: 0 }, "otp")),
+    submitName: nameForm.handleSubmit(({ first, last }) =>
+      run(async () => {
+        finish(await register(first.trim(), last.trim(), phone), "otp");
+      }),
+    ),
   };
 }

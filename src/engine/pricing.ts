@@ -4,6 +4,9 @@
  * them, overrides are kept in this browser (localStorage "kclub-pricing").
  */
 import { create } from "zustand";
+import { useQuery } from "@tanstack/react-query";
+import { getRentalPrices } from "@/engine/api";
+import { USE_MOCK } from "@/engine/config";
 import { persist } from "zustand/middleware";
 import { RENTALS } from "@/engine/venue";
 import type { CartItem } from "@/engine/types";
@@ -35,5 +38,12 @@ export const rentalCostOf = (item: CartItem, overrides?: Record<string, number>)
 /** Court plus rentals for one cart item. */
 export const itemTotal = (item: CartItem, overrides?: Record<string, number>) => item.price + rentalCostOf(item, overrides);
 
-/** Subscribe to price changes and get the current rental prices map. */
-export const useRentalPrices = () => usePricing((s) => s.rentalPrices);
+/**
+ * Current rental prices: from the backend when one is configured (the admin
+ * sets them there), otherwise this browser's sample overrides.
+ */
+export function useRentalPrices() {
+  const local = usePricing((s) => s.rentalPrices);
+  const { data } = useQuery({ queryKey: ["rental-prices"], queryFn: getRentalPrices, enabled: !USE_MOCK, staleTime: 5 * 60_000 });
+  return USE_MOCK ? local : (data ?? {});
+}

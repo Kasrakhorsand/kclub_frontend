@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTransactions, startTopUp } from "@/engine/api";
 import { dayKey, jDate, toLatinDigits } from "@/engine/format";
 import { useSession } from "@/engine/store";
+import { redirectToPayment } from "@/engine/security";
 import type { Tx } from "@/engine/types";
 
 /** Quick top-up amounts in toman. */
@@ -25,7 +26,7 @@ export function useWallet() {
   const phone = user?.phone ?? "";
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["transactions", phone],
-    queryFn: () => getTransactions(phone),
+    queryFn: () => getTransactions(),
     enabled: !!phone,
   });
 
@@ -93,8 +94,12 @@ export function useWallet() {
       setBusy(true);
       setError("");
       try {
-        const { gatewayUrl } = await startTopUp(phone, amount);
-        if (gatewayUrl) window.location.assign(gatewayUrl);
+        const { gatewayUrl } = await startTopUp(amount);
+        // Only ever leave the site for an allowed bank gateway host.
+        if (gatewayUrl && !redirectToPayment(gatewayUrl)) {
+          setError("آدرس درگاه پرداخت معتبر نیست؛ با پشتیبانی تماس بگیرید.");
+          return false;
+        }
         return true;
       } catch {
         setError("اتصال به درگاه انجام نشد. دوباره تلاش کنید.");

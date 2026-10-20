@@ -7,6 +7,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "@/engine/store";
+import { logout as apiLogout } from "@/engine/api";
 import { useUnreadNotifications } from "@/engine/notifications/useNotifications";
 import { usePendingTickets } from "@/engine/tickets/useTickets";
 import type { Role } from "@/engine/types";
@@ -50,7 +51,9 @@ export function usePanelSession() {
       setRole(r);
       router.push("/panel");
     },
-    logout: () => {
+    /** End the session on the server, clear the local copy, go home. */
+    logout: async () => {
+      await apiLogout();
       setUser(null);
       router.push("/");
     },

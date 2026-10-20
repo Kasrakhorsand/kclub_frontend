@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { fa, jFull } from "@/engine/format";
 import { useNotifications } from "@/engine/notifications/useNotifications";
+import { safeInternalPath } from "@/engine/security";
 import type { Notif, NotifKind } from "@/engine/types";
 import { Icon3D } from "@/ui/kit/Icon3D";
 import type { Icon3DName } from "@/ui/kit/icons3d";
@@ -26,7 +27,8 @@ export function NotificationsView() {
 
   const open = async (item: Notif) => {
     if (!item.read) await n.markRead(item.id);
-    if (item.href) router.push(item.href);
+    // href comes from the backend: follow it only if it is an in-app path.
+    if (item.href) router.push(safeInternalPath(item.href, "/panel/notif"));
   };
 
   return (

@@ -7,6 +7,7 @@ import { fa, hm, jDay, jFull, jMonth, toman, weekday } from "@/engine/format";
 import { MAX_DAYS_AHEAD, RENTALS } from "@/engine/venue";
 import { REPEAT_WEEKS, useBookingFlow, type DayAvailability } from "@/engine/booking/useBookingFlow";
 import { useCart } from "@/engine/booking/useCart";
+import { bookableDateParam, openingHourParam } from "@/engine/security";
 import type { Sport } from "@/engine/types";
 import { ArrowIcon, BackButton, Button3D } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
@@ -138,15 +139,18 @@ function CartBar() {
  */
 export function Booking({ sport }: { sport: Sport }) {
   const params = useSearchParams();
-  const presetHour = params.get("hour");
-  const flow = useBookingFlow(sport, { game: params.get("game"), date: params.get("date"), hour: presetHour ? Number(presetHour) : null });
+  // URL parameters are user-controlled: accept only a bookable day, an opening hour and a known game.
+  const presetHour = openingHourParam(params.get("hour"));
+  const gameParam = params.get("game");
+  const game = gameParam && /^[a-z]{2,20}$/.test(gameParam) ? gameParam : null;
+  const flow = useBookingFlow(sport, { game, date: bookableDateParam(params.get("date")), hour: presetHour });
   const cart = useCart();
   const mapRef = useRef<HTMLDivElement>(null);
   const scrollToMap = (delay: number) => setTimeout(() => mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), delay);
 
   // Arriving with a preselected hour: jump straight to the court map.
   useEffect(() => {
-    if (!presetHour) return;
+    if (presetHour === null) return;
     const t = scrollToMap(400);
     return () => clearTimeout(t);
   }, [presetHour]);

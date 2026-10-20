@@ -38,7 +38,10 @@ export const useSession = create<SessionState>()(
       afterLogin: null,
       loginMethod: null,
       setUser: (user, role = user?.roles[0] ?? null, loginMethod = null) => set({ user, role, loginMethod: user ? loginMethod : null }),
-      setRole: (role) => set({ role }),
+      // Only a role the user actually has; the backend checks permissions on every request anyway.
+      setRole: (role) => {
+        if (get().user?.roles.includes(role)) set({ role });
+      },
       updateUser: (patch) => {
         const user = get().user;
         if (user) set({ user: { ...user, ...patch } });
@@ -56,7 +59,26 @@ export const useSession = create<SessionState>()(
       clearCart: () => set({ cart: [] }),
       setAfterLogin: (afterLogin) => set({ afterLogin }),
     }),
-    { name: "kclub-session" },
+    {
+      name: "kclub-session",
+      // Keep only what the UI needs between visits; the cart and theme are harmless,
+      // the user is re-checked against the server on load (see EngineProvider).
+      partialize: (s) => ({
+        // Personal details like email and national ID stay out of localStorage.
+        user: s.user && { phone: s.user.phone, first: s.user.first, last: s.user.last, roles: s.user.roles, wallet: s.user.wallet, vip: s.user.vip },
+        role: s.role,
+        theme: s.theme,
+        cart: s.cart,
+        afterLogin: s.afterLogin,
+        loginMethod: s.loginMethod,
+      }),
+      // A role edited in localStorage that the user doesn't have falls back to their first role.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<SessionState>;
+        const role = p.user && p.role && p.user.roles.includes(p.role) ? p.role : (p.user?.roles[0] ?? null);
+        return { ...current, ...p, role };
+      },
+    },
   ),
 );
 

@@ -9,9 +9,9 @@ import { isValidNationalId, toLatinDigits } from "@/engine/format";
 import { useSession } from "@/engine/store";
 
 const schema = z.object({
-  first: z.string().trim().min(2, "نام را وارد کنید"),
-  last: z.string().trim().min(2, "نام خانوادگی را وارد کنید"),
-  email: z.union([z.literal(""), z.string().trim().email("ایمیل معتبر نیست")]),
+  first: z.string().trim().min(2, "نام را وارد کنید").max(40, "نام طولانی است"),
+  last: z.string().trim().min(2, "نام خانوادگی را وارد کنید").max(60, "نام خانوادگی طولانی است"),
+  email: z.union([z.literal(""), z.string().trim().max(120, "ایمیل طولانی است").email("ایمیل معتبر نیست")]),
   nationalId: z
     .string()
     .transform((v) => toLatinDigits(v).replace(/\D/g, ""))
@@ -50,8 +50,8 @@ export function useProfile() {
         nationalId: values.nationalId || undefined,
       };
       try {
-        await updateProfile(user.phone, patch);
-        updateUser(patch);
+        const fresh = await updateProfile(patch);
+        updateUser(fresh);
         form.reset(values);
         setSaved(true);
       } catch (ex) {

@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { freeCountSync, getCourts, getSlots, isPast, takenSync } from "@/engine/api";
+import { getAvailability, getCourts, getSlots, isPast, takenSync } from "@/engine/api";
 import { addDays, dayKey } from "@/engine/format";
 import { MAX_DAYS_AHEAD, courtsOf, gameOf, priceOf, rentalsForSport, sportById } from "@/engine/venue";
 import { rentalPriceOf, useRentalPrices } from "@/engine/pricing";
@@ -53,14 +53,18 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   // A named game on shared courts, the sport's only game, or the sport itself.
   const title = game || sportDef.games.length === 1 ? gameOf(sportDef, game).name : sportDef.name;
 
-  const days: DayAvailability[] = useMemo(
-    () =>
-      Array.from({ length: MAX_DAYS_AHEAD }, (_, i) => {
-        const d = dayKey(addDays(new Date(), i));
-        return { date: d, free: freeCountSync(sport, d), inCart: cart.some((item) => item.date === d) };
-      }),
-    [sport, cart],
-  );
+  const { data: availability = [] } = useQuery({
+    queryKey: ["availability", sport],
+    queryFn: () => getAvailability(sport, MAX_DAYS_AHEAD),
+    staleTime: 60_000,
+  });
+  const days: DayAvailability[] = useMemo(() => {
+    const free = new Map(availability.map((a) => [a.date, a.free]));
+    return Array.from({ length: MAX_DAYS_AHEAD }, (_, i) => {
+      const d = dayKey(addDays(new Date(), i));
+      return { date: d, free: free.get(d) ?? 0, inCart: cart.some((item) => item.date === d) };
+    });
+  }, [availability, cart]);
 
   const playedGame = game ?? (sportDef.games.length === 1 ? sportDef.games[0].id : undefined);
   const rentalOptions = rentalsForSport(sport, playedGame).map((r) => ({

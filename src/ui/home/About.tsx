@@ -29,7 +29,7 @@ function InfoTile({ item }: { item: InfoItem }) {
   );
   if (item.href && item.text)
     return (
-      <a className="inf" href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
+      <a className="inf" href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
         {body}
       </a>
     );

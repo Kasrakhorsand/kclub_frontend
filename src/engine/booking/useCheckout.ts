@@ -11,6 +11,7 @@ import { courtById, rentalsFor, sportById } from "@/engine/venue";
 import { itemTotal, rentalPriceOf, useRentalPrices } from "@/engine/pricing";
 import type { CartItem } from "@/engine/types";
 import { CHECKOUT_PATH, LOGIN_PATH } from "./useCart";
+import { redirectToPayment } from "@/engine/security";
 
 export type PaymentMethod = "wallet" | "gateway";
 
@@ -77,7 +78,12 @@ export function useCheckout() {
       setBusy(true);
       setError("");
       try {
-        const result = await createBookings(user, cart, method);
+        const result = await createBookings(cart, method);
+        // Gateway payment: hand over to the bank (only to an allowed host); the booking is confirmed on return.
+        if (result.gatewayUrl) {
+          if (!redirectToPayment(result.gatewayUrl)) throw new Error("PAYMENT_HOST");
+          return;
+        }
         clearCart();
         setConfirmation({ tracking: result.tracking });
       } catch {

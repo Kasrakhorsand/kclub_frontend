@@ -7,6 +7,7 @@ export const PASSWORD_MIN = 8;
 export const passwordRule = z
   .string()
   .min(PASSWORD_MIN, `رمز عبور حداقل ${PASSWORD_MIN.toLocaleString("fa-IR")} کاراکتر باشد`)
+  .max(128, "رمز عبور طولانی است")
   .regex(/[A-Za-z؀-ۿ]/, "رمز عبور باید حرف داشته باشد")
   .regex(/[0-9۰-۹]/, "رمز عبور باید عدد داشته باشد");
 

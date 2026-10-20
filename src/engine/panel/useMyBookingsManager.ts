@@ -4,10 +4,11 @@
  * refund preview (CANCEL_RULES) and a confirmation step.
  */
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cancelBooking } from "@/engine/api";
 import { refundPercent } from "@/engine/venue";
 import type { Booking } from "@/engine/types";
-import { useMyBookings, usePastBookings } from "./stats";
+import { myBookingsKey, useMyBookings, usePastBookings } from "./stats";
 
 export type BookingsTab = "upcoming" | "past";
 
@@ -17,6 +18,7 @@ export type PendingCancel = { booking: Booking; refundPercent: number; refundAmo
 export function useMyBookingsManager() {
   const upcomingAll = useMyBookings(20);
   const past = usePastBookings(30);
+  const client = useQueryClient();
   const [tab, setTab] = useState<BookingsTab>("upcoming");
   const [cancelled, setCancelled] = useState<Record<string, number>>({}); // id → refund amount
   const [pending, setPending] = useState<PendingCancel | null>(null);
@@ -47,6 +49,9 @@ export function useMyBookingsManager() {
         const result = await cancelBooking(pending.booking);
         setCancelled((c) => ({ ...c, [pending.booking.id]: result.refundAmount }));
         setPending(null);
+        // The wallet balance and booking list changed on the server.
+        client.invalidateQueries({ queryKey: myBookingsKey("upcoming") });
+        client.invalidateQueries({ queryKey: ["transactions"] });
         return result;
       } finally {
         setBusy(false);

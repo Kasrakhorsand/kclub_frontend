@@ -22,7 +22,7 @@ export function useSetPassword() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (user) fetchHasPassword(user.phone).then(setHasPassword);
+    if (user) fetchHasPassword().then(setHasPassword);
   }, [user]);
 
   /** An SMS login proves the phone, so the old password isn't needed. */
@@ -52,7 +52,7 @@ export function useSetPassword() {
       setError("");
       setSaved(false);
       try {
-        await setPassword(user.phone, password, needsCurrent ? current : undefined, loginMethod === "otp");
+        await setPassword(password, needsCurrent ? current : undefined);
         setHasPassword(true);
         setSaved(true);
         form.reset();
