@@ -125,7 +125,7 @@ function Upcoming({ bookings }: { bookings: Booking[] }) {
       </header>
       {!bookings.length && <p className="muted small">رزروی ندارید.</p>}
       <ol className="pd-timeline">
-        {bookings.slice(0, 5).map((b) => {
+        {bookings.slice(0, 3).map((b) => {
           const court = courtById(b.courtId);
           return (
             <li key={b.id} style={{ ["--floor" as string]: court?.floor }}>
@@ -173,7 +173,7 @@ function Notifications() {
         <Link href="/panel/notif">همه</Link>
       </header>
       <ul className="pd-notifs">
-        {NOTIFS.map((n) => (
+        {NOTIFS.slice(0, 3).map((n) => (
           <li key={n.id} className={clsx(!n.read && "unread")}>
             <Icon3D name="bell" />
             <span>
@@ -194,11 +194,10 @@ export function PlayerDashboard() {
   return (
     <div className="pd">
       <WelcomeHero name={user.first} next={summary.next} />
+      {/* Three columns sized to fit one desktop screen; lists show the first few items with a link to the full page. */}
       <div className="pd-grid">
-        <div className="pd-col">
-          <Upcoming bookings={summary.upcoming} />
-          <QuickBook />
-        </div>
+        <Upcoming bookings={summary.upcoming} />
+        <QuickBook />
         <div className="pd-col">
           <WalletMini balance={user.wallet} />
           <Notifications />

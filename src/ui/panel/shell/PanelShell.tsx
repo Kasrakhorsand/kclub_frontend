@@ -67,7 +67,6 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="sb-foot">
-          <ThemeButton withLabel />
           <button className="sb-it out" onClick={panel.logout} title="خروج">
             <Icon3D name="door" className="ic" />
             <span className="sb-hide tl">خروج</span>
@@ -84,7 +83,8 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
           </button>
           <b>{panel.currentLabel}</b>
           <span className="pbar-sp" />
-          <span className="xs muted">{jFull(dayKey(new Date()))}</span>
+          <span className="xs muted pbar-date">{jFull(dayKey(new Date()))}</span>
+          <ThemeButton />
         </header>
         <main className="main">{children}</main>
       </div>
