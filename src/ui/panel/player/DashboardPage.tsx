@@ -1,8 +1,8 @@
 "use client";
 /**
  * Player › Dashboard (/panel): welcome hero with the next game and a live
- * countdown, stat tiles, quick booking per game, upcoming games, wallet and
- * latest notifications. Styles: player.css (classes prefixed "pd-").
+ * countdown, upcoming games, quick booking per game, wallet and latest
+ * notifications. Styles: player.css (classes prefixed "pd-").
  */
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
@@ -80,32 +80,6 @@ function WelcomeHero({ name, next }: { name: string; next: Booking | null }) {
           <p>سانس‌های خالی امروز را ببینید و زمین بگیرید.</p>
         </div>
       )}
-    </section>
-  );
-}
-
-type Tile = { icon: Icon3DName; label: string; value: string; hint?: string; href?: string };
-
-function StatTiles({ tiles }: { tiles: Tile[] }) {
-  return (
-    <section className="pd-stats" aria-label="خلاصه">
-      {tiles.map((t) => {
-        const body = (
-          <>
-            <Icon3D name={t.icon} />
-            <span className="pd-stat-text">
-              <span className="pd-stat-label">{t.label}</span>
-              <b>{t.value}</b>
-              {t.hint && <small>{t.hint}</small>}
-            </span>
-          </>
-        );
-        return t.href ? (
-          <Link key={t.label} className="pd-stat link" href={t.href}>{body}</Link>
-        ) : (
-          <div key={t.label} className="pd-stat">{body}</div>
-        );
-      })}
     </section>
   );
 }
@@ -216,20 +190,10 @@ function Notifications() {
 export function PlayerDashboard() {
   const user = useSession((s) => s.user)!;
   const summary = usePlayerSummary();
-  const favSport = summary.favoriteSport ? sportById(summary.favoriteSport) : undefined;
-  const favCourt = summary.favoriteCourt ? courtById(summary.favoriteCourt) : undefined;
 
   return (
     <div className="pd">
       <WelcomeHero name={user.first} next={summary.next} />
-      <StatTiles
-        tiles={[
-          { icon: "cal", label: "رزروهای پیش رو", value: fa(summary.upcoming.length), hint: "سانس", href: "/panel/res" },
-          { icon: "clock", label: "بازی در ۳۰ روز گذشته", value: fa(summary.played30), hint: "ساعت" },
-          { icon: "trophy", label: "رشته‌ی محبوب", value: favSport?.name ?? "—", hint: favCourt ? `بیشتر در ${favCourt.name}` : undefined },
-          { icon: "wallet", label: "کیف پول", value: faNum(user.wallet), hint: "تومان", href: "/panel/wallet" },
-        ]}
-      />
       <div className="pd-grid">
         <div className="pd-col">
           <Upcoming bookings={summary.upcoming} />
