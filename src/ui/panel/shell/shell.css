@@ -32,7 +32,6 @@
 .sb-it .ic.i3{width:30px;height:30px}
 .sb-it:hover .ic.i3{transform:translateY(-2px) rotate(-6deg)}
 .sb-it.on .ic.i3{filter:drop-shadow(0 0 6px rgba(255,255,255,.35))}
-@media (max-width:520px){.pbar-date{display:none}}
 
 /* The menu is a drawer on every screen: the burger in the top bar opens it, the scrim, Esc or a link closes it. */
 .pnl2{min-height:100vh}

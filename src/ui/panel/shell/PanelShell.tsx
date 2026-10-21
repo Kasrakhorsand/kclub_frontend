@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { dayKey, fa, jFull } from "@/engine/format";
+import { fa } from "@/engine/format";
 import { ROLE_EN, ROLE_FA } from "@/engine/panel/menus";
 import { usePanelSession } from "@/engine/panel/usePanelSession";
 import { SITE } from "@/config/site";
@@ -90,7 +90,6 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
             <b>{panel.currentLabel}</b>
           </div>
           <span className="pbar-sp" />
-          <span className="xs muted pbar-date">{jFull(dayKey(new Date()))}</span>
           <ThemeButton />
         </header>
         <main className="main">{children}</main>
