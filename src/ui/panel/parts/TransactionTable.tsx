@@ -1,7 +1,6 @@
 "use client";
 /** Wallet transactions table (player wallet, front-desk cash, admin reports). */
 import { fa, faNum, jDate } from "@/engine/format";
-import { USERS } from "@/engine/mock";
 import type { Tx } from "@/engine/types";
 
 const TX_TYPE: Record<Tx["type"], [label: string, pill: string]> = {
@@ -12,7 +11,6 @@ const TX_TYPE: Record<Tx["type"], [label: string, pill: string]> = {
 
 /** Wallet transactions table; `showUser` adds a column with the account holder. */
 export function TransactionTable({ rows, showUser }: { rows: Tx[]; showUser?: boolean }) {
-  const userName = (phone: string) => (USERS[phone] ? `${USERS[phone].first} ${USERS[phone].last}` : fa(phone));
   return (
     <div className="tbl-wrap">
       <table>
@@ -31,7 +29,7 @@ export function TransactionTable({ rows, showUser }: { rows: Tx[]; showUser?: bo
           {rows.map((tx) => (
             <tr key={tx.id}>
               <td>{jDate(tx.date)}</td>
-              {showUser && <td>{userName(tx.phone)}</td>}
+              {showUser && <td>{tx.userName ?? fa(tx.phone)}</td>}
               <td><span className={`pill ${TX_TYPE[tx.type][1]}`}>{TX_TYPE[tx.type][0]}</span></td>
               <td>{tx.desc}</td>
               <td>{tx.method}</td>

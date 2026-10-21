@@ -155,6 +155,8 @@ export interface Tx {
   method: string;
   /** Who recorded it (system, front-desk name, ...). */
   actor: string;
+  /** Account holder's name, on staff lists. */
+  userName?: string;
 }
 
 export type TicketStatus = "open" | "answered" | "escalated" | "closed";
@@ -345,4 +347,39 @@ export interface DeskBookingResult {
   total: number;
   /** Booked court-hours (items the backend accepted). */
   count: number;
+}
+/* ===== Front desk: customers, wallet operations, cash drawer ===== */
+
+/** One row of the front desk's customer list. */
+export interface CustomerRow extends DeskCustomer {
+  roles: Role[];
+  /** Day key of the last booking, if any. */
+  lastVisit?: string;
+  totalBookings: number;
+}
+
+export type CustomerFilter = "all" | "vip" | "upcoming" | "inactive";
+
+/** Everything the desk sees when a customer is opened. */
+export interface CustomerDetail {
+  customer: CustomerRow;
+  upcoming: Booking[];
+  recent: Booking[];
+  transactions: Tx[];
+}
+
+/** Money taken or given back at the desk. */
+export type DeskMethod = "pos" | "cash";
+
+/** One day's cash drawer for the signed-in front desk user. */
+export interface CashReport {
+  date: string;
+  rows: Tx[];
+  byMethod: { method: string; received: number; refunded: number; count: number }[];
+  received: number;
+  refunded: number;
+  /** Cash expected in the drawer (cash received − cash refunded). */
+  expectedCash: number;
+  /** Set once the drawer was counted and closed. */
+  closed?: { counted: number; difference: number; at: string; note?: string };
 }

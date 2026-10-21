@@ -17,8 +17,8 @@ import { ApiError, http } from "@/engine/http";
 import { COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Booking, CartItem, Coach, Court, DeskBookingInput, DeskBookingResult, DeskCustomer, NewSupportTicket, Notif, PaymentResult, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
-import { addDays, dayKey } from "@/engine/format";
+import type { Booking, CartItem, CashReport, Coach, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, NewSupportTicket, Notif, PaymentResult, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
+import { addDays, dayKey, toLatinDigits } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
 /* ------------------------------------------------------------------ */
@@ -517,4 +517,132 @@ export async function getPaymentResult(ref: string): Promise<PaymentResult> {
   const status = ref.startsWith("F") ? "failed" : ref.startsWith("P") ? "pending" : "paid";
   const kind = ref.includes("TOP") ? "topup" : "booking";
   return wait({ ref, status, kind, amount: 800_000, tracking: status === "paid" && kind === "booking" ? "482139" : undefined, bankRef: "72834910563", wallet: mockWallet() }, 500);
+}
+/* ------------------------------------------------------------------ */
+/* Front desk: customers, wallet operations, transactions, cash drawer */
+/* ------------------------------------------------------------------ */
+
+const DESK_METHOD_FA: Record<DeskMethod, string> = { pos: "کارتخوان", cash: "نقدی" };
+/** Mock: who is at the desk, as "منشی: name". */
+const deskActor = () => {
+  const u = sessionUser();
+  return u ? `${u.roles.includes("admin") ? "مدیر" : "منشی"}: ${u.first} ${u.last}` : "منشی";
+};
+const nameOf = (phone: string) => (USERS[phone] ? `${USERS[phone].first} ${USERS[phone].last}` : db().find((b) => b.userPhone === phone)?.userName ?? phone);
+
+function mockCustomerRow(phone: string): CustomerRow {
+  const u = USERS[phone];
+  const today = dayKey(new Date());
+  const mine = db().filter((b) => b.userPhone === phone && b.status === "active");
+  const [first, ...rest] = (u ? `${u.first} ${u.last}` : nameOf(phone)).split(" ");
+  return {
+    phone,
+    first: u?.first ?? first,
+    last: u?.last ?? rest.join(" "),
+    wallet: mockWallet(phone),
+    vip: u?.vip,
+    roles: u?.roles ?? ["player"],
+    upcoming: mine.filter((b) => b.date >= today).length,
+    totalBookings: mine.length,
+    lastVisit: mine.filter((b) => b.date <= today).map((b) => b.date).sort().pop(),
+  };
+}
+
+/** Front desk: customers, searched by name or phone, with a quick filter. */
+export async function getCustomers(q: string, filter: CustomerFilter): Promise<CustomerRow[]> {
+  if (!USE_MOCK) return http("/staff/customers/list", { query: { q, filter } });
+  const phones = new Set([...Object.keys(USERS), ...db().map((b) => b.userPhone)]);
+  const needle = toLatinDigits(q.trim()).toLowerCase();
+  const rows = [...phones]
+    .map(mockCustomerRow)
+    .filter((c) => !needle || c.phone.includes(needle) || `${c.first} ${c.last}`.includes(q.trim()))
+    .filter((c) => (filter === "vip" ? c.vip : filter === "upcoming" ? c.upcoming > 0 : filter === "inactive" ? !c.upcoming : true))
+    .sort((a, b) => b.upcoming - a.upcoming || `${a.first}${a.last}`.localeCompare(`${b.first}${b.last}`, "fa"));
+  return wait(rows, 150);
+}
+
+/** Front desk: one customer's bookings and wallet history. */
+export async function getCustomerDetail(phone: string): Promise<CustomerDetail> {
+  if (!USE_MOCK) return http(`/staff/customers/${seg(phone)}`);
+  const today = dayKey(new Date());
+  const mine = db().filter((b) => b.userPhone === phone && b.status === "active");
+  return wait(structuredClone({
+    customer: mockCustomerRow(phone),
+    upcoming: mine.filter((b) => b.date > today || (b.date === today && !isPast(b.date, b.hour))).sort((a, b) => a.date.localeCompare(b.date) || a.hour - b.hour),
+    recent: mine.filter((b) => b.date < today || (b.date === today && isPast(b.date, b.hour))).sort((a, b) => b.date.localeCompare(a.date) || b.hour - a.hour).slice(0, 10),
+    transactions: TXS.filter((t) => t.phone === phone).sort((a, b) => b.date.localeCompare(a.date)),
+  }), 150);
+}
+
+/** Front desk: top up (charge) or pay back (refund) a customer's wallet at the desk. */
+export async function deskWalletOp(phone: string, kind: "charge" | "refund", amount: number, method: DeskMethod, note?: string): Promise<{ balance: number }> {
+  if (!USE_MOCK) return http(`/staff/customers/${seg(phone)}/wallet`, { method: "POST", body: { kind, amount, method, note } });
+  const balance = mockWallet(phone);
+  if (kind === "refund" && amount > balance) throw new ApiError("مبلغ بیشتر از موجودی کیف پول است", 422, "LOW_BALANCE");
+  const next = kind === "charge" ? balance + amount : balance - amount;
+  wallets.set(phone, next);
+  TXS.unshift({
+    id: `TX-${Date.now()}`, date: dayKey(new Date()), phone, type: kind === "charge" ? "charge" : "refund",
+    amount: kind === "charge" ? amount : -amount,
+    desc: note || (kind === "charge" ? "شارژ حضوری" : "برگشت وجه از کیف پول"),
+    method: DESK_METHOD_FA[method], actor: deskActor(),
+  });
+  return wait({ balance: next }, 300);
+}
+
+/** Front desk / admin: all wallet transactions in a date range, newest first. */
+export async function getAllTransactions(from: string, to: string): Promise<Tx[]> {
+  if (!USE_MOCK) return http("/staff/transactions", { query: { from, to } });
+  return wait(structuredClone(TXS.filter((t) => t.date >= from && t.date <= to).sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).map((t) => ({ ...t, userName: nameOf(t.phone) }))), 150);
+}
+
+/** Mock: closed drawers per date. */
+const drawers = new Map<string, NonNullable<CashReport["closed"]>>();
+
+/** Front desk: what the signed-in desk user took and paid back on a day, by method. */
+export async function getCashReport(date: string): Promise<CashReport> {
+  if (!USE_MOCK) return http("/staff/cash", { query: { date } });
+  const me = deskActor();
+  const rows = TXS.filter((t) => t.date === date && t.actor === me).map((t) => ({ ...t, userName: nameOf(t.phone) }));
+  const methods = [...new Set(rows.map((t) => t.method))];
+  const byMethod = methods.map((method) => {
+    const of = rows.filter((t) => t.method === method);
+    // Desk money: a charge or a desk-paid booking comes in; a refund goes out.
+    return {
+      method,
+      received: of.filter((t) => t.type !== "refund").reduce((a, t) => a + Math.abs(t.amount), 0),
+      refunded: of.filter((t) => t.type === "refund").reduce((a, t) => a + Math.abs(t.amount), 0),
+      count: of.length,
+    };
+  });
+  const cash = byMethod.find((m) => m.method === DESK_METHOD_FA.cash);
+  return wait(structuredClone({
+    date, rows, byMethod,
+    received: byMethod.reduce((a, m) => a + m.received, 0),
+    refunded: byMethod.reduce((a, m) => a + m.refunded, 0),
+    expectedCash: (cash?.received ?? 0) - (cash?.refunded ?? 0),
+    closed: drawers.get(date),
+  }), 150);
+}
+
+/** Front desk: count the cash drawer and close the day. */
+export async function closeCashDrawer(date: string, counted: number, note?: string): Promise<void> {
+  if (!USE_MOCK) return http("/staff/cash/close", { method: "POST", body: { date, counted, note } });
+  const report = await getCashReport(date);
+  drawers.set(date, { counted, difference: counted - report.expectedCash, at: new Date().toTimeString().slice(0, 5), note });
+  await wait(null, 200);
+}
+
+/** Front desk: cancel a booking for a customer; the refund follows the venue rules unless `fullRefund`. */
+export async function deskCancelBooking(id: string, reason: string, fullRefund = false): Promise<{ refundAmount: number }> {
+  if (!USE_MOCK) return http(`/staff/bookings/${seg(id)}/cancel`, { method: "POST", body: { reason, fullRefund } });
+  const b = db().find((x) => x.id === id);
+  if (!b) throw new ApiError("رزرو پیدا نشد", 404);
+  b.status = "cancelled";
+  const refundAmount = fullRefund ? b.price : Math.round((b.price * refundPercent(b.date, b.hour)) / 100);
+  if (refundAmount) {
+    wallets.set(b.userPhone, mockWallet(b.userPhone) + refundAmount);
+    TXS.unshift({ id: `TX-${Date.now()}`, date: dayKey(new Date()), phone: b.userPhone, type: "refund", amount: refundAmount, desc: `بازگشت وجه لغو ${courtById(b.courtId)?.name ?? ""} · ${reason}`, method: "کیف پول", actor: deskActor() });
+  }
+  return wait({ refundAmount }, 300);
 }

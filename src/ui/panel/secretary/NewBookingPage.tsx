@@ -3,8 +3,8 @@
  * Front desk + Admin › New booking (/panel/newb): walk-in or phone booking.
  * Customer by phone first, then court-hours picked straight on the day grid
  * (several at once), then game, rentals and weekly repeat; a sticky invoice
- * on the side takes the payment method and books. ?date, ?hour and ?court
- * prefill from the dashboard. Styles: secretary.css ("nb-").
+ * on the side takes the payment method and books. ?date, ?hour, ?court and
+ * ?phone prefill from the dashboard, schedule and customer pages. Styles: secretary.css ("nb-").
  */
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -211,7 +211,7 @@ function Invoice({ s }: { s: Desk }) {
 export function NewBookingView() {
   const params = useSearchParams();
   // URL parameters are user-controlled: accept only a bookable day, an opening hour and a known court.
-  const s = useStaffBooking({ date: bookableDateParam(params.get("date")), hour: openingHourParam(params.get("hour")), court: params.get("court") });
+  const s = useStaffBooking({ date: bookableDateParam(params.get("date")), hour: openingHourParam(params.get("hour")), court: params.get("court"), phone: params.get("phone") });
   return (
     <div className="nb">
       <PageHead title="رزرو جدید" sub="رزرو حضوری یا تلفنی؛ مشتری، سانس و پرداخت در یک صفحه" />

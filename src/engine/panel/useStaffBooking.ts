@@ -33,13 +33,13 @@ const plusWeeks = (date: string, w: number) => dayKey(addDays(new Date(`${date}T
 
 export type DeskCell = { court: Court; hour: number; state: "past" | "taken" | "free" | "picked"; booking?: Booking; price: number };
 
-export function useStaffBooking(preset: { date?: string | null; hour?: number | null; court?: string | null } = {}) {
+export function useStaffBooking(preset: { date?: string | null; hour?: number | null; court?: string | null; phone?: string | null } = {}) {
   const client = useQueryClient();
   const rentalPrices = useRentalPrices();
   const courts = COURTS.filter((c) => c.active);
 
   /* ----- customer ----- */
-  const [phoneText, setPhoneText] = useState("");
+  const [phoneText, setPhoneText] = useState(preset.phone && /^09\d{9}$/.test(preset.phone) ? preset.phone : "");
   const phone = toLatinDigits(phoneText).replace(/\D/g, "").slice(0, 11);
   const phoneOk = PHONE.test(phone);
   const { data: customer, isFetching: lookingUp } = useQuery({
