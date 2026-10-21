@@ -15,9 +15,9 @@
 import { USE_MOCK, SUPPORT_UPLOAD } from "@/engine/config";
 import { ApiError, http } from "@/engine/http";
 import { COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
-import { COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
+import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Booking, CartItem, Coach, Court, NewSupportTicket, Notif, PaymentResult, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
+import type { Booking, CartItem, Coach, Court, DeskBookingInput, DeskBookingResult, DeskCustomer, NewSupportTicket, Notif, PaymentResult, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
 import { addDays, dayKey } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -97,6 +97,42 @@ export async function getAvailability(sport: Sport, days: number): Promise<{ dat
 export async function getDayBoard(date: string): Promise<Booking[]> {
   if (!USE_MOCK) return http("/staff/board", { query: { date } });
   return wait(structuredClone(db().filter((b) => b.date === date && b.status === "active")));
+}
+
+/** Front desk: look a customer up by phone; null if they have no account yet. */
+export async function findCustomer(phone: string): Promise<DeskCustomer | null> {
+  if (!USE_MOCK) return http<DeskCustomer | null>("/staff/customers", { query: { phone } }).catch((ex) => (ex instanceof ApiError && ex.status === 404 ? null : Promise.reject(ex)));
+  const u = USERS[phone];
+  if (!u) return wait(null, 150);
+  const today = dayKey(new Date());
+  const upcoming = db().filter((b) => b.userPhone === phone && b.status === "active" && b.date >= today).length;
+  return wait({ phone, first: u.first, last: u.last, wallet: mockWallet(phone), vip: u.vip, upcoming }, 150);
+}
+
+/**
+ * Front desk: book court-hours for a customer (creating the account if the
+ * phone is new). The backend prices it, checks every slot (409 SLOT_TAKEN),
+ * charges the wallet or texts a payment link, and sends the confirmation SMS.
+ */
+export async function createDeskBooking(input: DeskBookingInput): Promise<DeskBookingResult> {
+  if (!USE_MOCK) return http("/staff/bookings", { method: "POST", body: input });
+  for (const it of input.items)
+    if (takenSync(it.date, it.courtId, it.hour)) throw new ApiError("یکی از سانس‌ها همین الان رزرو شد", 409, "SLOT_TAKEN");
+  const name = USERS[input.phone] ? `${USERS[input.phone].first} ${USERS[input.phone].last}` : `${input.first ?? ""} ${input.last ?? ""}`.trim();
+  const created = input.items.map<Booking>((it) => ({
+    id: `B-${Date.now()}-${it.courtId}-${it.date}-${it.hour}`,
+    courtId: it.courtId, date: it.date, hour: it.hour,
+    userPhone: input.phone, userName: name || input.phone,
+    price: itemTotal({ ...it, price: priceOf(courtById(it.courtId)!.sport, it.hour) }),
+    rentals: it.rentals, source: "staff", status: "active",
+  }));
+  const total = created.reduce((a, b) => a + b.price, 0);
+  if (input.payment === "wallet") {
+    if (mockWallet(input.phone) < total) throw new ApiError("موجودی کیف پول مشتری کافی نیست", 422, "LOW_BALANCE");
+    wallets.set(input.phone, mockWallet(input.phone) - total);
+  }
+  db().push(...created);
+  return wait({ tracking: String(Math.floor(100000 + Math.random() * 899999)), total, count: created.length }, 500);
 }
 
 /** Front desk: mark a booking's player as arrived. */

@@ -313,3 +313,36 @@ export interface PaymentResult {
   /** Why it failed, in Persian, if the backend knows. */
   message?: string;
 }
+/* ===== Front desk booking (walk-in or phone) ===== */
+
+/** A customer as the front desk sees them when typing a phone number. */
+export interface DeskCustomer {
+  phone: string;
+  first: string;
+  last: string;
+  wallet: number;
+  vip?: boolean;
+  /** Upcoming active bookings. */
+  upcoming: number;
+}
+
+/** How a desk booking is paid. "link" texts a gateway link; "later" leaves it unpaid until arrival. */
+export type DeskPayment = "pos" | "cash" | "wallet" | "link" | "later";
+
+export interface DeskBookingInput {
+  phone: string;
+  /** Only for a new customer. */
+  first?: string;
+  last?: string;
+  items: Pick<CartItem, "courtId" | "date" | "hour" | "game" | "rentals">[];
+  payment: DeskPayment;
+  note?: string;
+}
+
+export interface DeskBookingResult {
+  tracking: string;
+  /** Toman, as priced by the backend. */
+  total: number;
+  /** Booked court-hours (items the backend accepted). */
+  count: number;
+}
