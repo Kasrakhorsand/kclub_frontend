@@ -41,7 +41,7 @@ function Summary({ d }: { d: ReturnType<typeof useFrontDesk> }) {
 }
 
 /** The scoreboard: what each court is doing now and what comes next. */
-function NowBoard({ d }: { d: ReturnType<typeof useFrontDesk> }) {
+export function NowBoard({ d }: { d: ReturnType<typeof useFrontDesk> }) {
   const elapsed = (60 - d.board[0]?.minutesLeft) / 60 || 0;
   return (
     <section className="fd-now" aria-label="وضعیت زمین‌ها در این ساعت">
@@ -79,7 +79,7 @@ function NowBoard({ d }: { d: ReturnType<typeof useFrontDesk> }) {
 }
 
 /** The whole day per court, with a line at the current time. */
-function Timeline({ d }: { d: ReturnType<typeof useFrontDesk> }) {
+export function Timeline({ d }: { d: ReturnType<typeof useFrontDesk> }) {
   const cols = HOURS.length;
   const byCourt = (id: string) => d.bookings.filter((b) => b.courtId === id);
   return (

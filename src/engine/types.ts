@@ -200,6 +200,8 @@ export interface Notif {
 /** Audit-log entry for an admin or staff change. */
 export interface Audit {
   date: string;
+  /** "HH:mm", when known. */
+  time?: string;
   actor: string;
   action: string;
   target: string;
@@ -382,4 +384,61 @@ export interface CashReport {
   expectedCash: number;
   /** Set once the drawer was counted and closed. */
   closed?: { counted: number; difference: number; at: string; note?: string };
+}
+/* ===== Admin: revenue, courts, closures, pricing, settings ===== */
+
+/** One day of revenue in toman, per sport id, with the number of bookings. */
+export interface RevenueDay {
+  date: string;
+  bySport: Record<string, number>;
+  bookings: number;
+}
+
+export interface RevenueReport {
+  days: RevenueDay[];
+  total: number;
+  bySport: Record<string, number>;
+  /** Revenue per court id. */
+  byCourt: Record<string, number>;
+  /** Booked hours per court id, to read against the opening hours. */
+  hoursByCourt: Record<string, number>;
+  /** Share of bookings made online (0–1); the rest were entered at the desk. */
+  onlineShare: number;
+  bookings: number;
+}
+
+/** A court closed for a time range (maintenance, tournament). */
+export interface Closure {
+  id: string;
+  courtIds: string[];
+  date: string;
+  /** First closed start hour and the hour it opens again. */
+  from: number;
+  to: number;
+  reason: string;
+  /** Bookings that were cancelled because of it. */
+  affected: number;
+  createdBy: string;
+}
+
+export type NewClosure = Pick<Closure, "courtIds" | "date" | "from" | "to" | "reason"> & { fullRefund: boolean };
+
+/** Session prices per sport and the equipment rental prices, as the admin edits them. */
+export interface PriceSheet {
+  bands: Record<string, PriceBand[]>;
+  rentals: Record<string, number>;
+}
+
+/** Booking rules the admin can change. */
+export interface VenueSettings {
+  /** How many days ahead the public can book. */
+  maxDaysAhead: number;
+  /** Minutes a court is held while the player is at the bank gateway. */
+  holdMinutes: number;
+  /** Hour of day when a new day opens for booking (0–23). */
+  releaseHour: number;
+  /** Most active bookings one player may hold (0 = no limit). */
+  maxActivePerUser: number;
+  /** Refund `percent` if cancelled at least `hours` before the start (checked from the largest `hours`). */
+  cancelRules: { hours: number; percent: number }[];
 }

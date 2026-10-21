@@ -14,11 +14,11 @@
  */
 import { USE_MOCK, SUPPORT_UPLOAD } from "@/engine/config";
 import { ApiError, http } from "@/engine/http";
-import { COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
+import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Booking, CartItem, CashReport, Coach, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, NewSupportTicket, Notif, PaymentResult, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User } from "@/engine/types";
-import { addDays, dayKey, toLatinDigits } from "@/engine/format";
+import type { Audit, Booking, CartItem, CashReport, Closure, Coach, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, RevenueReport, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
+import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
 /* ------------------------------------------------------------------ */
@@ -647,4 +647,150 @@ export async function deskCancelBooking(id: string, reason: string, fullRefund =
     TXS.unshift({ id: `TX-${Date.now()}`, date: dayKey(new Date()), phone: b.userPhone, type: "refund", amount: refundAmount, desc: `بازگشت وجه لغو ${courtById(b.courtId)?.name ?? ""} · ${reason}`, method: "کیف پول", actor: deskActor() });
   }
   return wait({ refundAmount }, 300);
+}
+/* ------------------------------------------------------------------ */
+/* Admin: revenue, courts, closures, pricing, settings, audit          */
+/* ------------------------------------------------------------------ */
+
+/** Admin: revenue for the last `days` days (bookings by start date, cancelled ones excluded). */
+export async function getRevenue(days: number): Promise<RevenueReport> {
+  if (!USE_MOCK) return http("/admin/revenue", { query: { days } });
+  const start = addDays(new Date(), -days + 1);
+  const from = dayKey(start);
+  const to = dayKey(new Date());
+  // Sample data: seedBookings covers two weeks from its start, so stitch windows together.
+  const windows = Array.from({ length: Math.ceil(days / 14) + 1 }, (_, i) => seedBookings(addDays(start, i * 14)));
+  const seen = new Set<string>();
+  const list = [...windows.flat(), ...db()].filter((b) => {
+    const key = `${b.date}|${b.courtId}|${b.hour}`;
+    if (b.status !== "active" || b.date < from || b.date > to || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const sportOf = (courtId: string) => courtById(courtId)?.sport ?? "";
+  const daysOut = Array.from({ length: days }, (_, i) => {
+    const date = dayKey(addDays(start, i));
+    const of = list.filter((b) => b.date === date);
+    const bySport: Record<string, number> = {};
+    for (const b of of) bySport[sportOf(b.courtId)] = (bySport[sportOf(b.courtId)] ?? 0) + b.price;
+    return { date, bySport, bookings: of.length };
+  });
+  const bySport: Record<string, number> = {};
+  const byCourt: Record<string, number> = {};
+  const hoursByCourt: Record<string, number> = {};
+  for (const b of list) {
+    bySport[sportOf(b.courtId)] = (bySport[sportOf(b.courtId)] ?? 0) + b.price;
+    byCourt[b.courtId] = (byCourt[b.courtId] ?? 0) + b.price;
+    hoursByCourt[b.courtId] = (hoursByCourt[b.courtId] ?? 0) + 1;
+  }
+  return wait({
+    days: daysOut, bySport, byCourt, hoursByCourt,
+    total: list.reduce((a, b) => a + b.price, 0),
+    onlineShare: list.length ? list.filter((b) => b.source === "online").length / list.length : 0,
+    bookings: list.length,
+  }, 200);
+}
+
+/** Mock: admin changes kept in memory. */
+const adminState = {
+  courts: new Map<string, boolean>(),
+  closures: [] as Closure[],
+  bands: null as PriceSheet["bands"] | null,
+  settings: null as VenueSettings | null,
+};
+
+/** Admin: every court with its active flag. */
+export async function getAdminCourts(): Promise<Court[]> {
+  if (!USE_MOCK) return http("/admin/courts");
+  return wait(COURTS.map((c) => ({ ...c, active: adminState.courts.get(c.id) ?? c.active })), 100);
+}
+
+/** Admin: show or hide a court in online booking. */
+export async function setCourtActive(id: string, active: boolean): Promise<void> {
+  if (!USE_MOCK) return http(`/admin/courts/${seg(id)}`, { method: "PATCH", body: { active } });
+  adminState.courts.set(id, active);
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: active ? "فعال کردن زمین" : "غیرفعال کردن زمین", target: courtById(id)?.name ?? id, detail: active ? "نمایش در رزرو آنلاین" : "حذف از رزرو آنلاین" });
+  await wait(null, 150);
+}
+
+/** Bookings a closure would cancel. */
+const closureHits = (c: Pick<Closure, "courtIds" | "date" | "from" | "to">) =>
+  db().filter((b) => b.status === "active" && b.date === c.date && c.courtIds.includes(b.courtId) && b.hour >= c.from && b.hour < c.to);
+
+/** Admin: closures from today on. */
+export async function getClosures(): Promise<Closure[]> {
+  if (!USE_MOCK) return http("/admin/closures");
+  const today = dayKey(new Date());
+  return wait(structuredClone(adminState.closures.filter((c) => c.date >= today).sort((a, b) => a.date.localeCompare(b.date) || a.from - b.from)), 100);
+}
+
+/** Admin: the bookings a closure would cancel, before confirming it. */
+export async function previewClosure(c: Pick<Closure, "courtIds" | "date" | "from" | "to">): Promise<Booking[]> {
+  if (!USE_MOCK) return http("/admin/closures/preview", { method: "POST", body: c });
+  return wait(structuredClone(closureHits(c)), 150);
+}
+
+/** Admin: close courts for a time range; their bookings are cancelled, refunded and texted. */
+export async function createClosure(input: NewClosure): Promise<Closure> {
+  if (!USE_MOCK) return http("/admin/closures", { method: "POST", body: input });
+  const hits = closureHits(input);
+  for (const b of hits) {
+    b.status = "cancelled";
+    const refund = input.fullRefund ? b.price : Math.round((b.price * refundPercent(b.date, b.hour)) / 100);
+    if (refund) wallets.set(b.userPhone, mockWallet(b.userPhone) + refund);
+  }
+  const closure: Closure = { id: `CL-${Date.now()}`, courtIds: input.courtIds, date: input.date, from: input.from, to: input.to, reason: input.reason, affected: hits.length, createdBy: deskActor() };
+  adminState.closures.push(closure);
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "بستن زمین", target: input.courtIds.map((id) => courtById(id)?.name ?? id).join("، "), detail: `${input.reason} · ${hm(input.from)} تا ${hm(input.to)} · ${hits.length.toLocaleString("fa-IR")} رزرو لغو شد` });
+  return wait(structuredClone(closure), 300);
+}
+
+/** Admin: reopen a closed range (cancelled bookings stay cancelled). */
+export async function deleteClosure(id: string): Promise<void> {
+  if (!USE_MOCK) return http(`/admin/closures/${seg(id)}`, { method: "DELETE" });
+  adminState.closures = adminState.closures.filter((c) => c.id !== id);
+  await wait(null, 100);
+}
+
+/** Admin: session prices per sport and rental prices. */
+export async function getPriceSheet(): Promise<PriceSheet> {
+  if (!USE_MOCK) return http("/admin/pricing");
+  const { PRICING: defaults, RENTALS: rentalDefs } = await import("@/engine/venue");
+  const { usePricing } = await import("@/engine/pricing");
+  const overrides = usePricing.getState().rentalPrices;
+  return wait(structuredClone({
+    bands: adminState.bands ?? defaults,
+    rentals: Object.fromEntries(rentalDefs.map((r) => [r.id, overrides[r.id] ?? r.price])),
+  }), 100);
+}
+
+/** Admin: save prices; new bookings use them right away (the backend prices every booking). */
+export async function savePriceSheet(sheet: PriceSheet): Promise<void> {
+  if (!USE_MOCK) return http("/admin/pricing", { method: "PUT", body: sheet });
+  adminState.bands = structuredClone(sheet.bands);
+  const { usePricing } = await import("@/engine/pricing");
+  usePricing.getState().setRentalPrices(sheet.rentals);
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "تغییر قیمت", target: "قیمت سانس‌ها و اجاره", detail: "ذخیره‌ی جدول قیمت" });
+  await wait(null, 200);
+}
+
+/** Admin: booking rules. */
+export async function getVenueSettings(): Promise<VenueSettings> {
+  if (!USE_MOCK) return http("/admin/settings");
+  const v = await import("@/engine/venue");
+  return wait(structuredClone(adminState.settings ?? { maxDaysAhead: v.MAX_DAYS_AHEAD, holdMinutes: v.HOLD_MINUTES, releaseHour: 0, maxActivePerUser: 0, cancelRules: v.CANCEL_RULES }), 100);
+}
+
+/** Admin: save booking rules. */
+export async function saveVenueSettings(settings: VenueSettings): Promise<void> {
+  if (!USE_MOCK) return http("/admin/settings", { method: "PUT", body: settings });
+  adminState.settings = structuredClone(settings);
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "تغییر تنظیمات", target: "قوانین رزرو", detail: `بازه‌ی رزرو ${settings.maxDaysAhead.toLocaleString("fa-IR")} روز · نگه‌داشت ${settings.holdMinutes.toLocaleString("fa-IR")} دقیقه` });
+  await wait(null, 200);
+}
+
+/** Admin: who changed what, newest first. */
+export async function getAuditLog(from: string): Promise<Audit[]> {
+  if (!USE_MOCK) return http("/admin/audit", { query: { from } });
+  return wait(structuredClone(AUDIT.filter((a) => a.date >= from)), 120);
 }

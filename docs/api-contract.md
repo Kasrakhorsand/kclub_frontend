@@ -130,4 +130,23 @@
 | `GET /staff/cash` | `?date=` | `{ date, rows: Tx[], byMethod: [{ method, received, refunded, count }], received, refunded, expectedCash, closed? }`؛ فقط تراکنش‌هایی که همین کاربر پذیرش ثبت کرده. `expectedCash` = نقد دریافتی − نقد برگشتی. |
 | `POST /staff/cash/close` | `{ date, counted, note? }` | `204`. اختلاف (`counted − expectedCash`) ذخیره و به مدیریت گزارش می‌شود. برای اختلاف ۱۰۰ هزار تومان یا بیشتر توضیح لازم است. صندوق بسته‌شده دوباره بسته نمی‌شود (`409`). |
 
+## مدیریت (`/admin/...`، فقط نقش `admin`)
+
+هر تغییر در این بخش با نام مدیر، زمان و جزئیات در تاریخچه‌ی تغییرات ثبت می‌شود.
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /admin/revenue` | `?days=7\|30\|90` | `{ days: [{ date, bySport: { [sport]: toman }, bookings }], total, bySport, byCourt, hoursByCourt, onlineShare, bookings }`؛ رزروهای فعال بر اساس تاریخ سانس. |
+| `GET /admin/courts` | — | `Court[]` با `active` |
+| `PATCH /admin/courts/{id}` | `{ active }` | `204`. زمین غیرفعال در رزرو آنلاین نمی‌آید؛ رزروهای قبلی‌اش می‌مانند. |
+| `GET /admin/closures` | — | `Closure[]` از امروز به بعد: `{ id, courtIds, date, from, to, reason, affected, createdBy }` |
+| `POST /admin/closures/preview` | `{ courtIds, date, from, to }` | `Booking[]` که با این بستن لغو می‌شوند (بدون تغییر چیزی). |
+| `POST /admin/closures` | `{ courtIds, date, from, to, reason, fullRefund }` | `Closure`. رزروهای بازه لغو، وجه (کامل یا طبق قوانین) به کیف پول برگشت و به رزروکنندگان پیامک می‌شود. آن ساعت‌ها دیگر قابل رزرو نیستند. |
+| `DELETE /admin/closures/{id}` | — | `204`؛ زمین دوباره باز می‌شود (رزروهای لغوشده برنمی‌گردند). |
+| `GET /admin/pricing` | — | `{ bands: { [sport]: [{ from, to, price }] }, rentals: { [rentalId]: price } }` |
+| `PUT /admin/pricing` | همان شکل | `204`. هر قیمت بین ۱۰ هزار و ۱۰۰ میلیون تومان. رزروهای ثبت‌شده با قیمت قبلی می‌مانند؛ رزروهای تازه با قیمت جدید حساب می‌شوند. |
+| `GET /admin/settings` | — | `{ maxDaysAhead, holdMinutes, releaseHour, maxActivePerUser, cancelRules: [{ hours, percent }] }` |
+| `PUT /admin/settings` | همان شکل | `204`. بازه‌ها: `maxDaysAhead` ۱ تا ۹۰، `holdMinutes` ۳ تا ۳۰، `releaseHour` ۰ تا ۲۳، `maxActivePerUser` ۰ تا ۵۰ (۰ یعنی بی‌محدودیت). `cancelRules` نزولی بر اساس `hours`، آخری با `hours: 0`، و درصد برای لغو دیرتر بیشتر نشود. بک‌اند همین قوانین را برای رزرو، نگه‌داشت درگاه و برگشت وجه به کار ببرد. |
+| `GET /admin/audit` | `?from=` | `[{ date, time, actor, action, target, detail }]`، جدیدترین اول. |
+
 شکل نوع‌ها (`User`، `Booking`، `Court` و بقیه) در [`src/engine/types.ts`](../src/engine/types.ts) است.

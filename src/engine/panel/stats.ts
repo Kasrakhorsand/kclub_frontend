@@ -1,11 +1,10 @@
 "use client";
-/** Panel data: today's numbers, the day board, a player's bookings and revenue series. */
+/** Panel data: today's numbers, the day board and a player's bookings. */
 import { useQuery } from "@tanstack/react-query";
 import { getDayBoard, getMyBookings } from "@/engine/api";
-import { addDays, dayKey, jDate, jDay } from "@/engine/format";
-import { seedBookings } from "@/engine/mock";
+import { addDays, dayKey, jDate } from "@/engine/format";
 import { useSession } from "@/engine/store";
-import { CLOSE_HOUR, COURTS, HOURS, OPEN_HOUR, SPORTS, courtById } from "@/engine/venue";
+import { CLOSE_HOUR, COURTS, HOURS, OPEN_HOUR, courtById } from "@/engine/venue";
 import type { Booking } from "@/engine/types";
 
 /** Today's date key (yyyy-MM-dd, local time). */
@@ -49,29 +48,6 @@ export function useMyBookings(limit = 8) {
   const { data = [] } = useQuery({ queryKey: myBookingsKey("upcoming"), queryFn: () => getMyBookings("upcoming"), enabled: !!user });
   return data.slice(0, limit);
 }
-
-/** One day of revenue: Jalali day label plus millions of toman per sport id. */
-export type DayRevenue = { day: string } & Record<string, number | string>;
-
-/** Daily revenue in millions of toman for the last `days` days, one key per sport. */
-export function revenueSeries(days = 30): DayRevenue[] {
-  const start = addDays(new Date(), -days + 1);
-  // seedBookings covers two weeks from its start date, so stitch three windows together.
-  const bookings = [0, 14, 28].flatMap((offset) => seedBookings(addDays(start, offset)));
-  return Array.from({ length: days }, (_, i) => {
-    const key = dayKey(addDays(start, i));
-    const ofDay = bookings.filter((b) => b.date === key);
-    const row: DayRevenue = { day: jDay(key) };
-    for (const sport of SPORTS) {
-      row[sport.id] = ofDay.filter((b) => courtById(b.courtId)?.sport === sport.id).reduce((a, b) => a + b.price, 0) / 1e6;
-    }
-    return row;
-  });
-}
-
-/** Total of one sport, or of all sports, across a revenue series (millions of toman). */
-export const revenueTotal = (series: DayRevenue[], sport?: string) =>
-  series.reduce((sum, d) => sum + SPORTS.filter((s) => !sport || s.id === sport).reduce((a, s) => a + Number(d[s.id]), 0), 0);
 
 /** What a player's dashboard shows: next game, recent activity and habits. */
 export type PlayerSummary = {
