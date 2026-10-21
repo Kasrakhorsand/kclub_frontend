@@ -102,6 +102,32 @@
 
 | متد و مسیر | ورودی | خروجی |
 |---|---|---|
-| `GET /staff/board` | `?date=` | `Booking[]`؛ فقط برای پذیرش و مدیریت. |
+همه‌ی مسیرهای `/staff/...` فقط برای نقش پذیرش (`secretary`) و مدیریت (`admin`) هستند و بک‌اند نقش را از نشست بررسی می‌کند. هر عملیات مالی با نام کاربر پذیرش ثبت می‌شود (`actor`) و در تاریخچه‌ی تغییرات مدیریت می‌آید.
+
+### جدول و رزرو
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /staff/board` | `?date=` | `Booking[]`: رزروهای فعال آن روز، با `userPhone`، `source` و `checkedIn`. |
+| `POST /staff/bookings` | `{ phone, first?, last?, items: [{ courtId, date, hour, game?, rentals? }], payment, note? }` | `{ tracking, total, count }`. `payment` یکی از `pos`، `cash`، `wallet`، `link` (پیامک لینک درگاه) و `later` (پرداخت هنگام ورود) است. اگر شماره حساب نداشته باشد، با `first` و `last` ساخته می‌شود. قیمت را بک‌اند حساب می‌کند. سانس پر: `409` با `SLOT_TAKEN`. کیف پول کم: `422` با `LOW_BALANCE`. پیامک تأیید را بک‌اند می‌فرستد. |
+| `POST /staff/bookings/{id}/checkin` | — | `204`؛ ورود بازیکن ثبت می‌شود. |
+| `POST /staff/bookings/{id}/cancel` | `{ reason, fullRefund }` | `{ refundAmount }`. برگشت وجه طبق قوانین لغو به کیف پول؛ `fullRefund: true` برگشت کامل است و بهتر است فقط برای مدیریت یا با ثبت دلیل مجاز باشد. |
+
+### مشتری‌ها و کیف پول
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /staff/customers` | `?phone=` | `{ phone, first, last, wallet, vip?, upcoming }` یا `404` اگر حساب نیست (فرانت آن را «مشتری جدید» نشان می‌دهد). |
+| `GET /staff/customers/list` | `?q=&filter=all\|vip\|upcoming\|inactive` | `CustomerRow[]`: همان فیلدها به‌علاوه‌ی `roles`، `totalBookings` و `lastVisit?`. `q` روی نام و شماره جستجو می‌کند. **پذیرش فقط بازیکن‌ها را می‌بیند؛ مدیریت حساب کارکنان را هم می‌بیند.** |
+| `GET /staff/customers/{phone}` | — | `{ customer, upcoming: Booking[], recent: Booking[], transactions: Tx[] }` |
+| `POST /staff/customers/{phone}/wallet` | `{ kind: "charge"\|"refund", amount, method: "pos"\|"cash", note? }` | `{ balance }`. مبلغ بین ۱۰ هزار تا ۵۰ میلیون تومان؛ برگشت بیشتر از موجودی: `422` با `LOW_BALANCE`. |
+
+### تراکنش‌ها و صندوق
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /staff/transactions` | `?from=&to=` | `Tx[]` همه‌ی کاربران، جدیدترین اول، با `userName`. |
+| `GET /staff/cash` | `?date=` | `{ date, rows: Tx[], byMethod: [{ method, received, refunded, count }], received, refunded, expectedCash, closed? }`؛ فقط تراکنش‌هایی که همین کاربر پذیرش ثبت کرده. `expectedCash` = نقد دریافتی − نقد برگشتی. |
+| `POST /staff/cash/close` | `{ date, counted, note? }` | `204`. اختلاف (`counted − expectedCash`) ذخیره و به مدیریت گزارش می‌شود. برای اختلاف ۱۰۰ هزار تومان یا بیشتر توضیح لازم است. صندوق بسته‌شده دوباره بسته نمی‌شود (`409`). |
 
 شکل نوع‌ها (`User`، `Booking`، `Court` و بقیه) در [`src/engine/types.ts`](../src/engine/types.ts) است.

@@ -556,6 +556,8 @@ export async function getCustomers(q: string, filter: CustomerFilter): Promise<C
   const rows = [...phones]
     .map(mockCustomerRow)
     .filter((c) => !needle || c.phone.includes(needle) || `${c.first} ${c.last}`.includes(q.trim()))
+    // The backend scopes by role: the front desk sees players only, admin sees staff accounts too.
+    .filter((c) => useSession.getState().role === "admin" || (c.roles.length === 1 && c.roles[0] === "player"))
     .filter((c) => (filter === "vip" ? c.vip : filter === "upcoming" ? c.upcoming > 0 : filter === "inactive" ? !c.upcoming : true))
     .sort((a, b) => b.upcoming - a.upcoming || `${a.first}${a.last}`.localeCompare(`${b.first}${b.last}`, "fa"));
   return wait(rows, 150);
