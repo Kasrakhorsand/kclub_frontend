@@ -16,6 +16,8 @@ import { ComingSoon } from "@/ui/panel/common/ComingSoonPage";
 import { NotificationsView } from "@/ui/panel/common/NotificationsPage";
 import { ProfileView } from "@/ui/panel/common/ProfilePage";
 import { SupportView } from "@/ui/panel/common/SupportPage";
+import { MediaView } from "@/ui/panel/common/MediaPage";
+import { StaffView } from "@/ui/panel/admin/StaffPage";
 import { TicketsView } from "@/ui/panel/common/TicketsPage";
 import { PlayerDashboard } from "@/ui/panel/player/DashboardPage";
 import { MyBookingsView } from "@/ui/panel/player/MyBookingsPage";
@@ -58,6 +60,7 @@ const BY_ROLE: Record<Role, Routes> = {
     users: () => <UsersView />,
     wops: () => <AllTransactionsView title="کیف پول و تراکنش‌ها" />,
     cash: () => <DailyCashView />,
+    media: () => <MediaView />,
   },
   admin: {
     dash: () => <AdminDashboard />,
@@ -72,6 +75,8 @@ const BY_ROLE: Record<Role, Routes> = {
     rfin: () => <FinanceReportsView />,
     alltx: () => <AllTransactionsView title="تراکنش‌ها" />, // front desk page, admin title
     audit: () => <AuditLogView />,
+    staff: () => <StaffView />,
+    media: () => <MediaView />,
   },
 };
 

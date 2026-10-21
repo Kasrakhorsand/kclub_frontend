@@ -4,7 +4,8 @@
  */
 import type { Role } from "@/engine/types";
 
-export type MenuItem = { key: string; label: string; soon?: boolean };
+/** `needs: "content"` hides the item from a front desk account the admin gave no content permission. */
+export type MenuItem = { key: string; label: string; soon?: boolean; needs?: "content" };
 
 export const MENUS: Record<Role, MenuItem[]> = {
   player: [
@@ -32,13 +33,15 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "support", label: "پشتیبانی فنی سایت" },
     { key: "notif", label: "اعلان‌ها" },
     { key: "cash", label: "گزارش صندوق روزانه" },
+    { key: "media", label: "گالری و رسانه", needs: "content" },
     { key: "profile", label: "پروفایل و رمز عبور" },
   ],
   admin: [
     { key: "dash", label: "داشبورد" },
     { key: "sched", label: "جدول رزروها" },
     { key: "newb", label: "رزرو جدید" },
-    { key: "users", label: "کاربران و نقش‌ها" },
+    { key: "users", label: "کاربران" },
+    { key: "staff", label: "کارکنان و دسترسی‌ها" },
     { key: "courts", label: "زمین‌ها" },
     { key: "close", label: "بستن زمین" },
     { key: "pricing", label: "قیمت‌گذاری" },
@@ -47,6 +50,7 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "alltx", label: "تراکنش‌ها" },
     { key: "tickets", label: "تیکت‌ها" },
     { key: "support", label: "پشتیبانی فنی سایت" },
+    { key: "media", label: "گالری و رسانه" },
     { key: "audit", label: "تاریخچه تغییرات" },
     { key: "notif", label: "اعلان‌ها" },
     { key: "profile", label: "پروفایل و رمز عبور" },

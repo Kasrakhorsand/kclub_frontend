@@ -65,7 +65,7 @@ export const useSession = create<SessionState>()(
       // the user is re-checked against the server on load (see EngineProvider).
       partialize: (s) => ({
         // Personal details like email and national ID stay out of localStorage.
-        user: s.user && { phone: s.user.phone, first: s.user.first, last: s.user.last, roles: s.user.roles, wallet: s.user.wallet, vip: s.user.vip },
+        user: s.user && { phone: s.user.phone, first: s.user.first, last: s.user.last, roles: s.user.roles, wallet: s.user.wallet, vip: s.user.vip, permissions: s.user.permissions },
         role: s.role,
         theme: s.theme,
         cart: s.cart,

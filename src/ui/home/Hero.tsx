@@ -6,6 +6,7 @@ import { Button3D } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
 import { CountUp } from "@/ui/kit/CountUp";
 import { HERO, HERO_FACTS } from "@/config/home";
+import { useSiteMedia } from "@/engine/content/useSiteContent";
 
 const Logo3D = dynamic(() => import("@/ui/three/Logo3D"), { ssr: false, loading: () => <div className="klogo3" /> });
 
@@ -15,6 +16,8 @@ const CROSSFADE_MS = 900;
 /** Muted background videos; each one fades into the next just before it ends. Reduced motion loops the first clip. */
 function HeroVideos() {
   const wrap = useRef<HTMLDivElement>(null);
+  // Videos and poster the front desk replaced from the panel (config/home.tsx MEDIA_SLOTS).
+  const media = useSiteMedia();
   useEffect(() => {
     const videos = Array.from(wrap.current?.querySelectorAll("video") ?? []);
     if (!videos.length) return;
@@ -51,16 +54,17 @@ function HeroVideos() {
     videos.forEach((v) => v.addEventListener("timeupdate", onTime));
     play(videos[0]);
     return () => videos.forEach((v) => v.removeEventListener("timeupdate", onTime));
-  }, []);
+    // Re-wire the crossfade when a video is replaced from the panel.
+  }, [media.replaced]);
   return (
     <div className="bgv" aria-hidden="true" ref={wrap}>
       {HERO.videos.map((clip, i) => (
         <video
-          key={clip.src}
+          key={`${i}-${media.src(`hero-video-${i + 1}`, clip.src)}`}
           className={`hv ${i === 0 ? "on" : ""}`}
-          src={clip.src}
+          src={media.src(`hero-video-${i + 1}`, clip.src)}
           style={{ objectPosition: clip.pos }}
-          poster={i === 0 ? HERO.poster : undefined}
+          poster={i === 0 ? media.src("hero-poster", HERO.poster) : undefined}
           muted
           playsInline
           preload={i === 0 ? "auto" : "metadata"}

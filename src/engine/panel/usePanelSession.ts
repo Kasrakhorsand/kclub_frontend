@@ -10,6 +10,7 @@ import { useSession } from "@/engine/store";
 import { logout as apiLogout } from "@/engine/api";
 import { useUnreadNotifications } from "@/engine/notifications/useNotifications";
 import { usePendingTickets } from "@/engine/tickets/useTickets";
+import { useCan } from "@/engine/content/permissions";
 import type { Role } from "@/engine/types";
 import { MENUS, sectionHref } from "./menus";
 
@@ -29,7 +30,8 @@ export function usePanelSession() {
   }, [ready, user, router]);
 
   const section = path.split("/")[2] ?? "dash";
-  const menu = role ? MENUS[role] : [];
+  const content = useCan();
+  const menu = (role ? MENUS[role] : []).filter((m) => m.needs !== "content" || content.any);
 
   const unreadNotifs = useUnreadNotifications();
   const pendingTickets = usePendingTickets();

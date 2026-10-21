@@ -12,12 +12,12 @@
  *   rentals and top-ups itself.
  * - Path segments are URL-encoded; query values go through URLSearchParams.
  */
-import { USE_MOCK, SUPPORT_UPLOAD } from "@/engine/config";
+import { CONTENT_UPLOAD, USE_MOCK, SUPPORT_UPLOAD } from "@/engine/config";
 import { ApiError, http } from "@/engine/http";
 import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Audit, Booking, CartItem, CashReport, Closure, Coach, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, RevenueReport, Role, Slot, Sport, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
+import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, RevenueReport, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
 import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -146,7 +146,8 @@ export async function checkInBooking(id: string): Promise<void> {
 /** Coach profiles for the coaches page. */
 export async function getCoaches(): Promise<Coach[]> {
   if (!USE_MOCK) return http("/coaches");
-  return wait(COACHES);
+  // Photos replaced from the panel (sample data keeps them in memory).
+  return wait(COACHES.map((c) => ({ ...c, photo: content.coachPhotos.get(c.id) ?? c.photo })));
 }
 
 /** Current price per item for each rental (set by the admin). */
@@ -793,4 +794,197 @@ export async function saveVenueSettings(settings: VenueSettings): Promise<void> 
 export async function getAuditLog(from: string): Promise<Audit[]> {
   if (!USE_MOCK) return http("/admin/audit", { query: { from } });
   return wait(structuredClone(AUDIT.filter((a) => a.date >= from)), 120);
+}
+/* ------------------------------------------------------------------ */
+/* Admin: staff roles and content permissions                          */
+/* ------------------------------------------------------------------ */
+
+/** Mock: content permissions per phone. */
+const staffPerms = new Map<string, StaffPermission[]>();
+const staffOf = (phone: string): StaffMember => {
+  const u = USERS[phone];
+  return { phone, first: u?.first ?? "", last: u?.last ?? "", roles: u?.roles ?? ["player"], permissions: staffPerms.get(phone) ?? u?.permissions ?? [] };
+};
+
+/** Admin: every account with a front desk or admin role. */
+export async function getStaff(): Promise<StaffMember[]> {
+  if (!USE_MOCK) return http("/admin/staff");
+  return wait(Object.keys(USERS).filter((p) => USERS[p].roles.some((r) => r !== "player")).map(staffOf), 120);
+}
+
+/**
+ * Admin: give a phone the front desk role. A number without an account gets
+ * one with the given name. The person sees the front desk panel on next login.
+ */
+export async function grantStaffRole(phone: string, role: "secretary", name?: { first: string; last: string }): Promise<StaffMember> {
+  if (!USE_MOCK) return http("/admin/staff", { method: "POST", body: { phone, role, ...name } });
+  if (!USERS[phone]) {
+    if (!name) throw new ApiError("این شماره حساب ندارد؛ نام را وارد کنید", 422, "NAME_REQUIRED");
+    USERS[phone] = { phone, first: name.first, last: name.last, roles: ["player"], wallet: 0 };
+  }
+  const u = USERS[phone];
+  if (!u.roles.includes(role)) u.roles = [...u.roles, role];
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "دادن نقش", target: `${u.first} ${u.last}`, detail: `نقش منشی به ${phone}` });
+  return wait(staffOf(phone), 200);
+}
+
+/** Admin: take a staff role away. Your own admin role and the last admin can't be removed. */
+export async function revokeStaffRole(phone: string, role: "secretary" | "admin"): Promise<void> {
+  if (!USE_MOCK) return http(`/admin/staff/${seg(phone)}/roles/${seg(role)}`, { method: "DELETE" });
+  const u = USERS[phone];
+  if (!u) throw new ApiError("کاربر پیدا نشد", 404);
+  if (role === "admin" && phone === sessionPhone()) throw new ApiError("نقش مدیر خودتان را نمی‌توانید بردارید", 409, "SELF_ADMIN");
+  if (role === "admin" && Object.values(USERS).filter((x) => x.roles.includes("admin")).length <= 1) throw new ApiError("حداقل یک مدیر باید بماند", 409, "LAST_ADMIN");
+  u.roles = u.roles.filter((r) => r !== role);
+  if (!u.roles.length) u.roles = ["player"];
+  if (role === "secretary") staffPerms.delete(phone);
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "برداشتن نقش", target: `${u.first} ${u.last}`, detail: role === "admin" ? "نقش مدیر" : "نقش منشی" });
+  await wait(null, 200);
+}
+
+/** Admin: what a front desk account may do with site content. */
+export async function setStaffPermissions(phone: string, permissions: StaffPermission[]): Promise<void> {
+  if (!USE_MOCK) return http(`/admin/staff/${seg(phone)}/permissions`, { method: "PUT", body: { permissions } });
+  staffPerms.set(phone, permissions);
+  if (USERS[phone]) USERS[phone].permissions = permissions;
+  AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "تغییر دسترسی", target: USERS[phone] ? `${USERS[phone].first} ${USERS[phone].last}` : phone, detail: permissions.length ? permissions.join("، ") : "بدون دسترسی محتوا" });
+  await wait(null, 150);
+}
+
+/* ------------------------------------------------------------------ */
+/* Site content: gallery albums, coach photos, home page media         */
+/* ------------------------------------------------------------------ */
+
+/** Mock: content lives in memory; uploaded files are shown through blob: URLs until reload. */
+const content = {
+  albums: [] as Album[],
+  coachPhotos: new Map<string, string>(),
+  siteMedia: new Map<string, MediaItem>(),
+};
+const mediaFromFile = (f: File): MediaItem => ({ id: `M-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, kind: f.type.startsWith("video/") ? "video" : "image", url: URL.createObjectURL(f), alt: f.name.replace(/\.[^.]+$/, "") });
+const filesForm = (files: File[], data?: unknown) => {
+  const form = new FormData();
+  if (data !== undefined) form.append("data", JSON.stringify(data));
+  for (const f of files) form.append("files", f, f.name);
+  return form;
+};
+const touch = (a: Album) => { a.updatedAt = new Date().toISOString(); };
+const logContent = (action: string, target: string, detail = "") => AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action, target, detail });
+
+/** Public: published albums with their photos, for the home page gallery. */
+export async function getGallery(): Promise<Album[]> {
+  if (!USE_MOCK) return http("/site/gallery");
+  return wait(structuredClone(content.albums.filter((a) => a.published && a.items.length)), 100);
+}
+
+/** Staff: every album, published or not. */
+export async function getAlbums(): Promise<Album[]> {
+  if (!USE_MOCK) return http("/staff/albums");
+  return wait(structuredClone(content.albums), 100);
+}
+
+/** Staff (albums permission): new empty, unpublished album. */
+export async function createAlbum(title: string): Promise<Album> {
+  if (!USE_MOCK) return http("/staff/albums", { method: "POST", body: { title } });
+  const album: Album = { id: `AL-${Date.now()}`, title, published: false, items: [], updatedAt: new Date().toISOString() };
+  content.albums.push(album);
+  logContent("ساخت آلبوم", title);
+  return wait(structuredClone(album), 150);
+}
+
+/** Staff (albums permission): rename, publish/hide or set the cover. */
+export async function updateAlbum(id: string, patch: Partial<Pick<Album, "title" | "published" | "coverId">>): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/albums/${seg(id)}`, { method: "PATCH", body: patch });
+  const a = content.albums.find((x) => x.id === id);
+  if (!a) throw new ApiError("آلبوم پیدا نشد", 404);
+  Object.assign(a, patch);
+  touch(a);
+  if (patch.published !== undefined) logContent(patch.published ? "انتشار آلبوم" : "پنهان کردن آلبوم", a.title);
+  await wait(null, 120);
+}
+
+/** Staff (albums permission): delete an album and its photos. */
+export async function deleteAlbum(id: string): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/albums/${seg(id)}`, { method: "DELETE" });
+  const a = content.albums.find((x) => x.id === id);
+  content.albums = content.albums.filter((x) => x.id !== id);
+  if (a) logContent("حذف آلبوم", a.title, `${a.items.length.toLocaleString("fa-IR")} عکس`);
+  await wait(null, 120);
+}
+
+/** Staff (gallery permission): add photos to an album. */
+export async function addAlbumPhotos(id: string, files: File[]): Promise<Album> {
+  if (!USE_MOCK) return http(`/staff/albums/${seg(id)}/items`, { method: "POST", body: filesForm(files), timeoutMs: CONTENT_UPLOAD.timeoutMs });
+  const a = content.albums.find((x) => x.id === id);
+  if (!a) throw new ApiError("آلبوم پیدا نشد", 404);
+  a.items.push(...files.map(mediaFromFile));
+  a.coverId ??= a.items[0]?.id;
+  touch(a);
+  logContent("افزودن عکس به گالری", a.title, `${files.length.toLocaleString("fa-IR")} عکس`);
+  return wait(structuredClone(a), 300);
+}
+
+/** Staff (gallery permission): caption or alt text of one photo. */
+export async function updateAlbumPhoto(albumId: string, itemId: string, patch: Pick<MediaItem, "caption" | "alt">): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/albums/${seg(albumId)}/items/${seg(itemId)}`, { method: "PATCH", body: patch });
+  const it = content.albums.find((x) => x.id === albumId)?.items.find((i) => i.id === itemId);
+  if (it) Object.assign(it, patch);
+  await wait(null, 80);
+}
+
+/** Staff (gallery permission): remove a photo. */
+export async function removeAlbumPhoto(albumId: string, itemId: string): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/albums/${seg(albumId)}/items/${seg(itemId)}`, { method: "DELETE" });
+  const a = content.albums.find((x) => x.id === albumId);
+  if (a) {
+    a.items = a.items.filter((i) => i.id !== itemId);
+    if (a.coverId === itemId) a.coverId = a.items[0]?.id;
+    touch(a);
+    logContent("حذف عکس از گالری", a.title);
+  }
+  await wait(null, 100);
+}
+
+/** Staff (gallery permission): new photo order. */
+export async function reorderAlbum(albumId: string, ids: string[]): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/albums/${seg(albumId)}/order`, { method: "PUT", body: { ids } });
+  const a = content.albums.find((x) => x.id === albumId);
+  if (a) a.items = ids.map((id) => a.items.find((i) => i.id === id)).filter((i): i is MediaItem => !!i);
+  await wait(null, 80);
+}
+
+/** Staff (coaches permission): replace a coach's photo, or remove it with `file = null`. */
+export async function setCoachPhoto(coachId: string, file: File | null): Promise<string | null> {
+  if (!USE_MOCK)
+    return file
+      ? (await http<{ url: string }>(`/staff/coaches/${seg(coachId)}/photo`, { method: "PUT", body: filesForm([file]), timeoutMs: CONTENT_UPLOAD.timeoutMs })).url
+      : (await http(`/staff/coaches/${seg(coachId)}/photo`, { method: "DELETE" }), null);
+  const coach = COACHES.find((c) => c.id === coachId);
+  if (file) content.coachPhotos.set(coachId, URL.createObjectURL(file));
+  else content.coachPhotos.delete(coachId);
+  logContent(file ? "تعویض عکس مربی" : "حذف عکس مربی", coach?.name ?? coachId);
+  return wait(content.coachPhotos.get(coachId) ?? null, 200);
+}
+
+/** Public: the home page photos and videos the staff replaced, by slot id (missing = config default). */
+export async function getSiteMedia(): Promise<Record<string, MediaItem>> {
+  if (!USE_MOCK) return http("/site/media");
+  return wait(Object.fromEntries(content.siteMedia), 60);
+}
+
+/** Staff (home permission): replace one home page photo or video. */
+export async function setSiteMedia(slot: string, file: File): Promise<MediaItem> {
+  if (!USE_MOCK) return http(`/staff/site-media/${seg(slot)}`, { method: "PUT", body: filesForm([file]), timeoutMs: CONTENT_UPLOAD.timeoutMs });
+  const item = mediaFromFile(file);
+  content.siteMedia.set(slot, item);
+  logContent("تعویض رسانه‌ی صفحه‌ی اصلی", slot, file.name);
+  return wait(structuredClone(item), 300);
+}
+
+/** Staff (home permission): go back to the default photo or video of a slot. */
+export async function resetSiteMedia(slot: string): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/site-media/${seg(slot)}`, { method: "DELETE" });
+  content.siteMedia.delete(slot);
+  logContent("برگرداندن رسانه‌ی پیش‌فرض", slot);
+  await wait(null, 100);
 }

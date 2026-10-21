@@ -1,4 +1,5 @@
-import { COACHES } from "@/engine/mock";
+"use client";
+import { useCoaches } from "@/engine/content/useSiteContent";
 import { fa } from "@/engine/format";
 import { CoachBook } from "@/ui/coaches/CoachBook";
 import { CoachPortrait } from "@/ui/coaches/CoachPortrait";
@@ -16,6 +17,7 @@ const price = (p: number) => (p >= 1e6 ? `${fa(p / 1e6)} میلیون تومان
 
 /** Coach cards with rating, experience and price; booking a coach opens in a later phase. */
 export function CoachesPage() {
+  const { coaches: COACHES } = useCoaches();
   return (
     <main className="wrap">
       <div className="pghead">

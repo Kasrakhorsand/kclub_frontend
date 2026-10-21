@@ -149,4 +149,39 @@
 | `PUT /admin/settings` | همان شکل | `204`. بازه‌ها: `maxDaysAhead` ۱ تا ۹۰، `holdMinutes` ۳ تا ۳۰، `releaseHour` ۰ تا ۲۳، `maxActivePerUser` ۰ تا ۵۰ (۰ یعنی بی‌محدودیت). `cancelRules` نزولی بر اساس `hours`، آخری با `hours: 0`، و درصد برای لغو دیرتر بیشتر نشود. بک‌اند همین قوانین را برای رزرو، نگه‌داشت درگاه و برگشت وجه به کار ببرد. |
 | `GET /admin/audit` | `?from=` | `[{ date, time, actor, action, target, detail }]`، جدیدترین اول. |
 
+## کارکنان و دسترسی‌ها (فقط `admin`)
+
+`User` در `/auth/me` فیلد `permissions?: ("gallery"|"albums"|"coaches"|"home")[]` هم دارد. مدیر همه‌ی دسترسی‌ها را دارد؛ منشی فقط آنچه مدیر داده. **بک‌اند هر درخواست محتوا را با همین دسترسی‌ها بررسی کند**؛ پنهان شدن دکمه در پنل امنیت نیست.
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /admin/staff` | — | `[{ phone, first, last, roles, permissions }]`: هر حسابی که نقش منشی یا مدیر دارد. |
+| `POST /admin/staff` | `{ phone, role: "secretary", first?, last? }` | `StaffMember`. اگر شماره حساب ندارد با نام داده‌شده ساخته می‌شود (بدون نام: `422` با `NAME_REQUIRED`). |
+| `DELETE /admin/staff/{phone}/roles/{role}` | — | `204`. مدیر نقش مدیر خودش را برنمی‌دارد (`409 SELF_ADMIN`) و آخرین مدیر حذف نمی‌شود (`409 LAST_ADMIN`). نشست‌های باز آن نقش باید باطل شوند. |
+| `PUT /admin/staff/{phone}/permissions` | `{ permissions }` | `204` |
+
+## محتوای سایت: گالری، عکس مربیان، رسانه‌ی صفحه‌ی اصلی
+
+آپلودها `multipart/form-data` با بخش‌های `files` (و `data` برای JSON در صورت نیاز). عکس: JPG، PNG یا WEBP تا ۸ مگابایت؛ ویدیو: MP4 یا WEBM تا ۸۰ مگابایت؛ هر بار تا ۲۰ عکس. بک‌اند نوع واقعی فایل را از محتوا تشخیص دهد، EXIF را پاک کند، اندازه‌های کوچک‌تر (thumbnail) بسازد و فایل‌ها را از دامنه‌ی خودش یا CDN داخلی سرو کند.
+
+| متد و مسیر | دسترسی | ورودی | خروجی |
+|---|---|---|---|
+| `GET /site/gallery` | عمومی | — | `Album[]` منتشرشده با عکس: `{ id, title, published, coverId?, items: MediaItem[], updatedAt }` |
+| `GET /staff/albums` | gallery یا albums | — | همه‌ی آلبوم‌ها |
+| `POST /staff/albums` | albums | `{ title }` | `Album` (پیش‌نویس) |
+| `PATCH /staff/albums/{id}` | albums | `{ title?, published?, coverId? }` | `204` |
+| `DELETE /staff/albums/{id}` | albums | — | `204` |
+| `POST /staff/albums/{id}/items` | gallery | `files` | `Album` |
+| `PATCH /staff/albums/{id}/items/{itemId}` | gallery | `{ caption?, alt? }` | `204` |
+| `DELETE /staff/albums/{id}/items/{itemId}` | gallery | — | `204` |
+| `PUT /staff/albums/{id}/order` | gallery | `{ ids }` | `204` |
+| `GET /coaches` | عمومی | — | `Coach[]` با `photo?` |
+| `PUT /staff/coaches/{id}/photo` | coaches | `files` (یک عکس) | `{ url }` |
+| `DELETE /staff/coaches/{id}/photo` | coaches | — | `204` |
+| `GET /site/media` | عمومی | — | `{ [slotId]: MediaItem }`: فقط جایگاه‌هایی که عوض شده‌اند. |
+| `PUT /staff/site-media/{slotId}` | home | `files` (یک فایل) | `MediaItem` |
+| `DELETE /staff/site-media/{slotId}` | home | — | `204`؛ فایل پیش‌فرض سایت برمی‌گردد. |
+
+`MediaItem`: `{ id, kind: "image"|"video", url, alt?, caption?, width?, height? }`. شناسه‌ی جایگاه‌ها: `hero-video-1`، `hero-video-2`، `hero-video-3` (ویدیو)، `hero-poster`، `card-padel`، `card-beach-tennis`، `card-beach-volley` (عکس). فهرست کامل در `src/config/home.tsx` (`MEDIA_SLOTS`) است. هر تغییر محتوا در تاریخچه‌ی تغییرات ثبت شود.
+
 شکل نوع‌ها (`User`، `Booking`، `Court` و بقیه) در [`src/engine/types.ts`](../src/engine/types.ts) است.

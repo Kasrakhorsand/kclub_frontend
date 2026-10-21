@@ -96,3 +96,27 @@ export const FINAL_CTA = {
   text: "سانس خالی را ببین، زمین را انتخاب کن و در کمتر از دو دقیقه پرداخت کن.",
   secondary: { href: "/coaches", label: "کلاس با مربی" },
 };
+
+/**
+ * Home page photos and videos the front desk can replace from the panel
+ * (Gallery & media › Home page). `fallback` is the file shipped with the site.
+ */
+export const MEDIA_SLOTS: { id: string; group: string; label: string; kind: "image" | "video"; fallback: string; hint: string }[] = [
+  ...HERO.videos.map((v, i) => ({
+    id: `hero-video-${i + 1}`,
+    group: "ویدیوهای بالای صفحه",
+    label: `ویدیوی ${(i + 1).toLocaleString("fa-IR")}`,
+    kind: "video" as const,
+    fallback: v.src,
+    hint: "افقی ۱۶:۹، ۸ تا ۱۵ ثانیه، بی‌صدا؛ MP4 یا WEBM تا ۸۰ مگابایت",
+  })),
+  { id: "hero-poster", group: "ویدیوهای بالای صفحه", label: "عکس جایگزین ویدیو", kind: "image", fallback: HERO.poster, hint: "تا ویدیو بارگذاری شود نمایش داده می‌شود؛ افقی ۱۶:۹" },
+  ...SPORT_CARDS.cards.map((c) => ({
+    id: c.img.split("/").pop()!.replace(/\.\w+$/, ""),
+    group: "کارت‌های بازی",
+    label: `کارت ${c.name}`,
+    kind: "image" as const,
+    fallback: c.img,
+    hint: "عمودی ۳:۴، حداقل ۹۰۰ پیکسل عرض",
+  })),
+];

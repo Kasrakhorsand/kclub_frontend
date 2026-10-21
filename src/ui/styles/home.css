@@ -237,3 +237,21 @@ a.inf:hover{transform:translateY(-2px)}
 .facts3 b{font-weight:300;letter-spacing:.5px;font-variant-numeric:tabular-nums;color:var(--gold-2)}
 .facts3 b span{font-size:inherit;color:inherit;font-weight:inherit}
 .facts3 .f3i>span>span{font-size:.82rem;color:#A9A59D;margin-top:2px}
+
+/* gallery: album tabs, open buttons and the full-size viewer */
+.gl-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.gl-tabs button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.82rem;padding:6px 14px;border-radius:999px;cursor:pointer}
+.gl-tabs button small{font-size:.7rem;color:var(--muted)}
+.gl-tabs button.on{background:var(--black);border-color:var(--black);color:var(--gold-2)}
+.gl-tabs button.on small{color:var(--gold-2);opacity:.7}
+.gl-open{display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.gl-open:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.gl-view{position:fixed;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px max(16px,env(safe-area-inset-left,0px));background:rgba(5,5,6,.92);cursor:zoom-out}
+.gl-view img{max-width:min(1200px,100%);max-height:78vh;object-fit:contain;border-radius:10px;cursor:default}
+.gl-view p{margin:0;color:#ECEAE4;font-size:.9rem}
+.gl-count{color:#8F8C86;font-size:.76rem;font-variant-numeric:tabular-nums}
+.gl-close,.gl-nav{position:absolute;width:44px;height:44px;border-radius:50%;border:1px solid #3a3833;background:#141210;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+.gl-close{top:calc(18px + env(safe-area-inset-top,0px));inset-inline-end:18px;font-size:1rem}
+.gl-nav{top:50%;transform:translateY(-50%)}
+.gl-nav.prev{inset-inline-start:18px}
+.gl-nav.next{inset-inline-end:18px}

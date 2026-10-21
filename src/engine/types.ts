@@ -88,6 +88,8 @@ export interface User {
   /** Wallet balance in toman. */
   wallet: number;
   vip?: boolean;
+  /** Content permissions the admin gave this front desk account (admin has them all). */
+  permissions?: StaffPermission[];
 }
 
 /** One court-hour in the booking cart; price is fixed when added. */
@@ -441,4 +443,44 @@ export interface VenueSettings {
   maxActivePerUser: number;
   /** Refund `percent` if cancelled at least `hours` before the start (checked from the largest `hours`). */
   cancelRules: { hours: number; percent: number }[];
+}
+/* ===== Staff roles and site content (gallery, coach photos, home media) ===== */
+
+/**
+ * What the admin can let a front desk account do with site content:
+ * gallery = add/remove photos in existing albums · albums = create, rename,
+ * publish and delete albums · coaches = coach profile photos ·
+ * home = replace the home page's photos and videos.
+ */
+export type StaffPermission = "gallery" | "albums" | "coaches" | "home";
+
+/** A staff account as the admin manages it. */
+export interface StaffMember {
+  phone: string;
+  first: string;
+  last: string;
+  roles: Role[];
+  permissions: StaffPermission[];
+}
+
+/** An uploaded image or video. */
+export interface MediaItem {
+  id: string;
+  kind: "image" | "video";
+  url: string;
+  /** Text for screen readers and when the image can't load. */
+  alt?: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface Album {
+  id: string;
+  title: string;
+  /** Hidden from the site until published. */
+  published: boolean;
+  coverId?: string;
+  items: MediaItem[];
+  updatedAt: string;
 }

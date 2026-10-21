@@ -1,9 +1,12 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { SPORT_CARDS } from "@/config/home";
+import { useSiteMedia } from "@/engine/content/useSiteContent";
 
 /** Photo card per game, each linking to its booking page. Content: `config/home.tsx`. */
 export function SportCards() {
+  const media = useSiteMedia();
   return (
     <section className="sports3" data-reveal>
       <div className="wrap">
@@ -15,7 +18,7 @@ export function SportCards() {
           {SPORT_CARDS.cards.map((card) => (
             <Link key={card.name} href={card.href} className="spc">
               <div className="med">
-                <img src={card.img} alt={card.alt} loading="lazy" style={{ objectPosition: card.pos }} />
+                <img src={media.src(card.img.split("/").pop()!.replace(/\.\w+$/, ""), card.img)} alt={card.alt} loading="lazy" style={{ objectPosition: card.pos }} />
               </div>
               <div className="band">
                 <span className="lat">{card.latin}</span>

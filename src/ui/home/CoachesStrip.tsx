@@ -1,12 +1,15 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { COACHES } from "@/engine/mock";
+import { useCoaches } from "@/engine/content/useSiteContent";
 import { fa } from "@/engine/format";
 import { CoachPortrait } from "@/ui/coaches/CoachPortrait";
 import { COACHES_SECTION } from "@/config/home";
 
 /** A few padel coaches with a link to the full coaches page. */
 export function CoachesStrip() {
+  const { coaches } = useCoaches();
+  if (!coaches.length) return null;
   return (
     <section className="coachrow" aria-labelledby="coachrow-title" data-reveal>
       <div className="wrap">
@@ -18,7 +21,7 @@ export function CoachesStrip() {
           <Link className="btn ghost" href="/coaches">همه‌ی مربیان</Link>
         </div>
         <div className="crg">
-          {COACHES.slice(0, COACHES_SECTION.count).map((coach) => (
+          {coaches.slice(0, COACHES_SECTION.count).map((coach) => (
             <Link key={coach.id} href="/coaches" className="crc">
               <span className="crp">{coach.photo ? <img src={coach.photo} alt={coach.name} /> : <CoachPortrait name={coach.name} />}</span>
               <span className="crb">

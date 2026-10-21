@@ -31,3 +31,13 @@ export const SUPPORT_UPLOAD = {
   maxBytes: 5 * 1024 * 1024,
   timeoutMs: 60_000,
 } as const;
+/** Site content uploads (gallery, coach photos, home media); the backend enforces the same limits. */
+export const CONTENT_UPLOAD = {
+  imageTypes: ["image/png", "image/jpeg", "image/webp"],
+  videoTypes: ["video/mp4", "video/webm"],
+  maxImageBytes: 8 * 1024 * 1024,
+  maxVideoBytes: 80 * 1024 * 1024,
+  /** Images per upload into an album. */
+  maxBatch: 20,
+  timeoutMs: 180_000,
+} as const;

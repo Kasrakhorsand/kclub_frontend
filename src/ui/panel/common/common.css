@@ -240,3 +240,72 @@
 .su-lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .su-lightbox button{position:absolute;top:18px;inset-inline-end:18px;width:40px;height:40px;border-radius:50%;border:1px solid #3a3833;background:#141210;color:#fff;cursor:pointer}
 @media (max-width:700px){.su-sev{grid-template-columns:1fr}.su-time,.su-ref{flex:1 1 100%;width:auto}}
+
+/* ===== Gallery & media (/panel/media): albums, coach photos, home media ===== */
+.md-tabs{align-self:flex-start}
+.md-empty{margin:0;font-size:.82rem;color:var(--muted)}
+.md-empty.big{padding:50px 20px;text-align:center;border:1.5px dashed var(--line);border-radius:18px}
+.md-pick{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;border-radius:10px;background:var(--black);color:var(--gold-2);font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.md-pick input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.md-pick.off{opacity:.5;cursor:not-allowed}
+.md-pick:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.md-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.md-tools button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:.74rem;padding:4px 10px;border-radius:8px;cursor:pointer}
+.md-tools button:disabled{opacity:.4;cursor:not-allowed}
+.md-del{color:var(--busy)!important}
+
+.md-albums{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+.md-album-list{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);position:sticky;top:90px}
+.md-new{display:flex;gap:6px}
+.md-new .input{flex:1;min-width:0}
+.md-album-list ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:calc(100dvh - 260px);overflow-y:auto}
+.md-album{width:100%;display:flex;align-items:center;gap:10px;padding:6px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--ink);font:inherit;text-align:right;cursor:pointer}
+.md-album:hover{background:var(--surface-2)}
+.md-album.on{background:var(--court-soft);border-color:color-mix(in srgb,var(--gold) 50%,var(--line))}
+.md-album img,.md-album-ph{width:54px;height:42px;border-radius:8px;object-fit:cover;flex:none;background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,var(--line) 6px 7px)}
+.md-album span{display:flex;flex-direction:column;min-width:0}
+.md-album b{font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-album small{font-size:.7rem;color:var(--muted)}
+.md-album-pane{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.md-album-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.md-album-head h3{margin:0;flex:1}
+.md-title{flex:1;min-width:160px;font-size:1rem;font-weight:700}
+.md-state{font-size:.72rem;font-weight:600;padding:2px 10px;border-radius:999px}
+.md-state.pub{background:var(--free-bg);color:var(--free)}
+.md-state.draft{background:var(--surface-2);color:var(--muted)}
+.md-drop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;border-radius:14px;border:1.5px dashed var(--line);background:var(--surface-2);font-size:.76rem;color:var(--muted)}
+.md-photos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.md-photos li{display:flex;flex-direction:column;gap:6px}
+.md-thumb{position:relative;padding:0;border:0;border-radius:12px;overflow:hidden;cursor:zoom-in;aspect-ratio:4/3;background:var(--surface-2)}
+.md-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.md-thumb em{position:absolute;top:6px;inset-inline-start:6px;font-style:normal;font-size:.64rem;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--gold);color:#141210}
+.md-photos li.cover .md-thumb{box-shadow:0 0 0 2px var(--gold)}
+.md-cap{font-size:.76rem;padding:5px 9px}
+.md-photos small{font-size:.74rem;color:var(--muted)}
+.md-danger{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px dashed var(--line);font-size:.8rem}
+
+.md-coaches ul{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.md-coach{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.md-coach-ph{aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--black)}
+.md-coach-ph img,.md-coach-ph svg{width:100%;height:100%;object-fit:cover;display:block}
+.md-coach b{font-size:.9rem}
+.md-coach small{font-size:.74rem;color:var(--muted)}
+
+.md-home{display:flex;flex-direction:column;gap:18px}
+.md-home-group h4{margin:0 0 10px;font-size:.92rem}
+.md-home-group ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.md-slot{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.md-slot-media{position:relative;border-radius:12px;overflow:hidden;background:var(--black);aspect-ratio:16/9}
+.md-slot.image .md-slot-media{aspect-ratio:4/3}
+.md-slot-media img,.md-slot-media video{width:100%;height:100%;object-fit:cover;display:block}
+.md-slot-media em{position:absolute;top:8px;inset-inline-start:8px;font-style:normal;font-size:.64rem;font-weight:600;padding:1px 8px;border-radius:999px;background:rgba(13,13,14,.75);color:#ECEAE4}
+.md-slot-media em.new{background:var(--gold);color:#141210}
+.md-slot b{font-size:.86rem}
+.md-slot small{font-size:.72rem;color:var(--muted);line-height:1.7}
+@media (max-width:1000px){
+  .md-albums{grid-template-columns:1fr}
+  .md-album-list{position:static}
+  .md-albums.has-open .md-album-list{display:none}
+  .md-albums:not(.has-open) .md-album-pane{display:none}
+  .md-album-head .cu-back{display:grid;place-items:center}
+}

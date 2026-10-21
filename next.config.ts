@@ -22,7 +22,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   // Support screenshots are served by the API.
   `img-src 'self' data: blob:${apiOrigin ? ` ${apiOrigin}` : ""}`,
-  "media-src 'self'",
+  // Home videos replaced from the panel come from the API (blob: while previewing sample data).
+  `media-src 'self' blob:${apiOrigin ? ` ${apiOrigin}` : ""}`,
   "font-src 'self' data:",
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
   "worker-src 'self' blob:",
