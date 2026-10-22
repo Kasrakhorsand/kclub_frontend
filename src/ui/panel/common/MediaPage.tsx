@@ -1,7 +1,7 @@
 "use client";
 /**
  * Admin + front desk › Gallery & media (/panel/media). Tabs for gallery
- * albums, coach photos and the home page's photos and videos; a front desk
+ * albums and the home page's photos and videos (coach profiles have their own page); a front desk
  * account sees only the tabs and buttons the admin allowed. Styles: common.css ("md-").
  */
 import { useState } from "react";
@@ -10,13 +10,12 @@ import { MEDIA_SLOTS } from "@/config/home";
 import { CONTENT_UPLOAD } from "@/engine/config";
 import { useAlbums } from "@/engine/content/useAlbums";
 import { useCan } from "@/engine/content/permissions";
-import { useCoachPhotos, useSiteMediaEditor } from "@/engine/content/useSiteContent";
+import { useSiteMediaEditor } from "@/engine/content/useSiteContent";
 import { fa, jDate } from "@/engine/format";
 import type { MediaItem } from "@/engine/types";
-import { CoachPortrait } from "@/ui/coaches/CoachPortrait";
 import { PageHead } from "@/ui/panel/shell/PageHead";
 
-type Tab = "albums" | "coaches" | "home";
+type Tab = "albums" | "home";
 
 /** A styled file picker; `onFiles` gets the FileList. */
 function Pick({ label, accept, multiple, disabled, onFiles }: { label: string; accept: string; multiple?: boolean; disabled?: boolean; onFiles: (f: FileList | null) => void }) {
@@ -148,32 +147,6 @@ function Albums() {
   );
 }
 
-function CoachPhotos() {
-  const c = useCoachPhotos();
-  return (
-    <div className="md-coaches">
-      <p className="ad-none">عکس عمودی ۴:۳ یا مربع با صورت در وسط بهتر دیده می‌شود. عکس در صفحه‌ی مربیان و نوار مربیان صفحه‌ی اصلی می‌آید.</p>
-      <ul>
-        {c.coaches.map((coach) => (
-          <li key={coach.id} className="md-coach">
-            <div className="md-coach-ph">
-              {/* eslint-disable-next-line @next/next/no-img-element -- coach photo */}
-              {coach.photo ? <img src={coach.photo} alt={coach.name} /> : <CoachPortrait name={coach.name} />}
-            </div>
-            <b>{coach.name}</b>
-            <small>{coach.title}</small>
-            <div className="md-tools">
-              <Pick label={c.busyId === coach.id ? "…" : coach.photo ? "تعویض عکس" : "گذاشتن عکس"} accept={IMG} disabled={c.busyId === coach.id} onFiles={(f) => c.replace(coach.id, f)} />
-              {coach.photo && <button type="button" className="md-del" disabled={c.busyId === coach.id} onClick={() => c.clear(coach.id)}>حذف</button>}
-            </div>
-            {c.error?.id === coach.id && <p className="ad-err">{c.error.text}</p>}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 function HomeMedia() {
   const m = useSiteMediaEditor();
   const groups = [...new Set(MEDIA_SLOTS.map((s) => s.group))];
@@ -220,10 +193,10 @@ function HomeMedia() {
 }
 
 export function MediaView() {
-  const { can, any, isAdmin } = useCan();
+  const { can, isAdmin } = useCan();
+  const any = can("gallery") || can("albums") || can("home");
   const tabs: { id: Tab; label: string; show: boolean }[] = [
     { id: "albums", label: "آلبوم‌های گالری", show: can("gallery") || can("albums") },
-    { id: "coaches", label: "عکس مربیان", show: can("coaches") },
     { id: "home", label: "عکس و ویدیوی صفحه‌ی اصلی", show: can("home") },
   ];
   const visible = tabs.filter((t) => t.show);
@@ -247,7 +220,6 @@ export function MediaView() {
         ))}
       </div>
       {current === "albums" && <Albums />}
-      {current === "coaches" && <CoachPhotos />}
       {current === "home" && <HomeMedia />}
     </div>
   );

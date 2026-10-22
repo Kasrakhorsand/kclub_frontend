@@ -17,7 +17,7 @@ import { ApiError, http } from "@/engine/http";
 import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, RevenueReport, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
+import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, RevenueReport, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
 import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -146,8 +146,8 @@ export async function checkInBooking(id: string): Promise<void> {
 /** Coach profiles for the coaches page. */
 export async function getCoaches(): Promise<Coach[]> {
   if (!USE_MOCK) return http("/coaches");
-  // Photos replaced from the panel (sample data keeps them in memory).
-  return wait(COACHES.map((c) => ({ ...c, photo: content.coachPhotos.get(c.id) ?? c.photo })));
+  // Public: published profiles in page order (photos replaced from the panel stay in memory in sample data).
+  return wait(mockCoaches().filter((c) => c.published));
 }
 
 /** Current price per item for each rental (set by the admin). */
@@ -986,5 +986,54 @@ export async function resetSiteMedia(slot: string): Promise<void> {
   if (!USE_MOCK) return http(`/staff/site-media/${seg(slot)}`, { method: "DELETE" });
   content.siteMedia.delete(slot);
   logContent("برگرداندن رسانه‌ی پیش‌فرض", slot);
+  await wait(null, 100);
+}
+/* ------------------------------------------------------------------ */
+/* Coach profiles (front desk with the coaches permission, and admin)  */
+/* ------------------------------------------------------------------ */
+
+const mockCoaches = () => structuredClone([...COACHES].sort((a, b) => a.order - b.order)).map((c) => ({ ...c, photo: content.coachPhotos.get(c.id) ?? c.photo }));
+
+/** Staff: every coach profile, published or not. */
+export async function getStaffCoaches(): Promise<Coach[]> {
+  if (!USE_MOCK) return http("/staff/coaches");
+  return wait(mockCoaches(), 120);
+}
+
+/** Staff: create (no id) or update a coach profile. */
+export async function saveCoach(input: CoachInput, id?: string): Promise<Coach> {
+  if (!USE_MOCK) return http(id ? `/staff/coaches/${seg(id)}` : "/staff/coaches", { method: id ? "PUT" : "POST", body: input });
+  if (id) {
+    const c = COACHES.find((x) => x.id === id);
+    if (!c) throw new ApiError("مربی پیدا نشد", 404);
+    Object.assign(c, input);
+    logContent("ویرایش پروفایل مربی", c.name);
+    return wait(mockCoaches().find((x) => x.id === id)!, 200);
+  }
+  const coach: Coach = { ...input, id: `c${Date.now()}`, order: Math.max(0, ...COACHES.map((c) => c.order)) + 1 };
+  COACHES.push(coach);
+  logContent("افزودن مربی", coach.name);
+  return wait(structuredClone(coach), 200);
+}
+
+/** Staff: delete a coach profile and its photo. */
+export async function deleteCoach(id: string): Promise<void> {
+  if (!USE_MOCK) return http(`/staff/coaches/${seg(id)}`, { method: "DELETE" });
+  const i = COACHES.findIndex((c) => c.id === id);
+  if (i >= 0) {
+    logContent("حذف مربی", COACHES[i].name);
+    COACHES.splice(i, 1);
+  }
+  content.coachPhotos.delete(id);
+  await wait(null, 150);
+}
+
+/** Staff: order of coaches on the site. */
+export async function reorderCoaches(ids: string[]): Promise<void> {
+  if (!USE_MOCK) return http("/staff/coaches/order", { method: "PUT", body: { ids } });
+  ids.forEach((id, i) => {
+    const c = COACHES.find((x) => x.id === id);
+    if (c) c.order = i + 1;
+  });
   await wait(null, 100);
 }

@@ -119,20 +119,46 @@ export interface RentalDef {
   price: number;
 }
 
+/**
+ * A coach profile, entered by the front desk (coaches permission) in the panel.
+ * `rating`, `reviews`, `satisfaction` and `students` come from the system
+ * (player reviews and bookings), not from the form.
+ */
 export interface Coach {
   id: string;
   name: string;
+  /** One line under the name, e.g. "سرمربی پدل · بازیکن تیم ملی". */
   title: string;
-  level: string;
+  level: CoachLevel;
+  /** Game ids they teach (e.g. "padel", "tennis", "volley"). */
+  games: string[];
   years: number;
-  students: number;
-  satisfaction: number;
-  rating: number;
-  reviews: number;
-  tags: string[];
+  /** Price of one hour of private coaching, toman. */
   price: number;
+  /** Per person in a small group class, toman, if they offer one. */
+  groupPrice?: number;
+  /** Short labels: level taught, audience, focus (max 6). */
+  tags: string[];
+  bio?: string;
+  certificates?: string[];
+  gender?: "male" | "female";
+  /** Usual weekly teaching hours; day 0 = Saturday … 6 = Friday. */
+  schedule?: { day: number; from: number; to: number }[];
   photo?: string;
+  /** Hidden from the site while false. */
+  published: boolean;
+  /** Position on the coaches page, smallest first. */
+  order: number;
+  students?: number;
+  satisfaction?: number;
+  rating?: number;
+  reviews?: number;
 }
+
+export type CoachLevel = "head" | "coach" | "junior" | "guest";
+
+/** What the front desk form sends. */
+export type CoachInput = Omit<Coach, "id" | "photo" | "order" | "students" | "satisfaction" | "rating" | "reviews">;
 
 /** A court on the booking map at the chosen hour: free = bookable, sel = in the cart, taken = booked. */
 export type CourtState = "free" | "sel" | "taken";

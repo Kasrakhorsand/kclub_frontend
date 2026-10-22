@@ -11,7 +11,7 @@ import type { StaffPermission } from "@/engine/types";
 export const STAFF_PERMISSIONS: { id: StaffPermission; label: string; hint: string }[] = [
   { id: "gallery", label: "عکس‌های گالری", hint: "افزودن، حذف و مرتب کردن عکس در آلبوم‌های موجود" },
   { id: "albums", label: "ساخت و انتشار آلبوم", hint: "ساختن، تغییر نام، انتشار و حذف آلبوم" },
-  { id: "coaches", label: "عکس مربیان", hint: "گذاشتن و تعویض عکس پروفایل مربی‌ها" },
+  { id: "coaches", label: "پروفایل مربیان", hint: "افزودن، ویرایش، انتشار و حذف مربی‌ها، با عکس و برنامه‌ی هفتگی" },
   { id: "home", label: "عکس و ویدیوی صفحه‌ی اصلی", hint: "تعویض ویدیوهای بالای صفحه و عکس کارت‌ها" },
 ];
 

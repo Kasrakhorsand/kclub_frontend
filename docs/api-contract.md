@@ -160,6 +160,23 @@
 | `DELETE /admin/staff/{phone}/roles/{role}` | — | `204`. مدیر نقش مدیر خودش را برنمی‌دارد (`409 SELF_ADMIN`) و آخرین مدیر حذف نمی‌شود (`409 LAST_ADMIN`). نشست‌های باز آن نقش باید باطل شوند. |
 | `PUT /admin/staff/{phone}/permissions` | `{ permissions }` | `204` |
 
+## پروفایل مربیان (دسترسی `coaches` یا مدیر)
+
+همه‌ی اطلاعات مربی را پذیرش در پنل وارد می‌کند. `rating`، `reviews`، `satisfaction` و `students` را بک‌اند از نظرها و رزروهای بازیکن‌ها حساب می‌کند و از فرم دریافت نمی‌کند.
+
+`Coach`: `{ id, name, title, level: "head"|"coach"|"junior"|"guest", games: gameId[], years, price, groupPrice?, tags: string[], bio?, certificates?: string[], gender?: "male"|"female", schedule?: [{ day: 0..6 (۰ = شنبه), from, to }], photo?, published, order, students?, satisfaction?, rating?, reviews? }`
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /coaches` | — | فقط مربیان منتشرشده، به ترتیب `order` (عمومی). |
+| `GET /staff/coaches` | — | همه‌ی مربیان، منتشرشده و پیش‌نویس. |
+| `POST /staff/coaches` | `CoachInput` (همه‌ی فیلدهای بالا جز `id`، `photo`، `order` و آمارها) | `Coach` |
+| `PUT /staff/coaches/{id}` | `CoachInput` | `Coach` |
+| `DELETE /staff/coaches/{id}` | — | `204` |
+| `PUT /staff/coaches/order` | `{ ids }` | `204` |
+
+اعتبارسنجی (همان فرانت): نام ۲ تا ۶۰ حرف، عنوان ۳ تا ۸۰، حداقل یک بازی، سابقه ۰ تا ۶۰ سال، قیمت جلسه‌ی خصوصی ۵۰ هزار تا ۵۰ میلیون تومان، قیمت گروهی کمتر از خصوصی، حداکثر ۶ برچسب (هر کدام ۲۴ حرف)، ۶ مدرک (هر کدام ۶۰ حرف)، توضیح ۶۰۰ حرف، ۱۴ ردیف برنامه با پایان بعد از شروع.
+
 ## محتوای سایت: گالری، عکس مربیان، رسانه‌ی صفحه‌ی اصلی
 
 آپلودها `multipart/form-data` با بخش‌های `files` (و `data` برای JSON در صورت نیاز). عکس: JPG، PNG یا WEBP تا ۸ مگابایت؛ ویدیو: MP4 یا WEBM تا ۸۰ مگابایت؛ هر بار تا ۲۰ عکس. بک‌اند نوع واقعی فایل را از محتوا تشخیص دهد، EXIF را پاک کند، اندازه‌های کوچک‌تر (thumbnail) بسازد و فایل‌ها را از دامنه‌ی خودش یا CDN داخلی سرو کند.
@@ -175,7 +192,6 @@
 | `PATCH /staff/albums/{id}/items/{itemId}` | gallery | `{ caption?, alt? }` | `204` |
 | `DELETE /staff/albums/{id}/items/{itemId}` | gallery | — | `204` |
 | `PUT /staff/albums/{id}/order` | gallery | `{ ids }` | `204` |
-| `GET /coaches` | عمومی | — | `Coach[]` با `photo?` |
 | `PUT /staff/coaches/{id}/photo` | coaches | `files` (یک عکس) | `{ url }` |
 | `DELETE /staff/coaches/{id}/photo` | coaches | — | `204` |
 | `GET /site/media` | عمومی | — | `{ [slotId]: MediaItem }`: فقط جایگاه‌هایی که عوض شده‌اند. |

@@ -59,10 +59,18 @@ export function seedBookings(today = new Date()): Booking[] {
 }
 
 export const COACHES: Coach[] = [
-  { id: "c1", name: "کیان شریفی", title: "سرمربی پدل · بازیکن تیم ملی", level: "Head Coach", years: 8, students: 210, satisfaction: 96, rating: 4.9, reviews: 74, tags: ["پیشرفته", "تاکتیک دونفره", "مدرک FIP"], price: 950_000 },
-  { id: "c2", name: "نیلوفر احمدی", title: "مربی پدل · سطح ۲ فدراسیون", level: "Coach", years: 6, students: 158, satisfaction: 94, rating: 4.8, reviews: 51, tags: ["مبتدی تا متوسط", "بانوان", "کار با دیواره"], price: 750_000 },
-  { id: "c3", name: "آرش طاهری", title: "مربی پدل · آمادگی مسابقه", level: "Coach", years: 5, students: 120, satisfaction: 93, rating: 4.7, reviews: 38, tags: ["متوسط", "سرویس و اسمش", "آمادگی جسمانی"], price: 700_000 },
-  { id: "c4", name: "مهسا رحیمی", title: "مربی پدل · کودکان و نوجوانان", level: "Junior Coach", years: 4, students: 95, satisfaction: 97, rating: 4.9, reviews: 29, tags: ["کودکان ۸ تا ۱۶", "مبتدی", "کلاس گروهی"], price: 600_000 },
+  { id: "c1", name: "کیان شریفی", title: "سرمربی پدل · بازیکن تیم ملی", level: "head", games: ["padel"], years: 8, students: 210, satisfaction: 96, rating: 4.9, reviews: 74, tags: ["پیشرفته", "تاکتیک دونفره", "مدرک FIP"], price: 950_000, groupPrice: 400_000, gender: "male", published: true, order: 1,
+    bio: "بازیکن سابق تیم ملی پدل. روی تاکتیک بازی دونفره، جای‌گیری کنار دیواره و آمادگی مسابقه کار می‌کند.", certificates: ["مربیگری سطح ۳ FIP", "داوری فدراسیون تنیس"],
+    schedule: [{ day: 0, from: 16, to: 21 }, { day: 2, from: 16, to: 21 }, { day: 4, from: 9, to: 13 }] },
+  { id: "c2", name: "نیلوفر احمدی", title: "مربی پدل · سطح ۲ فدراسیون", level: "coach", games: ["padel"], years: 6, students: 158, satisfaction: 94, rating: 4.8, reviews: 51, tags: ["مبتدی تا متوسط", "بانوان", "کار با دیواره"], price: 750_000, groupPrice: 300_000, gender: "female", published: true, order: 2,
+    bio: "کلاس‌های مبتدی و متوسط، با تمرکز روی ضربه‌های پایه و بازی با دیواره. کلاس ویژه‌ی بانوان دارد.", certificates: ["مربیگری سطح ۲ فدراسیون"],
+    schedule: [{ day: 1, from: 9, to: 12 }, { day: 3, from: 17, to: 21 }] },
+  { id: "c3", name: "آرش طاهری", title: "مربی پدل · آمادگی مسابقه", level: "coach", games: ["padel", "tennis"], years: 5, students: 120, satisfaction: 93, rating: 4.7, reviews: 38, tags: ["متوسط", "سرویس و اسمش", "آمادگی جسمانی"], price: 700_000, gender: "male", published: true, order: 3,
+    bio: "آماده‌سازی برای مسابقه: سرویس، اسمش و آمادگی جسمانی. تنیس ساحلی هم تدریس می‌کند.",
+    schedule: [{ day: 0, from: 8, to: 12 }, { day: 5, from: 8, to: 12 }] },
+  { id: "c4", name: "مهسا رحیمی", title: "مربی پدل · کودکان و نوجوانان", level: "junior", games: ["padel", "volley"], years: 4, students: 95, satisfaction: 97, rating: 4.9, reviews: 29, tags: ["کودکان ۸ تا ۱۶", "مبتدی", "کلاس گروهی"], price: 600_000, groupPrice: 250_000, gender: "female", published: true, order: 4,
+    bio: "کلاس گروهی کودکان و نوجوانان با بازی و تمرین‌های هماهنگی. والیبال ساحلی نوجوانان هم دارد.",
+    schedule: [{ day: 1, from: 16, to: 19 }, { day: 3, from: 16, to: 19 }, { day: 5, from: 10, to: 13 }] },
 ];
 
 

@@ -27,7 +27,7 @@ export function CoachesStrip() {
               <span className="crb">
                 <b>{coach.name}</b>
                 <span className="small muted">{coach.title}</span>
-                <span className="crr">★ {fa(coach.rating)} · {fa(coach.years)} سال تجربه</span>
+                <span className="crr">{coach.rating ? `★ ${fa(coach.rating)} · ` : ""}{fa(coach.years)} سال تجربه</span>
               </span>
             </Link>
           ))}

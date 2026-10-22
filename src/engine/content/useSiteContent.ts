@@ -1,12 +1,12 @@
 "use client";
 /**
  * Public reads of editable site content (gallery albums, coaches with their
- * photos, home page media overrides) and the staff editors for coach photos
- * and home page media.
+ * photos, home page media overrides) and the staff editor for home page
+ * media. Coach profiles are edited with useCoachEditor.
  */
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCoaches, getGallery, getSiteMedia, resetSiteMedia, setCoachPhoto, setSiteMedia } from "@/engine/api";
+import { getCoaches, getGallery, getSiteMedia, resetSiteMedia, setSiteMedia } from "@/engine/api";
 import { checkFiles } from "@/engine/content/permissions";
 import type { MediaItem } from "@/engine/types";
 
@@ -31,36 +31,6 @@ const NO_MEDIA: Record<string, MediaItem> = {};
 export function useSiteMedia() {
   const { data = NO_MEDIA } = useQuery({ queryKey: ["site-media"], queryFn: getSiteMedia, staleTime: 60_000 });
   return { src: (slot: string, fallback: string) => data[slot]?.url ?? fallback, replaced: data };
-}
-
-/** Staff: replace or remove a coach's photo. */
-export function useCoachPhotos() {
-  const client = useQueryClient();
-  const { coaches, loading } = useCoaches();
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [error, setError] = useState<{ id: string; text: string } | null>(null);
-  const act = async (id: string, file: File | null) => {
-    setBusyId(id);
-    setError(null);
-    try {
-      await setCoachPhoto(id, file);
-      client.invalidateQueries({ queryKey: ["coaches"] });
-      client.invalidateQueries({ queryKey: ["admin-audit"] });
-    } catch (ex) {
-      setError({ id, text: (ex as Error).message });
-    } finally {
-      setBusyId(null);
-    }
-  };
-  return {
-    coaches, loading, busyId, error,
-    replace: (id: string, list: FileList | null) => {
-      const { ok, errors } = checkFiles(list, "image", 1);
-      if (!ok.length) return setError({ id, text: errors.join("؛ ") || "فایلی انتخاب نشد" });
-      act(id, ok[0]);
-    },
-    clear: (id: string) => act(id, null),
-  };
 }
 
 /** Staff: replace a home page slot's photo or video, or put the default back. */

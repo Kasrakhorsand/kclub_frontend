@@ -2,10 +2,10 @@
  * Panel sections per role. Keys are the URL segment (/panel/<key>); labels
  * are the default menu text. Sites add their own icons on top.
  */
-import type { Role } from "@/engine/types";
+import type { Role, StaffPermission } from "@/engine/types";
 
-/** `needs: "content"` hides the item from a front desk account the admin gave no content permission. */
-export type MenuItem = { key: string; label: string; soon?: boolean; needs?: "content" };
+/** `needs` hides the item from a front desk account that has none of these content permissions (admin sees everything). */
+export type MenuItem = { key: string; label: string; soon?: boolean; needs?: StaffPermission[] };
 
 export const MENUS: Record<Role, MenuItem[]> = {
   player: [
@@ -33,7 +33,8 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "support", label: "پشتیبانی فنی سایت" },
     { key: "notif", label: "اعلان‌ها" },
     { key: "cash", label: "گزارش صندوق روزانه" },
-    { key: "media", label: "گالری و رسانه", needs: "content" },
+    { key: "coaches", label: "مربیان", needs: ["coaches"] },
+    { key: "media", label: "گالری و رسانه", needs: ["gallery", "albums", "home"] },
     { key: "profile", label: "پروفایل و رمز عبور" },
   ],
   admin: [
@@ -50,6 +51,7 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "alltx", label: "تراکنش‌ها" },
     { key: "tickets", label: "تیکت‌ها" },
     { key: "support", label: "پشتیبانی فنی سایت" },
+    { key: "coaches", label: "مربیان" },
     { key: "media", label: "گالری و رسانه" },
     { key: "audit", label: "تاریخچه تغییرات" },
     { key: "notif", label: "اعلان‌ها" },

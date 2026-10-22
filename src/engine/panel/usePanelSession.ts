@@ -31,7 +31,7 @@ export function usePanelSession() {
 
   const section = path.split("/")[2] ?? "dash";
   const content = useCan();
-  const menu = (role ? MENUS[role] : []).filter((m) => m.needs !== "content" || content.any);
+  const menu = (role ? MENUS[role] : []).filter((m) => !m.needs || m.needs.some(content.can));
 
   const unreadNotifs = useUnreadNotifications();
   const pendingTickets = usePendingTickets();
