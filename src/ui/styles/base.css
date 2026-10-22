@@ -23,19 +23,26 @@ p{margin:0}
 .between{justify-content:space-between}
 .grid{display:grid;gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:0;padding:20px;min-width:0}
-.btn{white-space:nowrap;border:1px solid var(--ink);border-radius:0;padding:10px 20px;font-weight:500;background:var(--ink);color:var(--bg);display:inline-flex;gap:8px;align-items:center;justify-content:center;transition:background .15s,color .15s,border-color .15s;letter-spacing:.2px}
-.btn:hover{background:var(--court);border-color:var(--court);color:#fff}
-.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.btn.ghost:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
-.btn.soft{background:var(--court-soft);color:var(--court);border-color:transparent}
-.btn.soft:hover{background:var(--court);color:#fff}
-.btn.danger{background:transparent;color:var(--busy);border-color:var(--busy)}
-.btn.danger:hover{background:var(--busy);color:#fff}
-.btn.sm{padding:5px 12px;font-size:.84rem}
+/* Buttons: solid (ink), ghost (gold-edged outline), soft, danger, gold. Rounded, with a small lift on hover. */
+.btn{--btn-r:12px;white-space:nowrap;border:1.5px solid var(--ink);border-radius:var(--btn-r);padding:10px 20px;font:inherit;font-weight:600;background:var(--ink);color:var(--bg);display:inline-flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;box-shadow:0 1px 0 rgba(0,0,0,.04),0 6px 14px -10px rgba(0,0,0,.45);transition:background .2s,color .2s,border-color .2s,box-shadow .2s,transform .2s}
+.btn:hover{background:var(--court);border-color:var(--court);color:#fff;transform:translateY(-1px);box-shadow:0 10px 20px -12px color-mix(in srgb,var(--court) 70%,transparent)}
+.btn:active{transform:translateY(0);box-shadow:none}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.btn.ghost{background:color-mix(in srgb,var(--surface) 70%,transparent);color:var(--ink);border-color:color-mix(in srgb,var(--gold) 55%,var(--line));box-shadow:none}
+.btn.ghost:hover{background:var(--court-soft);border-color:var(--gold);color:var(--court);box-shadow:0 8px 18px -14px color-mix(in srgb,var(--gold) 80%,transparent)}
+.btn.soft{background:var(--court-soft);color:var(--court);border-color:transparent;box-shadow:none}
+.btn.soft:hover{background:var(--gold);color:#141210}
+.btn.danger{background:transparent;color:var(--busy);border-color:color-mix(in srgb,var(--busy) 60%,transparent);box-shadow:none}
+.btn.danger:hover{background:var(--busy);border-color:var(--busy);color:#fff}
+.btn.sm{--btn-r:10px;padding:6px 13px;font-size:.84rem}
 .btn.block{width:100%}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:disabled,.btn:disabled:hover{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 .btn.gold{background:var(--gold);border-color:var(--gold);color:#0D0D0E}
 .btn.gold:hover{background:var(--gold-2);border-color:var(--gold-2);color:#0D0D0E}
+/* "See all" style link-buttons in section headers get an arrow pointing forward (left in RTL). */
+.btn.more::after{content:"←";font-weight:400;transition:transform .2s}
+.btn.more:hover::after{transform:translateX(-3px)}
+@media (prefers-reduced-motion:reduce){.btn,.btn:hover{transition:none;transform:none}}
 .input,select.input,textarea.input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;border-radius:0;padding:9px 2px;outline:none}
 .input:focus{border-bottom-color:var(--court);box-shadow:0 1px 0 var(--court)}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:500;color:var(--muted);min-width:0}

@@ -510,3 +510,20 @@ export interface Album {
   items: MediaItem[];
   updatedAt: string;
 }
+/** A player's review shown on the site. */
+export interface SiteReview {
+  name: string;
+  /** Game name, e.g. "پدل". */
+  sport: string;
+  /** 1–5 */
+  rating: number;
+  text: string;
+  date?: string;
+}
+
+export interface ReviewSummary {
+  reviews: SiteReview[];
+  /** Average of all published reviews (not only the ones returned). */
+  average: number;
+  count: number;
+}
