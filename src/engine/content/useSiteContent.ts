@@ -6,6 +6,8 @@
  */
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CONFIG_FACTS } from "@/engine/siteFacts";
+import type { PublicRules } from "@/engine/types";
 import { getCoaches, getGallery, getPublicRules, getReviews, getSiteMedia, resetSiteMedia, setSiteMedia } from "@/engine/api";
 import { checkFiles } from "@/engine/content/permissions";
 import type { MediaItem } from "@/engine/types";
@@ -28,6 +30,11 @@ export function useReviews() {
 export function usePublicRules() {
   const { data, isLoading } = useQuery({ queryKey: ["site-rules"], queryFn: getPublicRules, staleTime: 10 * 60_000 });
   return { rules: data, loading: isLoading };
+}
+
+/** The rules in force, with the venue config until the server answers. */
+export function useRules(): PublicRules {
+  return usePublicRules().rules ?? CONFIG_FACTS.rules;
 }
 
 /** Coaches with their current photos. */

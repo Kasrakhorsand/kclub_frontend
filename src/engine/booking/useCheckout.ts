@@ -5,10 +5,10 @@
  */
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, newIdempotencyKey } from "@/engine/http";
 import { useBookingLimit } from "@/engine/booking/useRushGuards";
-import { createBookings } from "@/engine/api";
+import { createBookings, quoteBookings } from "@/engine/api";
 import { useWalletBalance } from "@/engine/wallet/useWallet";
 import { cartTotal, useSession } from "@/engine/store";
 import { courtById, rentalsFor, sportById } from "@/engine/venue";
@@ -62,7 +62,17 @@ export function useCheckout() {
     }
   }, [user, router, setAfterLogin]);
 
-  const total = cartTotal(cart, rentalPrices);
+  // Estimate from the price sheet, replaced by the server's quote as soon as it arrives.
+  const estimate = cartTotal(cart, rentalPrices);
+  const cartKey = cart.map((i) => `${i.courtId}|${i.date}|${i.hour}|${JSON.stringify(i.rentals ?? {})}`).join(",");
+  const { data: quote, isFetching: quoting } = useQuery({
+    queryKey: ["quote", cartKey],
+    queryFn: () => quoteBookings(cart),
+    enabled: !!user && cart.length > 0,
+    staleTime: 60_000,
+  });
+  const quoteLine = (item: CartItem) => quote?.lines.find((l) => l.courtId === item.courtId && l.date === item.date && l.hour === item.hour);
+  const total = quote?.total ?? estimate;
   // Shown as a hint only; the backend checks the balance again when charging.
   const canUseWallet = !!user && wallet.balance >= total;
 
@@ -75,7 +85,7 @@ export function useCheckout() {
       price: rentalPriceOf(r.id, rentalPrices),
       quantity: item.rentals?.[r.id] ?? 0,
     }));
-    return { item, court, sport: court ? sportById(court.sport) : undefined, rentalOptions, total: itemTotal(item, rentalPrices) };
+    return { item, court, sport: court ? sportById(court.sport) : undefined, rentalOptions, total: quoteLine(item)?.total ?? itemTotal(item, rentalPrices) };
   });
 
   // Count down the busy wait and try again when it reaches zero.
@@ -96,6 +106,12 @@ export function useCheckout() {
     user,
     items,
     total,
+    /** Court part of the total (without rentals). */
+    courtsTotal: quote ? quote.lines.reduce((a, l) => a + l.court, 0) : cart.reduce((a, i) => a + i.price, 0),
+    /** True while asking the server for the exact amount. */
+    quoting,
+    /** The server's price differs from what the cart showed (prices changed since adding). */
+    priceChanged: !!quote && quote.total !== estimate,
     remove: (item: CartItem) => toggleCart(item),
     /** Set how many of a rental this item takes, clamped to 0…maxPerBooking. */
     setRental: (item: CartItem, rentalId: string, quantity: number) => {

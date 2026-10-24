@@ -12,8 +12,10 @@ import { createDeskBooking, findCustomer, getDayBoard, isPast } from "@/engine/a
 import { ApiError } from "@/engine/http";
 import { addDays, dayKey, toLatinDigits } from "@/engine/format";
 import { useDayBoard } from "@/engine/panel/stats";
-import { rentalPriceOf, useRentalPrices } from "@/engine/pricing";
-import { COURTS, HOURS, MAX_DAYS_AHEAD, courtById, priceOf, rentalsFor, sportById } from "@/engine/venue";
+import { rentalPriceOf, usePrices } from "@/engine/pricing";
+import { HOURS, courtById, rentalsFor, sportById } from "@/engine/venue";
+import { useRules } from "@/engine/content/useSiteContent";
+import { useActiveCourts } from "@/engine/useCourts";
 import type { Booking, Court, DeskBookingResult, DeskPayment } from "@/engine/types";
 
 /** Weekly repeat choices at the desk. */
@@ -35,8 +37,10 @@ export type DeskCell = { court: Court; hour: number; state: "past" | "taken" | "
 
 export function useStaffBooking(preset: { date?: string | null; hour?: number | null; court?: string | null; phone?: string | null } = {}) {
   const client = useQueryClient();
-  const rentalPrices = useRentalPrices();
-  const courts = COURTS.filter((c) => c.active);
+  const prices = usePrices();
+  const rentalPrices = prices.rentals;
+  const courts = useActiveCourts();
+  const maxDays = useRules().maxDaysAhead;
 
   /* ----- customer ----- */
   const [phoneText, setPhoneText] = useState(preset.phone && /^09\d{9}$/.test(preset.phone) ? preset.phone : "");
@@ -57,13 +61,13 @@ export function useStaffBooking(preset: { date?: string | null; hour?: number | 
   const presetCourt = preset.court && courtById(preset.court) ? preset.court : null;
   const [picked, setPicked] = useState<Set<string>>(() => (presetCourt && preset.hour != null ? new Set([cellKey(presetCourt, preset.hour)]) : new Set()));
   const { data: board = [], isLoading: boardLoading } = useDayBoard(date);
-  const days = useMemo(() => Array.from({ length: MAX_DAYS_AHEAD }, (_, i) => dayKey(addDays(new Date(), i))), []);
+  const days = useMemo(() => Array.from({ length: maxDays }, (_, i) => dayKey(addDays(new Date(), i))), [maxDays]);
 
   const cells: DeskCell[][] = courts.map((court) =>
     HOURS.map((hour) => {
       const booking = board.find((b) => b.courtId === court.id && b.hour === hour && b.status === "active");
       const state = isPast(date, hour) ? "past" : booking ? "taken" : picked.has(cellKey(court.id, hour)) ? "picked" : "free";
-      return { court, hour, state, booking, price: priceOf(court.sport, hour) };
+      return { court, hour, state, booking, price: prices.session(court.sport, hour) };
     }),
   );
 
@@ -118,7 +122,7 @@ export function useStaffBooking(preset: { date?: string | null; hour?: number | 
   const rentalsOf = (court: Court) =>
     Object.fromEntries(rentalOptions.filter((r) => r.quantity > 0 && rentalsFor(court.id, gameFor(court)).some((x) => x.id === r.id)).map((r) => [r.id, r.quantity]));
   const linePrice = (court: Court, hour: number) =>
-    priceOf(court.sport, hour) + Object.entries(rentalsOf(court)).reduce((a, [id, q]) => a + q * rentalPriceOf(id, rentalPrices), 0);
+    prices.session(court.sport, hour) + Object.entries(rentalsOf(court)).reduce((a, [id, q]) => a + q * rentalPriceOf(id, rentalPrices), 0);
   const sessionTotal = selection.reduce((a, s) => a + linePrice(s.court, s.hour), 0);
   const estimate = sessionTotal * weeks;
 

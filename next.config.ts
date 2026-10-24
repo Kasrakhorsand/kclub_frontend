@@ -10,6 +10,15 @@ const apiOrigin = (() => {
   }
 })();
 
+/** Hosts uploaded photos and videos are served from (CDN / object storage), as origins. */
+const mediaHosts = (process.env.NEXT_PUBLIC_MEDIA_HOSTS ?? "")
+  .split(",")
+  .map((h) => h.trim())
+  .filter(Boolean)
+  .map((h) => (h.startsWith("http") ? h : `https://${h}`))
+  .join(" ");
+const mediaSrc = [apiOrigin, mediaHosts].filter(Boolean).map((x) => ` ${x}`).join("");
+
 /**
  * Content-Security-Policy: everything is self-hosted (fonts, media, three.js),
  * so only our own origin and the backend API are allowed. Next.js needs
@@ -21,9 +30,9 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // Support screenshots are served by the API.
-  `img-src 'self' data: blob:${apiOrigin ? ` ${apiOrigin}` : ""}`,
+  `img-src 'self' data: blob:${mediaSrc}`,
   // Home videos replaced from the panel come from the API (blob: while previewing sample data).
-  `media-src 'self' blob:${apiOrigin ? ` ${apiOrigin}` : ""}`,
+  `media-src 'self' blob:${mediaSrc}`,
   "font-src 'self' data:",
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
   "worker-src 'self' blob:",

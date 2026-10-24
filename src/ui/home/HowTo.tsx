@@ -1,9 +1,9 @@
-import { FAQ, HOW_TO } from "@/config/home";
+import { HOW_TO } from "@/config/home";
 import { fa } from "@/engine/format";
 import { Button3D } from "@/ui/kit/Buttons";
 
 /** Numbered booking steps and the FAQ accordion (anchor #how). Content: `config/home.tsx`. */
-export function HowTo() {
+export function HowTo({ faq }: { faq: [question: string, answer: string][] }) {
   return (
     <section className="how" id="how" data-reveal>
       <div className="wrap">
@@ -27,7 +27,7 @@ export function HowTo() {
             <h2>قبل از شروع</h2>
           </div>
           <div className="faqg">
-            {FAQ.map(([question, answer]) => (
+            {faq.map(([question, answer]) => (
               <details className="fq" key={question}>
                 <summary>
                   <span>{question}</span>

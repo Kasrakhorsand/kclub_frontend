@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getDayBoard, getMyBookings } from "@/engine/api";
 import { addDays, dayKey, jDate } from "@/engine/format";
 import { useSession } from "@/engine/store";
-import { CLOSE_HOUR, COURTS, HOURS, OPEN_HOUR, courtById } from "@/engine/venue";
+import { CLOSE_HOUR, HOURS, OPEN_HOUR, courtById } from "@/engine/venue";
+import { useActiveCourts } from "@/engine/useCourts";
 import type { Booking } from "@/engine/types";
 
 /** Today's date key (yyyy-MM-dd, local time). */
@@ -21,7 +22,7 @@ export function useDayBoard(date: string) {
 /** Today's booking count, occupancy and revenue across all courts. */
 export function useTodayStats() {
   const { data: bookings = [] } = useDayBoard(todayKey());
-  const totalSlots = COURTS.length * HOURS.length;
+  const totalSlots = useActiveCourts().length * HOURS.length;
   return {
     booked: bookings.length,
     occupancy: Math.round((bookings.length / totalSlots) * 100),

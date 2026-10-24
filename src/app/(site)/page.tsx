@@ -13,24 +13,29 @@ import { RevealOnScroll } from "@/ui/home/RevealOnScroll";
 import { SPORTS } from "@/engine/venue";
 import { JsonLd } from "@/ui/seo/JsonLd";
 import { clubSchema, faqSchema, serviceSchema, websiteSchema } from "@/ui/seo/schema";
+import { faqItems } from "@/config/home";
+import { loadSiteFacts } from "@/engine/siteFacts";
 
 /**
  * Home, top to bottom: hero, open slots, sports, prices, the club and
  * amenities, photos, coaches, reviews, how-to and FAQ, closing banner.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  // Live prices and rules (refreshed every 5 minutes), config as fallback.
+  const facts = await loadSiteFacts();
+  const faq = faqItems(facts);
   return (
     <>
-      <JsonLd data={[clubSchema(), websiteSchema(), faqSchema(), ...SPORTS.map((s) => serviceSchema(s.id)).filter((x) => x !== null)]} />
+      <JsonLd data={[clubSchema(facts), websiteSchema(), faqSchema(faq), ...SPORTS.map((s) => serviceSchema(s.id, facts)).filter((x) => x !== null)]} />
       <Hero />
       <FreeSlotsToday />
       <SportCards />
-      <Pricing />
+      <Pricing pricing={facts.pricing} />
       <About />
       <Gallery />
       <CoachesStrip />
       <Reviews />
-      <HowTo />
+      <HowTo faq={faq} />
       <FinalCta />
       <MobileBookBar />
       <RevealOnScroll />

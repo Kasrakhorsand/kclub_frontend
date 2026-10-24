@@ -4,7 +4,10 @@
  */
 import { PAYMENT_HOSTS } from "@/engine/config";
 import { addDays, dayKey } from "@/engine/format";
-import { HOURS, MAX_DAYS_AHEAD } from "@/engine/venue";
+import { HOURS } from "@/engine/venue";
+
+/** Longest booking window the admin can set; the page trims to the real one. */
+const MAX_WINDOW_DAYS = 90;
 
 /**
  * An in-app path that is safe to navigate to after login: must start with a
@@ -38,11 +41,11 @@ export function redirectToPayment(raw: string) {
   return true;
 }
 
-/** A yyyy-MM-dd day inside today … today + MAX_DAYS_AHEAD - 1, or null. */
+/** A yyyy-MM-dd day inside today … today + MAX_WINDOW_DAYS - 1, or null. */
 export function bookableDateParam(value: string | null) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const today = dayKey(new Date());
-  const last = dayKey(addDays(new Date(), MAX_DAYS_AHEAD - 1));
+  const last = dayKey(addDays(new Date(), MAX_WINDOW_DAYS - 1));
   return value >= today && value <= last ? value : null;
 }
 

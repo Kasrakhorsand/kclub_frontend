@@ -2,7 +2,8 @@
  * Home page text, cards and lists for this club. The home components in src/ui/home only lay
  * these out; change the words, images and items here.
  */
-import { CANCEL_RULES, CLOSE_HOUR, MAX_DAYS_AHEAD, OPEN_HOUR, PRICING } from "@/config/venue";
+import { CLOSE_HOUR, OPEN_HOUR } from "@/config/venue";
+import type { SiteFacts } from "@/engine/siteFacts";
 import { fa } from "@/engine/format";
 import type { Icon3DName } from "@/ui/kit/icons3d";
 
@@ -82,18 +83,26 @@ export const HOW_TO = {
   ] as const,
 };
 
-export const FAQ: [question: string, answer: string][] = [
-  [
-    "قیمت هر سانس چقدر است؟",
-    `هر سانس یک ساعت است. پدل ${PRICING.padel.map((b) => `از ساعت ${fa(b.from)} تا ${fa(b.to)} ${fa(b.price / 1000)} هزار تومان`).join(" و ")}؛ زمین‌های ساحلی (تنیس ساحلی و والیبال ساحلی) ${PRICING.beach.map((b) => `از ساعت ${fa(b.from)} تا ${fa(b.to)} ${fa(b.price / 1000)} هزار تومان`).join(" و ")}.`,
-  ],
-  ["ساعت کاری کی کلاب چیست؟", `همه‌ی روزهای هفته، از ساعت ${fa(OPEN_HOUR)} صبح تا ${fa(CLOSE_HOUR)}. رزرو آنلاین شبانه‌روزی باز است.`],
-  ["آیا برای رزرو زمین باید عضو باشم؟", "نه. کافی است با شماره‌ی موبایل و کد پیامکی وارد شوید. بار اول فقط نام و نام خانوادگی می‌خواهیم و حساب شما همان لحظه ساخته می‌شود."],
-  ["چقدر زودتر باید رزرو کنم؟", `سانس‌ها تا ${fa(MAX_DAYS_AHEAD)} روز آینده باز هستند. سانس‌های عصر و شب زودتر پر می‌شوند؛ اگر هر هفته ساعت ثابتی بازی می‌کنید از «رزرو تکراری هفتگی» استفاده کنید.`],
-  ["آیا رزرو قابل لغو است؟", `بله، از پنل «رزروهای من». ${CANCEL_RULES.filter((r) => r.percent > 0).map((r) => `تا ${fa(r.hours)} ساعت قبل از شروع ${fa(r.percent)}٪`).join(" و ")} مبلغ به کیف پول برمی‌گردد؛ بعد از آن بازگشتی ندارد.`],
-  ["آیا امکان اجاره راکت پدل وجود دارد؟", "بله. هنگام رزرو آنلاین تعداد راکت را انتخاب کنید تا هزینه‌اش روی فاکتور بیاید، یا هنگام ورود از پذیرش اجاره کنید. برای زمین‌های ساحلی هم توپ تنیس ساحلی و والیبال در اختیارتان قرار می‌گیرد."],
-  ["اگر پرداخت ناموفق باشد چه می‌شود؟", "اگر مبلغ از حساب کم شده باشد ولی رزرو ثبت نشده باشد، همان مبلغ خودکار به کیف پول کی کلاب برمی‌گردد و می‌توانید با آن رزرو کنید."],
-];
+/** Bands as "از ساعت ۸ تا ۱۲ ۵۰۰ هزار تومان و …". */
+const bandsText = (facts: SiteFacts, sport: string) =>
+  (facts.pricing.bands[sport] ?? []).map((b) => `از ساعت ${fa(b.from)} تا ${fa(b.to)} ${fa(b.price / 1000)} هزار تومان`).join(" و ");
+
+/**
+ * Home page FAQ (also used for structured data and llms.txt). Prices and
+ * rules come from `facts` (the admin's live values), so answers stay true.
+ */
+export function faqItems(facts: SiteFacts): [question: string, answer: string][] {
+  const refunds = [...facts.rules.cancelRules].sort((a, b) => b.hours - a.hours).filter((r) => r.percent > 0);
+  return [
+    ["قیمت هر سانس چقدر است؟", `هر سانس یک ساعت است. پدل ${bandsText(facts, "padel")}؛ زمین‌های ساحلی (تنیس ساحلی و والیبال ساحلی) ${bandsText(facts, "beach")}.`],
+    ["ساعت کاری کی کلاب چیست؟", `همه‌ی روزهای هفته، از ساعت ${fa(OPEN_HOUR)} صبح تا ${fa(CLOSE_HOUR)}. رزرو آنلاین شبانه‌روزی باز است.`],
+    ["آیا برای رزرو زمین باید عضو باشم؟", "نه. کافی است با شماره‌ی موبایل و کد پیامکی وارد شوید. بار اول فقط نام و نام خانوادگی می‌خواهیم و حساب شما همان لحظه ساخته می‌شود."],
+    ["چقدر زودتر باید رزرو کنم؟", `سانس‌ها تا ${fa(facts.rules.maxDaysAhead)} روز آینده باز هستند. سانس‌های عصر و شب زودتر پر می‌شوند؛ اگر هر هفته ساعت ثابتی بازی می‌کنید از «رزرو تکراری هفتگی» استفاده کنید.`],
+    ["آیا رزرو قابل لغو است؟", `بله، از پنل «رزروهای من». ${refunds.map((r) => `تا ${fa(r.hours)} ساعت قبل از شروع ${fa(r.percent)}٪`).join(" و ")} مبلغ به کیف پول برمی‌گردد؛ بعد از آن بازگشتی ندارد.`],
+    ["آیا امکان اجاره راکت پدل وجود دارد؟", "بله. هنگام رزرو آنلاین تعداد راکت را انتخاب کنید تا هزینه‌اش روی فاکتور بیاید، یا هنگام ورود از پذیرش اجاره کنید. برای زمین‌های ساحلی هم توپ تنیس ساحلی و والیبال در اختیارتان قرار می‌گیرد."],
+    ["اگر پرداخت ناموفق باشد چه می‌شود؟", "اگر مبلغ از حساب کم شده باشد ولی رزرو ثبت نشده باشد، همان مبلغ خودکار به کیف پول کی کلاب برمی‌گردد و می‌توانید با آن رزرو کنید."],
+  ];
+}
 
 export const FINAL_CTA = {
   eyebrow: "Ready to play?",

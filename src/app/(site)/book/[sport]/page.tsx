@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Booking } from "@/ui/booking/Booking";
-import { PRICING, SPORTS, courtsOf, sportById, sportTitle } from "@/engine/venue";
+import { SPORTS, courtsOf, sportById, sportTitle } from "@/engine/venue";
+import { loadSiteFacts } from "@/engine/siteFacts";
 import { toman } from "@/engine/format";
 import { SITE } from "@/config/site";
 import { JsonLd } from "@/ui/seo/JsonLd";
@@ -16,7 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ sport: st
   const sport = sportById((await params).sport);
   if (!sport) return {};
   const title = sportTitle(sport);
-  const prices = (PRICING[sport.id] ?? []).map((b) => b.price);
+  const facts = await loadSiteFacts();
+  const prices = (facts.pricing.bands[sport.id] ?? []).map((b) => b.price);
   const from = prices.length ? ` از ${toman(Math.min(...prices))} هر سانس.` : "";
   const path = `/book/${sport.id}`;
   return {
@@ -32,7 +34,7 @@ export default async function BookPage({ params }: { params: Promise<{ sport: st
   const { sport } = await params;
   const def = sportById(sport);
   if (!def) notFound();
-  const service = serviceSchema(sport);
+  const service = serviceSchema(sport, await loadSiteFacts());
   return (
     <Suspense>
       <JsonLd data={[breadcrumbSchema([["انتخاب رشته", "/sport"], [`رزرو زمین ${def.name}`, `/book/${sport}`]]), ...(service ? [service] : [])]} />

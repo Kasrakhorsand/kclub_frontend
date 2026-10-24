@@ -8,8 +8,9 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAvailability, getCourts, getSlots, isPast } from "@/engine/api";
 import { addDays, dayKey } from "@/engine/format";
-import { MAX_DAYS_AHEAD, courtsOf, gameOf, priceOf, rentalsForSport, sportById } from "@/engine/venue";
-import { rentalPriceOf, useRentalPrices } from "@/engine/pricing";
+import { courtsOf, gameOf, rentalsForSport, sportById } from "@/engine/venue";
+import { useRules } from "@/engine/content/useSiteContent";
+import { rentalPriceOf, usePrices } from "@/engine/pricing";
 import { useSession } from "@/engine/store";
 import type { Court, CourtState, Sport } from "@/engine/types";
 
@@ -39,7 +40,8 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   const cart = useSession((s) => s.cart);
   const toggleCart = useSession((s) => s.toggleCart);
   const setRentals = useSession((s) => s.setRentals);
-  const rentalPrices = useRentalPrices();
+  const prices = usePrices();
+  const rentalPrices = prices.rentals;
   const client = useQueryClient();
   /** True while checking the repeated weeks with the server. */
   const [checking, setChecking] = useState(false);
@@ -50,24 +52,27 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
   /** Equipment to rent with the courts picked at this hour: rental id → quantity. */
   const [rentalQty, setRentalQty] = useState<Record<string, number>>({});
 
-  const { data: slots = [] } = useQuery({ queryKey: ["slots", sport, date], queryFn: () => getSlots(sport, date) });
+  const { data: slots = [] } = useQuery({ queryKey: ["slots", sport, date], queryFn: () => getSlots(sport, date), refetchInterval: 30_000 });
+  const maxDays = useRules().maxDaysAhead;
   const { data: courts = courtsOf(sport) } = useQuery({ queryKey: ["courts", sport], queryFn: () => getCourts(sport) });
 
   // A named game on shared courts, the sport's only game, or the sport itself.
   const title = game || sportDef.games.length === 1 ? gameOf(sportDef, game).name : sportDef.name;
 
   const { data: availability = [] } = useQuery({
-    queryKey: ["availability", sport],
-    queryFn: () => getAvailability(sport, MAX_DAYS_AHEAD),
+    queryKey: ["availability", sport, maxDays],
+    queryFn: () => getAvailability(sport, maxDays),
     staleTime: 60_000,
+    // Others book too: keep the free counts current while the page is open.
+    refetchInterval: 60_000,
   });
   const days: DayAvailability[] = useMemo(() => {
     const free = new Map(availability.map((a) => [a.date, a.free]));
-    return Array.from({ length: MAX_DAYS_AHEAD }, (_, i) => {
+    return Array.from({ length: maxDays }, (_, i) => {
       const d = dayKey(addDays(new Date(), i));
       return { date: d, free: free.get(d) ?? 0, inCart: cart.some((item) => item.date === d) };
     });
-  }, [availability, cart]);
+  }, [availability, cart, maxDays]);
 
   const playedGame = game ?? (sportDef.games.length === 1 ? sportDef.games[0].id : undefined);
   const rentalOptions = rentalsForSport(sport, playedGame).map((r) => ({
@@ -102,7 +107,7 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
    */
   const pickCourt = async (court: Court): Promise<PickResult | null> => {
     if (hour === null) return null;
-    const item = (d: string) => ({ date: d, hour, courtId: court.id, price: priceOf(sport, hour), game: playedGame, rentals: chosenRentals });
+    const item = (d: string) => ({ date: d, hour, courtId: court.id, price: prices.session(sport, hour), game: playedGame, rentals: chosenRentals });
     if (inCart(court)) {
       let removed = 0;
       for (let w = 0; w < weeks; w++) {
@@ -114,7 +119,7 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
       }
       return { action: "removed", count: removed, requested: weeks };
     }
-    const lastDay = dayKey(addDays(new Date(), MAX_DAYS_AHEAD - 1));
+    const lastDay = dayKey(addDays(new Date(), maxDays - 1));
     const targets = Array.from({ length: weeks }, (_, w) => plusWeeks(date, w)).filter((d) => d <= lastDay && !isPast(d, hour) && !inCart(court, d));
     setChecking(weeks > 1);
     try {
@@ -148,7 +153,7 @@ export function useBookingFlow(sport: Sport, { game, date: initialDate, hour: in
     courtState,
     pickCourt,
     checking,
-    priceAt: (court: Court) => (hour === null ? 0 : priceOf(court.sport, hour)),
+    priceAt: (court: Court) => (hour === null ? 0 : prices.session(court.sport, hour)),
 
     /** Rentals offered for this sport/game, with current price and chosen quantity. */
     rentalOptions,

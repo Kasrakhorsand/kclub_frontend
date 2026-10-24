@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getRevenue } from "@/engine/api";
-import { COURTS, HOURS, SPORTS } from "@/engine/venue";
+import { HOURS, SPORTS } from "@/engine/venue";
+import { useCourts } from "@/engine/useCourts";
 
 export const REVENUE_PERIODS = [7, 30, 90] as const;
 export type RevenuePeriod = (typeof REVENUE_PERIODS)[number];
@@ -12,7 +13,7 @@ export function useRevenue(initial: RevenuePeriod = 30) {
   const [days, setDays] = useState<RevenuePeriod>(initial);
   const { data, isLoading } = useQuery({ queryKey: ["admin-revenue", days], queryFn: () => getRevenue(days), staleTime: 60_000 });
 
-  const courts = COURTS.map((court) => {
+  const courts = useCourts().map((court) => {
     const hours = data?.hoursByCourt[court.id] ?? 0;
     return { court, revenue: data?.byCourt[court.id] ?? 0, hours, utilisation: Math.round((hours / (HOURS.length * days)) * 100) };
   });

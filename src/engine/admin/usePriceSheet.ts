@@ -67,7 +67,7 @@ export function usePriceSheet() {
         client.setQueryData(["admin-prices"], draft);
         setDraft(null);
         setDone(true);
-        for (const key of [["admin-prices"], ["rental-prices"], ["slots"], ["admin-audit"]]) await client.invalidateQueries({ queryKey: key });
+        for (const key of [["admin-prices"], ["site-pricing"], ["slots"], ["quote"], ["admin-audit"]]) await client.invalidateQueries({ queryKey: key });
       } catch (ex) {
         setError((ex as Error).message);
       } finally {

@@ -1,12 +1,13 @@
 "use client";
 /**
  * Player's bookings page: upcoming and past games, and cancelling with a
- * refund preview (CANCEL_RULES) and a confirmation step.
+ * refund preview (the cancellation rules in force) and a confirmation step.
  */
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cancelBooking } from "@/engine/api";
-import { refundPercent } from "@/engine/venue";
+import { refundPercentFor } from "@/engine/siteFacts";
+import { useRules } from "@/engine/content/useSiteContent";
 import type { Booking } from "@/engine/types";
 import { myBookingsKey, useMyBookings, usePastBookings } from "./stats";
 
@@ -16,6 +17,7 @@ export type BookingsTab = "upcoming" | "past";
 export type PendingCancel = { booking: Booking; refundPercent: number; refundAmount: number };
 
 export function useMyBookingsManager() {
+  const rules = useRules();
   const upcomingAll = useMyBookings(20);
   const past = usePastBookings(30);
   const client = useQueryClient();
@@ -37,7 +39,7 @@ export function useMyBookingsManager() {
     busy,
     /** Open the confirmation with the refund the player would get right now. */
     askCancel: (booking: Booking) => {
-      const percent = refundPercent(booking.date, booking.hour);
+      const percent = refundPercentFor(rules, booking.date, booking.hour);
       setPending({ booking, refundPercent: percent, refundAmount: Math.round((booking.price * percent) / 100) });
     },
     dismiss: () => setPending(null),

@@ -529,3 +529,8 @@ export interface ReviewSummary {
 }
 /** Booking rules shown to players (terms page, checkout). Same values the admin sets in Settings. */
 export type PublicRules = Pick<VenueSettings, "maxDaysAhead" | "holdMinutes" | "cancelRules" | "releaseHour" | "maxActivePerUser">;
+/** What the server will charge for a cart, line by line, before paying. */
+export interface BookingQuote {
+  lines: { courtId: string; date: string; hour: number; court: number; rentals: number; total: number }[];
+  total: number;
+}

@@ -13,7 +13,8 @@ import { useNotifications } from "@/engine/notifications/useNotifications";
 import { useWalletBalance } from "@/engine/wallet/useWallet";
 import { todayKey, usePlayerSummary } from "@/engine/panel/stats";
 import { useSession } from "@/engine/store";
-import { PRICING, SPORTS, bookingHref, courtById, sportById } from "@/engine/venue";
+import { SPORTS, bookingHref, courtById, sportById } from "@/engine/venue";
+import { usePrices } from "@/engine/pricing";
 import type { Booking } from "@/engine/types";
 import { SITE } from "@/config/site";
 import { Button3D } from "@/ui/kit/Buttons";
@@ -87,11 +88,12 @@ function WelcomeHero({ name, next }: { name: string; next: Booking | null }) {
 
 /** One card per game with its starting price. */
 function QuickBook() {
+  const prices = usePrices();
   const games = SPORTS.flatMap((sport) =>
     sport.games.map((game) => ({
       sport,
       game,
-      from: Math.min(...(PRICING[sport.id] ?? []).map((b) => b.price)),
+      from: prices.from(sport.id),
     })),
   );
   return (

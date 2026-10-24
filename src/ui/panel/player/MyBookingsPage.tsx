@@ -8,7 +8,9 @@ import Link from "next/link";
 import clsx from "clsx";
 import { fa, hm, jDay, jFull, jMonth, timeUntil, toman, weekday } from "@/engine/format";
 import { useMyBookingsManager } from "@/engine/panel/useMyBookingsManager";
-import { CANCEL_RULES, bookingHref, courtById, sportById } from "@/engine/venue";
+import { bookingHref, courtById, sportById } from "@/engine/venue";
+import { useRules } from "@/engine/content/useSiteContent";
+import type { PublicRules } from "@/engine/types";
 import type { Booking } from "@/engine/types";
 import { Button3D } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
@@ -16,7 +18,7 @@ import { toast } from "@/ui/kit/Toast";
 import { PageHead } from "@/ui/panel/shell/PageHead";
 
 /** "تا ۲۴ ساعت قبل ۱۰۰٪ · تا ۶ ساعت قبل ۵۰٪" from the venue rules. */
-const rulesText = CANCEL_RULES.filter((r) => r.percent > 0)
+const rulesTextOf = (rules: PublicRules) => [...rules.cancelRules].filter((r) => r.percent > 0)
   .map((r) => `تا ${fa(r.hours)} ساعت قبل: ${fa(r.percent)}٪`)
   .join(" · ");
 
@@ -72,6 +74,7 @@ function PastRow({ booking }: { booking: Booking }) {
 }
 
 export function MyBookingsView() {
+  const rules = useRules();
   const m = useMyBookingsManager();
   const cancelledCount = Object.keys(m.cancelled).length;
 
@@ -93,7 +96,7 @@ export function MyBookingsView() {
             بازی‌شده <i>{fa(m.past.length)}</i>
           </button>
         </div>
-        <p className="pb-rules"><Icon3D name="clock" /> بازگشت وجه لغو: {rulesText}؛ بعد از آن بازگشتی ندارد.</p>
+        <p className="pb-rules"><Icon3D name="clock" /> بازگشت وجه لغو: {rulesTextOf(rules)}؛ بعد از آن بازگشتی ندارد.</p>
       </div>
 
       {m.tab === "upcoming" ? (

@@ -4,15 +4,19 @@
  * same config as the pages, so facts, prices and hours never drift.
  */
 import { CONTACT } from "@/config/content";
-import { FAQ } from "@/config/home";
+import { faqItems } from "@/config/home";
+import { loadSiteFacts } from "@/engine/siteFacts";
 import { SITE } from "@/config/site";
-import { CANCEL_RULES, CLOSE_HOUR, HOLD_MINUTES, MAX_DAYS_AHEAD, OPEN_HOUR, PRICING, RENTALS, SPORTS, courtsOf, sportTitle } from "@/engine/venue";
+import { CLOSE_HOUR, OPEN_HOUR, RENTALS, SPORTS, courtsOf, sportTitle } from "@/engine/venue";
 
-export const dynamic = "force-static";
+/** Rebuilt at most every 5 minutes, so prices and rules follow the admin settings. */
+export const revalidate = 300;
 
 const toman = (n: number) => `${n.toLocaleString("en-US")} toman`;
 
-export function GET() {
+export async function GET() {
+  const facts = await loadSiteFacts();
+  const { rules, pricing } = facts;
   const u = SITE.url;
   const lines: string[] = [
     `# ${SITE.latinName} (${SITE.name})`,
@@ -24,21 +28,21 @@ export function GET() {
     ...SPORTS.map((s) => `- ${s.latin}${s.games.length > 1 ? ` (${s.games.map((g) => g.latin).join(", ")})` : ""}: ${courtsOf(s.id).length} ${s.indoor ? "indoor" : "outdoor"} courts. Persian: ${sportTitle(s)}.`),
     `- Open every day, ${String(OPEN_HOUR).padStart(2, "0")}:00 to ${CLOSE_HOUR === 24 ? "24:00 (midnight)" : `${CLOSE_HOUR}:00`}. Online booking is open around the clock.`,
     "- Every session is one hour and starts on the hour.",
-    `- Bookable up to ${MAX_DAYS_AHEAD} days ahead; weekly repeat bookings are possible.`,
+    `- Bookable up to ${rules.maxDaysAhead} days ahead; weekly repeat bookings are possible.`,
     "- Payment: Iranian bank cards through Shaparak gateways, or the club wallet.",
-    `- Courts are held for ${HOLD_MINUTES} minutes while the player is on the bank page.`,
+    `- Courts are held for ${rules.holdMinutes} minutes while the player is on the bank page.`,
     ...(CONTACT.address ? [`- Address: ${CONTACT.address}`] : []),
     ...(CONTACT.phone ? [`- Phone: ${CONTACT.phone}`] : []),
     `- Instagram: https://instagram.com/${CONTACT.instagram}`,
     "",
     "## Prices (per one-hour session)",
     "",
-    ...SPORTS.flatMap((s) => (PRICING[s.id] ?? []).map((b) => `- ${s.latin}, ${String(b.from).padStart(2, "0")}:00–${String(b.to).padStart(2, "0")}:00: ${toman(b.price)}`)),
-    ...RENTALS.map((r) => `- Rental: ${r.name} — ${toman(r.price)} each, per session (up to ${r.maxPerBooking})`),
+    ...SPORTS.flatMap((s) => (pricing.bands[s.id] ?? []).map((b) => `- ${s.latin}, ${String(b.from).padStart(2, "0")}:00–${String(b.to).padStart(2, "0")}:00: ${toman(b.price)}`)),
+    ...RENTALS.map((r) => `- Rental: ${r.name} — ${toman(pricing.rentals[r.id] ?? r.price)} each, per session (up to ${r.maxPerBooking})`),
     "",
     "## Cancellation and refunds",
     "",
-    ...[...CANCEL_RULES].sort((a, b) => b.hours - a.hours).map((r, i, all) =>
+    ...[...rules.cancelRules].sort((a, b) => b.hours - a.hours).map((r, i, all) =>
       r.hours ? `- Cancelled ${r.hours}+ hours before the start: ${r.percent}% back to the club wallet` : `- Less than ${all[i - 1]?.hours ?? 0} hours before the start: ${r.percent ? `${r.percent}% back` : "no refund"}`,
     ),
     "- If the club closes a court, the booking is cancelled and fully refunded to the wallet.",
@@ -61,7 +65,7 @@ export function GET() {
     "",
     "## FAQ (Persian, as shown on the site)",
     "",
-    ...FAQ.flatMap(([q, a]) => [`### ${q}`, "", a, ""]),
+    ...faqItems(facts).flatMap(([q, a]) => [`### ${q}`, "", a, ""]),
   ];
   return new Response(lines.join("\n"), { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
 }

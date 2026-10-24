@@ -8,11 +8,13 @@
 import clsx from "clsx";
 import { useClosures } from "@/engine/admin/useCourtsAdmin";
 import { fa, hm, jDate, jFull, toman } from "@/engine/format";
-import { CLOSE_HOUR, COURTS, HOURS, courtById } from "@/engine/venue";
+import { CLOSE_HOUR, HOURS, courtById } from "@/engine/venue";
+import { useCourts } from "@/engine/useCourts";
 import { Button3D } from "@/ui/kit/Buttons";
 import { PageHead } from "@/ui/panel/shell/PageHead";
 
 export function CloseCourtView() {
+  const courts = useCourts();
   const c = useClosures();
   return (
     <div className="ad">
@@ -22,7 +24,7 @@ export function CloseCourtView() {
           <div className="cl-field">
             <span>زمین‌ها</span>
             <div className="cl-chips">
-              {COURTS.map((court) => (
+              {courts.map((court) => (
                 <button key={court.id} type="button" aria-pressed={c.courtIds.includes(court.id)} className={clsx(c.courtIds.includes(court.id) && "on")} onClick={() => c.toggleCourt(court.id)}>
                   <i style={{ background: court.floor }} />{court.name}
                 </button>

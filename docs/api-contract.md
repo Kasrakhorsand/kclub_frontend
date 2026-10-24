@@ -19,11 +19,12 @@
 
 | متد و مسیر | ورودی | خروجی |
 |---|---|---|
-| `GET /courts` | `?sport=` | `Court[]` |
+| `GET /courts` | `?sport=` | `Court[]` با `active` زنده (زمینی که ادمین از رزرو خارج کرده `active: false`)؛ همه‌ی بردهای پذیرش و آمار از همین می‌خوانند |
 | `GET /slots` | `?sport=&date=` | `Slot[]`: `{ hour, past, price, freeCourts: courtId[] }` |
 | `GET /availability` | `?sport=&from=&days=` | `{ date, free }[]` |
 | `GET /coaches` | — | `Coach[]` |
-| `GET /pricing/rentals` | — | `{ [rentalId]: price }` |
+| `GET /site/pricing` | — | `PriceSheet`: `{ bands: { [sport]: { from, to, price }[] }, rentals: { [rentalId]: price } }`؛ همان قیمت‌های ادمین. صفحه‌های سرور (بخش قیمت، سؤالات، داده‌ی ساخت‌یافته، llms.txt) هر ۵ دقیقه دوباره می‌خوانند |
+| `GET /site/rules` | — | `PublicRules` (پایین‌تر در «شلوغی رزرو»)؛ بازه‌ی رزرو، مهلت درگاه و پلکان بازگشت وجه در همه‌ی صفحه‌ها از این است |
 
 ## ورود
 
@@ -56,6 +57,7 @@
 
 | متد و مسیر | ورودی | خروجی |
 |---|---|---|
+| `POST /bookings/quote` | `{ items: [{ courtId, date, hour, game?, rentals? }] }` | `{ lines: [{ courtId, date, hour, court, rentals, total }], total }`؛ مبلغی که همین حالا گرفته می‌شود. صفحه‌ی پرداخت همین را نشان می‌دهد و `POST /bookings` باید همین مبلغ را بگیرد |
 | `POST /bookings` | `{ items: [{ courtId, date, hour, game?, rentals? }], method: "wallet"\|"gateway" }` | `{ tracking, gatewayUrl? }`. اگر سانس پر شده باشد `409` با `code: "SLOT_TAKEN"`. در پرداخت با درگاه، `gatewayUrl` برمی‌گردد. |
 
 - اگر موجودی کیف پول کافی نباشد: `422` با `code: "LOW_BALANCE"`.

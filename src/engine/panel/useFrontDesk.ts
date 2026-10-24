@@ -9,7 +9,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { checkInBooking, getTickets } from "@/engine/api";
 import { todayKey, useDayBoard } from "@/engine/panel/stats";
-import { COURTS, HOURS, OPEN_HOUR, CLOSE_HOUR } from "@/engine/venue";
+import { HOURS, OPEN_HOUR, CLOSE_HOUR } from "@/engine/venue";
+import { useActiveCourts } from "@/engine/useCourts";
 import type { Booking, Court } from "@/engine/types";
 
 export type CourtNow = {
@@ -44,7 +45,7 @@ export function useFrontDesk() {
 
   const hour = now.getHours();
   const minute = now.getMinutes();
-  const courts = COURTS.filter((c) => c.active);
+  const courts = useActiveCourts();
   const at = (courtId: string, h: number) => bookings.find((b) => b.courtId === courtId && b.hour === h && b.status === "active");
 
   const board: CourtNow[] = courts.map((court) => ({

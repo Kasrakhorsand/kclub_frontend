@@ -18,7 +18,7 @@ import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } fr
 import { CANCEL_RULES, courtById, COURTS, HOLD_MINUTES, HOURS, MAX_DAYS_AHEAD, PRICING, priceOf, refundPercent, RENTALS } from "@/engine/venue";
 import { REVIEWS } from "@/config/content";
 import { useSession } from "@/engine/store";
-import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, PublicRules, RevenueReport, ReviewSummary, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
+import type { Album, Audit, Booking, BookingQuote, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, PublicRules, RevenueReport, ReviewSummary, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
 import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
 import { itemTotal, usePricing } from "@/engine/pricing";
 
@@ -67,18 +67,24 @@ export function takenSync(date: string, courtId: string, hour: number) {
 /** Courts, optionally for one sport. */
 export async function getCourts(sport?: Sport): Promise<Court[]> {
   if (!USE_MOCK) return http("/courts", { query: { sport } });
-  return wait(sport ? COURTS.filter((c) => c.sport === sport) : COURTS);
+  const courts = mockCourts();
+  return wait(sport ? courts.filter((c) => c.sport === sport) : courts);
+}
+
+/** Mock: courts with the admin's active flags applied. */
+function mockCourts(): Court[] {
+  return COURTS.map((c) => ({ ...c, active: adminState.courts.get(c.id) ?? c.active }));
 }
 
 /** Every opening hour of a day for a sport, with price and free courts. */
 export async function getSlots(sport: Sport, date: string): Promise<Slot[]> {
   if (!USE_MOCK) return http("/slots", { query: { sport, date } });
-  const courts = COURTS.filter((c) => c.sport === sport && c.active);
+  const courts = mockCourts().filter((c) => c.sport === sport && c.active);
   return wait(
     HOURS.map((h) => ({
       hour: h,
       past: isPast(date, h),
-      price: priceOf(sport, h),
+      price: mockSessionPrice(sport, h),
       freeCourts: courts.filter((c) => !takenSync(date, c.id, h)).map((c) => c.id),
     })),
   );
@@ -87,7 +93,7 @@ export async function getSlots(sport: Sport, date: string): Promise<Slot[]> {
 /** Free sessions per day for the next `days` days (the booking date strip). */
 export async function getAvailability(sport: Sport, days: number): Promise<{ date: string; free: number }[]> {
   if (!USE_MOCK) return http("/availability", { query: { sport, from: dayKey(new Date()), days } });
-  const courts = COURTS.filter((c) => c.sport === sport && c.active);
+  const courts = mockCourts().filter((c) => c.sport === sport && c.active);
   return Array.from({ length: days }, (_, i) => {
     const date = dayKey(addDays(new Date(), i));
     return { date, free: HOURS.filter((h) => !isPast(date, h) && courts.some((c) => !takenSync(date, c.id, h))).length };
@@ -152,9 +158,32 @@ export async function getCoaches(): Promise<Coach[]> {
 }
 
 /** Current price per item for each rental (set by the admin). */
-export async function getRentalPrices(): Promise<Record<string, number>> {
-  if (!USE_MOCK) return http("/pricing/rentals");
-  return wait({});
+/** Public: session prices per sport and time band, and rental prices — what the admin set. */
+export async function getPublicPricing(): Promise<PriceSheet> {
+  if (!USE_MOCK) return http("/site/pricing");
+  return getPriceSheet();
+}
+
+/** Mock: a session's price from the admin's price sheet (config until the admin changes it). */
+function mockSessionPrice(sport: Sport, hour: number) {
+  const bands = (adminState.bands ?? PRICING)[sport] ?? [];
+  return bands.find((b) => hour >= b.from && hour < b.to)?.price ?? priceOf(sport, hour);
+}
+
+/**
+ * What the server will charge for these cart items right now (court + rentals
+ * per line). Shown on checkout so the player pays exactly the amount they see.
+ */
+export async function quoteBookings(items: CartItem[]): Promise<BookingQuote> {
+  const order = items.map(({ courtId, date, hour, game, rentals }) => ({ courtId, date, hour, game, rentals }));
+  if (!USE_MOCK) return http("/bookings/quote", { method: "POST", body: { items: order } });
+  const rentalPrices = usePricing.getState().rentalPrices;
+  const lines = order.map((it) => {
+    const court = mockSessionPrice(courtById(it.courtId)?.sport ?? "", it.hour);
+    const rentals = Object.entries(it.rentals ?? {}).reduce((a, [id, q]) => a + q * (rentalPrices[id] ?? RENTALS.find((r) => r.id === id)?.price ?? 0), 0);
+    return { courtId: it.courtId, date: it.date, hour: it.hour, court, rentals, total: court + rentals };
+  });
+  return wait({ lines, total: lines.reduce((a, l) => a + l.total, 0) }, 150);
 }
 
 /* ------------------------------------------------------------------ */
@@ -704,7 +733,7 @@ const adminState = {
 /** Admin: every court with its active flag. */
 export async function getAdminCourts(): Promise<Court[]> {
   if (!USE_MOCK) return http("/admin/courts");
-  return wait(COURTS.map((c) => ({ ...c, active: adminState.courts.get(c.id) ?? c.active })), 100);
+  return wait(mockCourts(), 100);
 }
 
 /** Admin: show or hide a court in online booking. */

@@ -1,13 +1,14 @@
 "use client";
 /** K Club checkout: ticket-style cart, payment options and confirmation, on the engine's useCheckout. */
 import Link from "next/link";
-import { HOLD_MINUTES } from "@/engine/venue";
+import { useRules } from "@/engine/content/useSiteContent";
 import { fa, hm, jFull, toman } from "@/engine/format";
 import { useCheckout } from "@/engine/booking/useCheckout";
 import { BackButton, Button3D } from "@/ui/kit/Buttons";
 import { SITE } from "@/config/site";
 
 export function CheckoutPage() {
+  const rules = useRules();
   const checkout = useCheckout();
   const { user } = checkout;
   if (!user) return null;
@@ -65,7 +66,7 @@ export function CheckoutPage() {
             ))}
           </div>
           {(() => {
-            const courts = checkout.items.reduce((sum, x) => sum + x.item.price, 0);
+            const courts = checkout.courtsTotal;
             const rentals = checkout.total - courts;
             return (
               <div className="bill-total">
@@ -75,6 +76,7 @@ export function CheckoutPage() {
             );
           })()}
           <div className="sum"><span>جمع کل</span><b>{toman(checkout.total)}</b></div>
+          {checkout.priceChanged && <p className="small rush-note">مبلغ با قیمت‌های امروز مجموعه به‌روز شد؛ همین مبلغ پرداخت می‌شود.</p>}
         </div>
         <div className="card stack">
           <h3>روش پرداخت</h3>
@@ -86,7 +88,7 @@ export function CheckoutPage() {
             <input type="radio" name="pm" disabled={!checkout.canUseWallet} checked={checkout.method === "wallet"} onChange={() => checkout.setMethod("wallet")} />
             <span className="rd" /><span><span className="ttl">{SITE.walletName}</span><br /><span className="small muted">موجودی: {toman(user.wallet)}</span></span>
           </label>
-          <p className="hold">زمین‌ها تا {fa(HOLD_MINUTES)} دقیقه بعد از رفتن به درگاه برای شما نگه داشته می‌شوند.</p>
+          <p className="hold">زمین‌ها تا {fa(rules.holdMinutes)} دقیقه بعد از رفتن به درگاه برای شما نگه داشته می‌شوند.</p>
           <p className="small muted legal-note">با پرداخت، <Link href="/terms">قوانین رزرو</Link> و <Link href="/terms#refunds">شرایط لغو و بازگشت وجه</Link> را می‌پذیرید.</p>
           {checkout.limit.over && (
             <p className="rush-note warn" role="alert">
@@ -104,7 +106,7 @@ export function CheckoutPage() {
               <button type="button" className="btn ghost sm" onClick={checkout.cancelWait}>توقف</button>
             </div>
           ) : (
-            <Button3D block size="lg" disabled={!checkout.items.length || checkout.busy || checkout.limit.over} onClick={checkout.pay}>
+            <Button3D block size="lg" disabled={!checkout.items.length || checkout.busy || checkout.quoting || checkout.limit.over} onClick={checkout.pay}>
               {checkout.busy ? "در حال پرداخت…" : `پرداخت ${toman(checkout.total)}`}
             </Button3D>
           )}

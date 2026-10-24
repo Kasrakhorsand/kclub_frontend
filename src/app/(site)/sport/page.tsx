@@ -4,6 +4,7 @@ import { SportPicker } from "@/ui/booking/SportPicker";
 import { SPORTS } from "@/engine/venue";
 import { JsonLd } from "@/ui/seo/JsonLd";
 import { breadcrumbSchema, serviceSchema } from "@/ui/seo/schema";
+import { loadSiteFacts } from "@/engine/siteFacts";
 
 export const metadata: Metadata = {
   title: "انتخاب رشته و رزرو زمین",
@@ -12,10 +13,11 @@ export const metadata: Metadata = {
   openGraph: { url: "/sport" },
 };
 
-export default function SportPage() {
+export default async function SportPage() {
+  const facts = await loadSiteFacts();
   return (
     <>
-      <JsonLd data={[breadcrumbSchema([["انتخاب رشته", "/sport"]]), ...SPORTS.map((s) => serviceSchema(s.id)).filter((x) => x !== null)]} />
+      <JsonLd data={[breadcrumbSchema([["انتخاب رشته", "/sport"]]), ...SPORTS.map((s) => serviceSchema(s.id, facts)).filter((x) => x !== null)]} />
       <SportPicker />
     </>
   );

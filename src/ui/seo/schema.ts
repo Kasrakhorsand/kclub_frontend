@@ -5,9 +5,9 @@
  * coordinates in config/content.ts) are left out instead of guessed.
  */
 import { CONTACT } from "@/config/content";
-import { FAQ } from "@/config/home";
 import { SITE } from "@/config/site";
-import { CLOSE_HOUR, OPEN_HOUR, PRICING, SPORTS, courtsOf, sportTitle } from "@/engine/venue";
+import { CLOSE_HOUR, OPEN_HOUR, SPORTS, courtsOf, sportTitle } from "@/engine/venue";
+import type { SiteFacts } from "@/engine/siteFacts";
 import type { Coach } from "@/engine/types";
 
 const abs = (path: string) => `${SITE.url}${path}`;
@@ -17,10 +17,9 @@ const hh = (h: number) => `${String(Math.min(h, 23)).padStart(2, "0")}:${h >= 24
 /** Prices are kept in toman; schema.org wants ISO currency (IRR = rial = toman × 10). */
 const rial = (toman: number) => toman * 10;
 
-const allPrices = Object.values(PRICING).flat().map((b) => b.price);
-
 /** The club as a sports venue (a LocalBusiness), for "padel court in Tehran"-style queries. */
-export function clubSchema() {
+export function clubSchema(facts: SiteFacts) {
+  const allPrices = Object.values(facts.pricing.bands).flat().map((b) => b.price);
   return {
     "@type": ["SportsActivityLocation", "LocalBusiness"],
     "@id": CLUB_ID,
@@ -73,7 +72,7 @@ export function websiteSchema() {
 }
 
 /** One bookable service per sport, with an hourly price per time band. */
-export function serviceSchema(sportId: string) {
+export function serviceSchema(sportId: string, facts: SiteFacts) {
   const sport = SPORTS.find((s) => s.id === sportId);
   if (!sport) return null;
   return {
@@ -85,7 +84,7 @@ export function serviceSchema(sportId: string) {
     provider: { "@id": CLUB_ID },
     areaServed: { "@type": "City", name: SITE.city },
     url: abs(`/book/${sport.id}`),
-    offers: (PRICING[sport.id] ?? []).map((band) => ({
+    offers: (facts.pricing.bands[sport.id] ?? []).map((band) => ({
       "@type": "Offer",
       name: `سانس ساعت ${band.from} تا ${band.to}`,
       price: rial(band.price),
@@ -97,10 +96,10 @@ export function serviceSchema(sportId: string) {
   };
 }
 
-export function faqSchema() {
+export function faqSchema(faq: [string, string][]) {
   return {
     "@type": "FAQPage",
-    mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+    mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
   };
 }
 

@@ -4,7 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { fa, hm, jDay, jFull, jMonth, toman, weekday } from "@/engine/format";
-import { MAX_DAYS_AHEAD, RENTALS } from "@/engine/venue";
+import { RENTALS } from "@/engine/venue";
+import { useRules } from "@/engine/content/useSiteContent";
 import { REPEAT_WEEKS, useBookingFlow, type DayAvailability } from "@/engine/booking/useBookingFlow";
 import { useCart } from "@/engine/booking/useCart";
 import { useBookingLimit, useReleaseCountdown } from "@/engine/booking/useRushGuards";
@@ -160,6 +161,7 @@ export function Booking({ sport }: { sport: Sport }) {
   const presetHour = openingHourParam(params.get("hour"));
   const gameParam = params.get("game");
   const game = gameParam && /^[a-z]{2,20}$/.test(gameParam) ? gameParam : null;
+  const maxDays = useRules().maxDaysAhead;
   const flow = useBookingFlow(sport, { game, date: bookableDateParam(params.get("date")), hour: presetHour });
   const cart = useCart();
   const release = useReleaseCountdown();
@@ -188,7 +190,7 @@ export function Booking({ sport }: { sport: Sport }) {
     }
     const result = await flow.pickCourt(court);
     if (result?.action === "added" && result.requested > 1 && result.count < result.requested)
-      toast(`${fa(result.count)} از ${fa(result.requested)} هفته اضافه شد؛ بقیه پر است یا خارج از بازه‌ی ${fa(MAX_DAYS_AHEAD)} روزه.`);
+      toast(`${fa(result.count)} از ${fa(result.requested)} هفته اضافه شد؛ بقیه پر است یا خارج از بازه‌ی ${fa(maxDays)} روزه.`);
     return result;
   };
 
@@ -211,7 +213,7 @@ export function Booking({ sport }: { sport: Sport }) {
         </div>
 
         <section className="bk2">
-          <div className="step"><span className="sn2">۱</span><div><h3>روز بازی</h3><p className="small muted">تا {fa(MAX_DAYS_AHEAD)} روز آینده قابل رزرو است</p></div></div>
+          <div className="step"><span className="sn2">۱</span><div><h3>روز بازی</h3><p className="small muted">تا {fa(maxDays)} روز آینده قابل رزرو است</p></div></div>
           {release.soon && (
             <p className="rush-note" role="status">
               <b>{jFull(release.opensDay)}</b> ساعت <bdi>{hm(release.releaseHour)}</bdi> برای رزرو باز می‌شود · <span dir="ltr">{fa(release.clock)}</span> مانده. همین صفحه را باز نگه دارید؛ سر ساعت خودش به‌روز می‌شود.

@@ -1,12 +1,14 @@
 "use client";
 /**
- * Prices the admin can change from the panel. Until the backend stores
- * them, overrides are kept in this browser (localStorage "kclub-pricing").
+ * Prices on the client: usePrices() reads the public price sheet the admin
+ * sets (GET /site/pricing), with the venue config as the first paint. In
+ * sample-data mode the admin's rental overrides live in this browser
+ * (localStorage "kclub-pricing").
  */
 import { create } from "zustand";
 import { useQuery } from "@tanstack/react-query";
-import { getRentalPrices } from "@/engine/api";
-import { USE_MOCK } from "@/engine/config";
+import { getPublicPricing } from "@/engine/api";
+import { CONFIG_FACTS, sessionPrice } from "@/engine/siteFacts";
 import { persist } from "zustand/middleware";
 import { RENTALS } from "@/engine/venue";
 import type { CartItem } from "@/engine/types";
@@ -38,12 +40,23 @@ export const rentalCostOf = (item: CartItem, overrides?: Record<string, number>)
 /** Court plus rentals for one cart item. */
 export const itemTotal = (item: CartItem, overrides?: Record<string, number>) => item.price + rentalCostOf(item, overrides);
 
-/**
- * Current rental prices: from the backend when one is configured (the admin
- * sets them there), otherwise this browser's sample overrides.
- */
-export function useRentalPrices() {
+/** The current price sheet (sessions per sport and time band, rentals); config until it loads. */
+export function usePrices() {
+  // Re-read when the sample-data rental overrides change in this browser.
   const local = usePricing((s) => s.rentalPrices);
-  const { data } = useQuery({ queryKey: ["rental-prices"], queryFn: getRentalPrices, enabled: !USE_MOCK, staleTime: 5 * 60_000 });
-  return USE_MOCK ? local : (data ?? {});
+  const { data } = useQuery({ queryKey: ["site-pricing", local], queryFn: getPublicPricing, staleTime: 5 * 60_000 });
+  const sheet = data ?? CONFIG_FACTS.pricing;
+  return {
+    sheet,
+    /** Price of one session of `sport` starting at `hour`. */
+    session: (sport: string, hour: number) => sessionPrice(sheet, sport, hour),
+    /** Lowest session price of a sport. */
+    from: (sport: string) => Math.min(...(sheet.bands[sport] ?? []).map((b) => b.price)),
+    rentals: sheet.rentals,
+  };
+}
+
+/** Current rental prices (rental id → toman). */
+export function useRentalPrices() {
+  return usePrices().rentals;
 }

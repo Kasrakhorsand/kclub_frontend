@@ -8,7 +8,10 @@ import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { checkInBooking, deskCancelBooking, getDayBoard, isPast } from "@/engine/api";
 import { addDays, dayKey } from "@/engine/format";
 import { useDayBoard } from "@/engine/panel/stats";
-import { COURTS, HOURS, courtById, refundPercent } from "@/engine/venue";
+import { HOURS, courtById } from "@/engine/venue";
+import { refundPercentFor } from "@/engine/siteFacts";
+import { useRules } from "@/engine/content/useSiteContent";
+import { useActiveCourts } from "@/engine/useCourts";
 import type { Booking } from "@/engine/types";
 
 const STRIP_DAYS = 14;
@@ -17,7 +20,8 @@ export function useDeskSchedule() {
   const client = useQueryClient();
   const today = dayKey(new Date());
   const [date, setDate] = useState(today);
-  const courts = COURTS.filter((c) => c.active);
+  const courts = useActiveCourts();
+  const rules = useRules();
   const { data: bookings = [], isLoading } = useDayBoard(date);
 
   const days = Array.from({ length: STRIP_DAYS }, (_, i) => dayKey(addDays(new Date(), i)));
@@ -75,7 +79,7 @@ export function useDeskSchedule() {
     opened,
     openedCourt: opened ? courtById(opened.courtId) : undefined,
     /** Refund % under the normal rules for the opened booking. */
-    rulePercent: opened ? refundPercent(opened.date, opened.hour) : 0,
+    rulePercent: opened ? refundPercentFor(rules, opened.date, opened.hour) : 0,
     open: (b: Booking | null) => {
       setOpenId(b?.id ?? null);
       setCancelling(false);
