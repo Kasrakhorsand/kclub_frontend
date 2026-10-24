@@ -45,12 +45,18 @@ export function EngineProvider({ children }: { children: React.ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          // Retry network and server errors twice; never retry 4xx (auth, validation, not found).
+          // Retry network and server errors twice and "busy" (429) three times, waiting as long as the
+          // server asks; never retry other 4xx (auth, validation, not found).
           queries: {
             staleTime: 15_000,
             retry: (count, err) => {
               const status = (err as { status?: number }).status ?? 0;
+              if (status === 429) return count < 3;
               return count < 2 && (status === 0 || status >= 500);
+            },
+            retryDelay: (count, err) => {
+              const after = (err as { retryAfter?: number }).retryAfter;
+              return after ? after * 1000 : Math.min(8_000, 1_000 * 2 ** count);
             },
           },
         },

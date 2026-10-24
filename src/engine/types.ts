@@ -528,4 +528,4 @@ export interface ReviewSummary {
   count: number;
 }
 /** Booking rules shown to players (terms page, checkout). Same values the admin sets in Settings. */
-export type PublicRules = Pick<VenueSettings, "maxDaysAhead" | "holdMinutes" | "cancelRules">;
+export type PublicRules = Pick<VenueSettings, "maxDaysAhead" | "holdMinutes" | "cancelRules" | "releaseHour" | "maxActivePerUser">;

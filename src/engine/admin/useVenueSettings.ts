@@ -71,7 +71,7 @@ export function useVenueSettings() {
         client.setQueryData(["admin-settings"], sorted);
         setDraft(null);
         setDone(true);
-        for (const key of [["admin-settings"], ["admin-audit"], ["availability"]]) await client.invalidateQueries({ queryKey: key });
+        for (const key of [["admin-settings"], ["site-rules"], ["admin-audit"], ["availability"]]) await client.invalidateQueries({ queryKey: key });
       } catch (ex) {
         setError((ex as Error).message);
       } finally {

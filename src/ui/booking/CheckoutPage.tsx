@@ -88,9 +88,26 @@ export function CheckoutPage() {
           </label>
           <p className="hold">زمین‌ها تا {fa(HOLD_MINUTES)} دقیقه بعد از رفتن به درگاه برای شما نگه داشته می‌شوند.</p>
           <p className="small muted legal-note">با پرداخت، <Link href="/terms">قوانین رزرو</Link> و <Link href="/terms#refunds">شرایط لغو و بازگشت وجه</Link> را می‌پذیرید.</p>
-          <Button3D block size="lg" disabled={!checkout.items.length || checkout.busy} onClick={checkout.pay}>
-            {checkout.busy ? "در حال پرداخت…" : `پرداخت ${toman(checkout.total)}`}
-          </Button3D>
+          {checkout.limit.over && (
+            <p className="rush-note warn" role="alert">
+              حداکثر {fa(checkout.limit.max)} رزرو فعال مجاز است؛ شما {fa(checkout.limit.held)} رزرو پیش رو دارید و {fa(checkout.limit.cartCount)} سانس در سبد. {fa(checkout.limit.held + checkout.limit.cartCount - checkout.limit.max)} سانس را از سبد حذف کنید.
+            </p>
+          )}
+          {checkout.wait !== null ? (
+            <div className="rush-wait" role="status" aria-live="polite">
+              <span className="rush-spin" aria-hidden />
+              <span>
+                <b>سرور الان شلوغ است</b>
+                <small>سانس‌ها در سبد شما می‌مانند. تلاش دوباره تا {fa(checkout.wait)} ثانیه‌ی دیگر…</small>
+              </span>
+              <button type="button" className="btn sm" onClick={checkout.retryNow}>همین الان</button>
+              <button type="button" className="btn ghost sm" onClick={checkout.cancelWait}>توقف</button>
+            </div>
+          ) : (
+            <Button3D block size="lg" disabled={!checkout.items.length || checkout.busy || checkout.limit.over} onClick={checkout.pay}>
+              {checkout.busy ? "در حال پرداخت…" : `پرداخت ${toman(checkout.total)}`}
+            </Button3D>
+          )}
           {checkout.error && <p className="small" role="alert" style={{ color: "var(--busy)" }}>{checkout.error}</p>}
           <p className="xs muted">اگر پرداخت ناموفق باشد ولی مبلغ از حساب کم شده باشد، همان مبلغ خودکار به {SITE.walletName} برمی‌گردد.</p>
         </div>

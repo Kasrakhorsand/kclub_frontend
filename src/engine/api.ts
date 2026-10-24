@@ -15,11 +15,12 @@
 import { CONTENT_UPLOAD, USE_MOCK, SUPPORT_UPLOAD } from "@/engine/config";
 import { ApiError, http } from "@/engine/http";
 import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
-import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
+import { CANCEL_RULES, courtById, COURTS, HOLD_MINUTES, HOURS, MAX_DAYS_AHEAD, PRICING, priceOf, refundPercent, RENTALS } from "@/engine/venue";
+import { REVIEWS } from "@/config/content";
 import { useSession } from "@/engine/store";
 import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, PublicRules, RevenueReport, ReviewSummary, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
 import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
-import { itemTotal } from "@/engine/pricing";
+import { itemTotal, usePricing } from "@/engine/pricing";
 
 /* ------------------------------------------------------------------ */
 /* Mock helpers (sample data only)                                     */
@@ -320,9 +321,9 @@ function mockMyBookings(scope: "upcoming" | "past") {
  * rentals); the backend prices it, checks the slots are free (409 SLOT_TAKEN
  * otherwise) and either charges the wallet or returns a gateway URL.
  */
-export async function createBookings(items: CartItem[], method: "wallet" | "gateway"): Promise<{ tracking: string; gatewayUrl?: string | null }> {
+export async function createBookings(items: CartItem[], method: "wallet" | "gateway", idempotencyKey?: string): Promise<{ tracking: string; gatewayUrl?: string | null }> {
   const order = items.map(({ courtId, date, hour, game, rentals }) => ({ courtId, date, hour, game, rentals }));
-  if (!USE_MOCK) return http("/bookings", { method: "POST", body: { items: order, method } });
+  if (!USE_MOCK) return http("/bookings", { method: "POST", body: { items: order, method }, idempotencyKey });
   const user = sessionUser();
   if (!user) throw new ApiError("ابتدا وارد شوید", 401);
   const created = items.map<Booking>((it) => ({
@@ -756,12 +757,10 @@ export async function deleteClosure(id: string): Promise<void> {
 /** Admin: session prices per sport and rental prices. */
 export async function getPriceSheet(): Promise<PriceSheet> {
   if (!USE_MOCK) return http("/admin/pricing");
-  const { PRICING: defaults, RENTALS: rentalDefs } = await import("@/engine/venue");
-  const { usePricing } = await import("@/engine/pricing");
   const overrides = usePricing.getState().rentalPrices;
   return wait(structuredClone({
-    bands: adminState.bands ?? defaults,
-    rentals: Object.fromEntries(rentalDefs.map((r) => [r.id, overrides[r.id] ?? r.price])),
+    bands: adminState.bands ?? PRICING,
+    rentals: Object.fromEntries(RENTALS.map((r) => [r.id, overrides[r.id] ?? r.price])),
   }), 100);
 }
 
@@ -769,7 +768,6 @@ export async function getPriceSheet(): Promise<PriceSheet> {
 export async function savePriceSheet(sheet: PriceSheet): Promise<void> {
   if (!USE_MOCK) return http("/admin/pricing", { method: "PUT", body: sheet });
   adminState.bands = structuredClone(sheet.bands);
-  const { usePricing } = await import("@/engine/pricing");
   usePricing.getState().setRentalPrices(sheet.rentals);
   AUDIT.unshift({ date: dayKey(new Date()), time: nowTime(), actor: deskActor(), action: "تغییر قیمت", target: "قیمت سانس‌ها و اجاره", detail: "ذخیره‌ی جدول قیمت" });
   await wait(null, 200);
@@ -778,8 +776,7 @@ export async function savePriceSheet(sheet: PriceSheet): Promise<void> {
 /** Admin: booking rules. */
 export async function getVenueSettings(): Promise<VenueSettings> {
   if (!USE_MOCK) return http("/admin/settings");
-  const v = await import("@/engine/venue");
-  return wait(structuredClone(adminState.settings ?? { maxDaysAhead: v.MAX_DAYS_AHEAD, holdMinutes: v.HOLD_MINUTES, releaseHour: 0, maxActivePerUser: 0, cancelRules: v.CANCEL_RULES }), 100);
+  return wait(structuredClone(adminState.settings ?? { maxDaysAhead: MAX_DAYS_AHEAD, holdMinutes: HOLD_MINUTES, releaseHour: 0, maxActivePerUser: 0, cancelRules: CANCEL_RULES }), 100);
 }
 
 /** Admin: save booking rules. */
@@ -1041,7 +1038,6 @@ export async function reorderCoaches(ids: string[]): Promise<void> {
 /** Public: published player reviews for the home page, with the overall score. */
 export async function getReviews(): Promise<ReviewSummary> {
   if (!USE_MOCK) return http("/site/reviews");
-  const { REVIEWS } = await import("@/config/content");
   const count = REVIEWS.length;
   return wait({ reviews: structuredClone(REVIEWS), count, average: count ? REVIEWS.reduce((a, r) => a + r.rating, 0) / count : 0 }, 80);
 }
@@ -1049,6 +1045,6 @@ export async function getReviews(): Promise<ReviewSummary> {
 /** Public: the booking and refund rules in force (terms page, checkout). */
 export async function getPublicRules(): Promise<PublicRules> {
   if (!USE_MOCK) return http("/site/rules");
-  const { maxDaysAhead, holdMinutes, cancelRules } = await getVenueSettings();
-  return { maxDaysAhead, holdMinutes, cancelRules: [...cancelRules].sort((a, b) => b.hours - a.hours) };
+  const { maxDaysAhead, holdMinutes, cancelRules, releaseHour, maxActivePerUser } = await getVenueSettings();
+  return { maxDaysAhead, holdMinutes, releaseHour, maxActivePerUser, cancelRules: [...cancelRules].sort((a, b) => b.hours - a.hours) };
 }

@@ -7,6 +7,7 @@ import { fa, hm, jDay, jFull, jMonth, toman, weekday } from "@/engine/format";
 import { MAX_DAYS_AHEAD, RENTALS } from "@/engine/venue";
 import { REPEAT_WEEKS, useBookingFlow, type DayAvailability } from "@/engine/booking/useBookingFlow";
 import { useCart } from "@/engine/booking/useCart";
+import { useBookingLimit, useReleaseCountdown } from "@/engine/booking/useRushGuards";
 import { bookableDateParam, openingHourParam } from "@/engine/security";
 import type { Sport } from "@/engine/types";
 import { ArrowIcon, BackButton, Button3D } from "@/ui/kit/Buttons";
@@ -26,7 +27,20 @@ const DAY_PARTS = [
 const LOW_AVAILABILITY = 5;
 
 /** Horizontally scrolling day cards for the booking window, with free-session counts. */
-function DateStrip({ days, value, onChange }: { days: DayAvailability[]; value: string; onChange: (day: string) => void }) {
+/** The next day that isn't open yet, with when it opens; counts down in its last hour. */
+function NextDayCard({ r }: { r: ReturnType<typeof useReleaseCountdown> }) {
+  return (
+    <div className={clsx("dc locked", r.soon && "soon")} aria-label={`${jFull(r.opensDay)} ساعت ${hm(r.releaseHour)} باز می‌شود`}>
+      <span className="w">{weekday(r.opensDay)}</span>
+      <b>{jDay(r.opensDay)}</b>
+      <span className="mo">{jMonth(r.opensDay)}</span>
+      <span className="av" dir="ltr">{r.soon ? fa(r.clock) : `ساعت ${hm(r.releaseHour)}`}</span>
+      <svg className="lk" viewBox="0 0 24 24" aria-hidden><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+    </div>
+  );
+}
+
+function DateStrip({ days, value, onChange, release }: { days: DayAvailability[]; value: string; onChange: (day: string) => void; release?: ReturnType<typeof useReleaseCountdown> }) {
   const row = useRef<HTMLDivElement>(null);
   // Bring the selected day into view on first render.
   useEffect(() => {
@@ -38,6 +52,8 @@ function DateStrip({ days, value, onChange }: { days: DayAvailability[]; value: 
       <button className="dnav" onClick={() => scroll(1)} aria-label="روزهای قبل"><ArrowIcon /></button>
       <div className="dsr" ref={row}>
         {days.map(({ date, free, inCart }, i) => {
+          // The day that opens at the next release is shown locked with its countdown.
+          if (release?.ready && date === release.opensDay) return <NextDayCard key={date} r={release} />;
           const level = free === 0 ? "none" : free < LOW_AVAILABILITY ? "low" : "ok";
           return (
             <button key={date} className={clsx("dc", level, date === value && "on")} disabled={free === 0} onClick={() => onChange(date)} aria-pressed={date === value}>
@@ -49,6 +65,7 @@ function DateStrip({ days, value, onChange }: { days: DayAvailability[]; value: 
             </button>
           );
         })}
+        {release?.ready && !days.some((d) => d.date === release.opensDay) && <NextDayCard r={release} />}
       </div>
       <button className="dnav nx" onClick={() => scroll(-1)} aria-label="روزهای بعد"><ArrowIcon /></button>
     </div>
@@ -145,6 +162,8 @@ export function Booking({ sport }: { sport: Sport }) {
   const game = gameParam && /^[a-z]{2,20}$/.test(gameParam) ? gameParam : null;
   const flow = useBookingFlow(sport, { game, date: bookableDateParam(params.get("date")), hour: presetHour });
   const cart = useCart();
+  const release = useReleaseCountdown();
+  const limit = useBookingLimit();
   const mapRef = useRef<HTMLDivElement>(null);
   const scrollToMap = (delay: number) => setTimeout(() => mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), delay);
 
@@ -162,6 +181,11 @@ export function Booking({ sport }: { sport: Sport }) {
 
   const pickCourt = async (court: Parameters<typeof flow.pickCourt>[0]) => {
     if (flow.checking) return null;
+    // Adding (not removing) past the player's active-booking limit: warn instead.
+    if (flow.courtState(court) !== "sel" && !limit.canAdd) {
+      toast(`حداکثر ${fa(limit.max)} رزرو فعال مجاز است؛ برای سانس تازه اول یکی از رزروها یا سانس‌های سبد را حذف کنید.`);
+      return null;
+    }
     const result = await flow.pickCourt(court);
     if (result?.action === "added" && result.requested > 1 && result.count < result.requested)
       toast(`${fa(result.count)} از ${fa(result.requested)} هفته اضافه شد؛ بقیه پر است یا خارج از بازه‌ی ${fa(MAX_DAYS_AHEAD)} روزه.`);
@@ -188,7 +212,15 @@ export function Booking({ sport }: { sport: Sport }) {
 
         <section className="bk2">
           <div className="step"><span className="sn2">۱</span><div><h3>روز بازی</h3><p className="small muted">تا {fa(MAX_DAYS_AHEAD)} روز آینده قابل رزرو است</p></div></div>
-          <DateStrip days={flow.days} value={flow.date} onChange={flow.selectDate} />
+          {release.soon && (
+            <p className="rush-note" role="status">
+              <b>{jFull(release.opensDay)}</b> ساعت <bdi>{hm(release.releaseHour)}</bdi> برای رزرو باز می‌شود · <span dir="ltr">{fa(release.clock)}</span> مانده. همین صفحه را باز نگه دارید؛ سر ساعت خودش به‌روز می‌شود.
+            </p>
+          )}
+          {limit.max > 0 && limit.reached && (
+            <p className="rush-note warn" role="status">به سقف {fa(limit.max)} رزرو فعال رسیده‌اید ({fa(limit.held)} رزرو پیش رو و {fa(limit.cartCount)} سانس در سبد).</p>
+          )}
+          <DateStrip days={flow.days} value={flow.date} onChange={flow.selectDate} release={release} />
 
           <div className="step"><span className="sn2">۲</span><div><h3>ساعت بازی · {jFull(flow.date)}</h3><p className="small muted">هر سانس یک ساعت · صبح‌ها ارزان‌تر</p></div></div>
           <div className="tgrid">

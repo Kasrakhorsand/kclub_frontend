@@ -278,3 +278,18 @@
 .pr-spin{width:64px;height:64px;margin:0 auto;border-radius:50%;border:4px solid var(--line);border-top-color:var(--gold);animation:prspin .9s linear infinite}
 @keyframes prspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.pr-spin{animation-duration:3s}}
+/* ===== busy booking moments: next day opening, active-booking limit, server busy ===== */
+.dc.locked{cursor:default;border-style:dashed;background:var(--surface-2);color:var(--muted)}
+.dc.locked .av{background:var(--surface);color:var(--muted);font-variant-numeric:tabular-nums}
+.dc.locked.soon{border-color:var(--gold);color:var(--ink)}
+.dc.locked.soon .av{background:var(--gold);color:#141210}
+.dc .lk{position:absolute;top:8px;inset-inline-end:8px;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;opacity:.7}
+.rush-note{margin:0;padding:10px 14px;border-radius:14px;background:var(--court-soft);color:var(--ink);font-size:.86rem;line-height:1.8;border:1px solid color-mix(in srgb,var(--gold) 45%,transparent)}
+.rush-note.warn{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.rush-note span[dir=ltr]{font-weight:700;font-variant-numeric:tabular-nums}
+.rush-wait{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:14px;background:var(--black);color:var(--onblack)}
+.rush-wait>span:nth-child(2){display:flex;flex-direction:column;flex:1;min-width:180px}
+.rush-wait small{color:var(--onblack-mute);font-size:.78rem}
+.rush-wait .btn.ghost{color:var(--onblack);border-color:var(--blackline);background:transparent}
+.rush-spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--blackline);border-top-color:var(--gold);animation:prspin .9s linear infinite;flex:none}
+@media (prefers-reduced-motion:reduce){.rush-spin{animation-duration:3s}}

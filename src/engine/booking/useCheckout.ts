@@ -4,9 +4,10 @@
  * confirmation (tracking code). Redirects guests to login and back.
  */
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/engine/http";
+import { ApiError, newIdempotencyKey } from "@/engine/http";
+import { useBookingLimit } from "@/engine/booking/useRushGuards";
 import { createBookings } from "@/engine/api";
 import { useWalletBalance } from "@/engine/wallet/useWallet";
 import { cartTotal, useSession } from "@/engine/store";
@@ -36,6 +37,21 @@ export function useCheckout() {
   const [confirmation, setConfirmation] = useState<{ tracking: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const limit = useBookingLimit();
+
+  /**
+   * One key per cart and payment method: a retry after "server busy" or a
+   * dropped connection reuses it, so the backend never books the cart twice.
+   */
+  const keyRef = useRef<string | null>(null);
+  useEffect(() => {
+    keyRef.current = null;
+  }, [cart, method]);
+
+  /** Seconds left before the automatic retry after a 429, or null. */
+  const [wait, setWait] = useState<number | null>(null);
+  const attempts = useRef(0);
+  const MAX_AUTO_RETRIES = 3;
 
   // Guests log in first and come straight back here. Read the store directly:
   // during hydration the hook still returns the empty server-side state.
@@ -62,7 +78,20 @@ export function useCheckout() {
     return { item, court, sport: court ? sportById(court.sport) : undefined, rentalOptions, total: itemTotal(item, rentalPrices) };
   });
 
-  return {
+  // Count down the busy wait and try again when it reaches zero.
+  const payRef = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    if (wait === null) return;
+    if (wait <= 0) {
+      setWait(null);
+      payRef.current();
+      return;
+    }
+    const t = setTimeout(() => setWait((w) => (w === null ? null : w - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+
+  const checkout = {
     /** null until the session is known and the user is logged in. */
     user,
     items,
@@ -79,12 +108,29 @@ export function useCheckout() {
     busy,
     error,
     confirmation,
+    /** The cart holds more sessions than the player may have active; paying is blocked. */
+    limit,
+    /** Seconds until the automatic retry while the server is busy (429). */
+    wait,
+    retryNow: () => setWait(0),
+    cancelWait: () => {
+      setWait(null);
+      attempts.current = 0;
+      setError("پرداخت متوقف شد. هر وقت خواستید دوباره «پرداخت» را بزنید.");
+    },
     pay: async () => {
       if (!user || !cart.length) return;
+      if (limit.over) {
+        setError(`حداکثر ${limit.max.toLocaleString("fa-IR")} رزرو فعال مجاز است و شما ${limit.held.toLocaleString("fa-IR")} رزرو پیش رو دارید. چند سانس را از سبد حذف کنید.`);
+        return;
+      }
       setBusy(true);
       setError("");
+      setWait(null);
+      keyRef.current ??= newIdempotencyKey();
       try {
-        const result = await createBookings(cart, method);
+        const result = await createBookings(cart, method, keyRef.current);
+        attempts.current = 0;
         // Gateway payment: hand over to the bank (only to an allowed host); the booking is confirmed on return.
         if (result.gatewayUrl) {
           if (!redirectToPayment(result.gatewayUrl)) throw new Error("PAYMENT_HOST");
@@ -95,7 +141,19 @@ export function useCheckout() {
         // Money and slots moved on the server.
         for (const key of [["wallet"], ["transactions"], ["my-bookings"], ["slots"], ["availability"]]) client.invalidateQueries({ queryKey: key });
       } catch (ex) {
-        if (ex instanceof ApiError && ex.code === "SLOT_TAKEN") {
+        if (ex instanceof ApiError && ex.status === 429) {
+          // Busy moment (e.g. a new day just opened): wait as long as the server asks, then try again with the same key.
+          if (attempts.current < MAX_AUTO_RETRIES) {
+            attempts.current += 1;
+            setWait(ex.retryAfter ?? 5);
+          } else {
+            attempts.current = 0;
+            setError("سرور هنوز شلوغ است. سانس‌ها در سبد شما می‌مانند؛ کمی بعد دوباره «پرداخت» را بزنید.");
+          }
+        } else if (ex instanceof ApiError && ex.code === "BOOKING_LIMIT") {
+          client.invalidateQueries({ queryKey: ["my-bookings"] });
+          setError(ex.message);
+        } else if (ex instanceof ApiError && ex.code === "SLOT_TAKEN") {
           client.invalidateQueries({ queryKey: ["slots"] });
           setError("یکی از سانس‌ها همین الان رزرو شد. آن را از سبد حذف کنید و دوباره پرداخت کنید.");
         } else if (ex instanceof ApiError && ex.code === "LOW_BALANCE") {
@@ -107,4 +165,6 @@ export function useCheckout() {
       }
     },
   };
+  payRef.current = () => void checkout.pay();
+  return checkout;
 }

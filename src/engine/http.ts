@@ -20,6 +20,8 @@ export class ApiError extends Error {
     readonly status: number,
     /** Machine-readable code from the backend body, e.g. "SLOT_TAKEN". */
     readonly code?: string,
+    /** Seconds to wait before trying again (from Retry-After on 429/503). */
+    readonly retryAfter?: number,
   ) {
     super(message);
     this.name = "ApiError";
@@ -34,7 +36,7 @@ const STATUS_MESSAGE: Record<number, string> = {
   404: "پیدا نشد",
   409: "این مورد همین الان تغییر کرد؛ صفحه را تازه کنید",
   422: "اطلاعات واردشده درست نیست",
-  429: "تعداد درخواست‌ها زیاد است؛ کمی بعد دوباره امتحان کنید",
+  429: "سرور شلوغ است؛ چند لحظه بعد دوباره امتحان می‌کنیم",
 };
 const SERVER_ERROR = "خطای سرور؛ کمی بعد دوباره امتحان کنید";
 const NETWORK_ERROR = "اتصال به سرور برقرار نشد؛ اینترنت را بررسی کنید";
@@ -66,6 +68,12 @@ type RequestOptions = {
   signal?: AbortSignal;
   /** Override the default timeout (uploads take longer). */
   timeoutMs?: number;
+  /**
+   * Same key on every retry of one action (e.g. paying for one cart), so the
+   * backend runs it once even if the request is sent again after a 429 or a
+   * dropped connection. Sent as the Idempotency-Key header.
+   */
+  idempotencyKey?: string;
   /** Don't fire the global 401 handler (e.g. for the "who am I" probe). */
   silent401?: boolean;
 };
@@ -79,15 +87,28 @@ function buildUrl(path: string, query?: Query) {
   return `${API_URL}${path}${qs ? `?${qs}` : ""}`;
 }
 
+/** Seconds from a Retry-After header (number of seconds or an HTTP date), capped at 2 minutes. */
+function retryAfterOf(res: Response) {
+  const h = res.headers.get("Retry-After");
+  if (!h) return res.status === 429 ? 5 : undefined;
+  const secs = /^\d+$/.test(h) ? Number(h) : Math.ceil((Date.parse(h) - Date.now()) / 1000);
+  return Number.isFinite(secs) ? Math.min(120, Math.max(1, secs)) : 5;
+}
+
+/** A fresh key for one action that may be retried (see `idempotencyKey`). */
+export const newIdempotencyKey = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
 /**
  * Call the backend and return the parsed JSON (undefined for 204).
  * Throws ApiError with a user-facing Persian message on any failure.
  */
-export async function http<T>(path: string, { method = "GET", body, query, signal, silent401, timeoutMs = API_TIMEOUT_MS }: RequestOptions = {}): Promise<T> {
+export async function http<T>(path: string, { method = "GET", body, query, signal, silent401, timeoutMs = API_TIMEOUT_MS, idempotencyKey }: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   const isForm = typeof FormData !== "undefined" && body instanceof FormData;
   // Multipart: the browser sets Content-Type with the boundary itself.
   if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   if (method !== "GET") {
     const csrf = readCookie("csrf_token");
     if (csrf) headers["X-CSRF-Token"] = decodeURIComponent(csrf);
@@ -120,7 +141,8 @@ export async function http<T>(path: string, { method = "GET", body, query, signa
   if (!res.ok) {
     if (res.status === 401 && !silent401) unauthorizedListeners.forEach((fn) => fn());
     const message = typeof data?.message === "string" && data.message ? data.message : STATUS_MESSAGE[res.status] ?? SERVER_ERROR;
-    throw new ApiError(message, res.status, typeof data?.code === "string" ? data.code : undefined);
+    const code = typeof data?.code === "string" ? data.code : res.status === 429 ? "RATE_LIMITED" : undefined;
+    throw new ApiError(message, res.status, code, retryAfterOf(res));
   }
   return data as T;
 }
