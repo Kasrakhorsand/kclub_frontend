@@ -3,6 +3,8 @@
 .kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;border:1px solid var(--line);background:var(--surface)}
 .kpis>.card{border:0;border-inline-start:1px solid var(--line)}
 .kpis>.card:first-child{border-inline-start:0}
+/* Phones: two tiles per row instead of one long column. */
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis>.card{padding:12px 14px;border-top:1px solid var(--line)}.kpis>.card:nth-child(-n+2){border-top:0}.kpis>.card:nth-child(odd){border-inline-start:0}.kpis .v{font-size:1.6rem}}
 .kpi{display:flex;flex-direction:column;gap:2px}
 .kpi .v{font-size:1.7rem;font-weight:200;font-variant-numeric:tabular-nums;color:var(--ink)}
 .kpi .d{font-size:.76rem}
