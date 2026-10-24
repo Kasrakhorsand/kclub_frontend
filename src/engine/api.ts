@@ -17,7 +17,7 @@ import { ApiError, http } from "@/engine/http";
 import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } from "@/engine/mock";
 import { courtById, COURTS, HOURS, priceOf, refundPercent } from "@/engine/venue";
 import { useSession } from "@/engine/store";
-import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, RevenueReport, ReviewSummary, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
+import type { Album, Audit, Booking, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, PublicRules, RevenueReport, ReviewSummary, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
 import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
 import { itemTotal } from "@/engine/pricing";
 
@@ -1044,4 +1044,11 @@ export async function getReviews(): Promise<ReviewSummary> {
   const { REVIEWS } = await import("@/config/content");
   const count = REVIEWS.length;
   return wait({ reviews: structuredClone(REVIEWS), count, average: count ? REVIEWS.reduce((a, r) => a + r.rating, 0) / count : 0 }, 80);
+}
+
+/** Public: the booking and refund rules in force (terms page, checkout). */
+export async function getPublicRules(): Promise<PublicRules> {
+  if (!USE_MOCK) return http("/site/rules");
+  const { maxDaysAhead, holdMinutes, cancelRules } = await getVenueSettings();
+  return { maxDaysAhead, holdMinutes, cancelRules: [...cancelRules].sort((a, b) => b.hours - a.hours) };
 }

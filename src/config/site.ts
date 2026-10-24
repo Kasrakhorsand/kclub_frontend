@@ -45,6 +45,7 @@ export const NAV_SOON: { label: string; message: string } | null = {
 export const FOOTER_COLUMNS: [string, [string, string][]][] = [
   ["رزرو", [["/book/padel", "زمین پدل"], ["/book/beach?game=tennis", "تنیس ساحلی"], ["/book/beach?game=volley", "والیبال ساحلی"]]],
   ["کی کلاب", [["/coaches", "مربیان پدل"], ["/#how", "راهنمای رزرو"], ["/panel", "رزروهای من"]]],
+  ["قوانین", [["/terms", "قوانین و مقررات"], ["/terms#refunds", "لغو و بازگشت وجه"], ["/privacy", "حریم خصوصی"]]],
 ];
 
 /** One line under the logo in the footer. */

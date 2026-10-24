@@ -1,5 +1,6 @@
 "use client";
 /** K Club login card: phone, then password or SMS code, and one-step sign-up; driven by the engine's useLogin. */
+import Link from "next/link";
 import { fa } from "@/engine/format";
 import { CODE_LENGTH, useLogin } from "@/engine/auth/useLogin";
 import { Button3D } from "@/ui/kit/Buttons";
@@ -86,6 +87,7 @@ export function LoginPage() {
             <Button3D type="submit" block>ساخت حساب</Button3D>
           </form>
         )}
+        <p className="xs muted legal-note">ورود یا ساخت حساب یعنی پذیرش <Link href="/terms">قوانین</Link> و <Link href="/privacy">حریم خصوصی</Link> کی کلاب.</p>
       </div>
     </main>
   );

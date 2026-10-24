@@ -1,5 +1,6 @@
 "use client";
 /** K Club checkout: ticket-style cart, payment options and confirmation, on the engine's useCheckout. */
+import Link from "next/link";
 import { HOLD_MINUTES } from "@/engine/venue";
 import { fa, hm, jFull, toman } from "@/engine/format";
 import { useCheckout } from "@/engine/booking/useCheckout";
@@ -86,6 +87,7 @@ export function CheckoutPage() {
             <span className="rd" /><span><span className="ttl">{SITE.walletName}</span><br /><span className="small muted">موجودی: {toman(user.wallet)}</span></span>
           </label>
           <p className="hold">زمین‌ها تا {fa(HOLD_MINUTES)} دقیقه بعد از رفتن به درگاه برای شما نگه داشته می‌شوند.</p>
+          <p className="small muted legal-note">با پرداخت، <Link href="/terms">قوانین رزرو</Link> و <Link href="/terms#refunds">شرایط لغو و بازگشت وجه</Link> را می‌پذیرید.</p>
           <Button3D block size="lg" disabled={!checkout.items.length || checkout.busy} onClick={checkout.pay}>
             {checkout.busy ? "در حال پرداخت…" : `پرداخت ${toman(checkout.total)}`}
           </Button3D>

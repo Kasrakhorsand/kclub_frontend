@@ -51,7 +51,7 @@
 .topbar.fl .brand small{white-space:nowrap}
 @media (max-width:860px){.topbar.fl .lnk{gap:0;padding:4px}.topbar.fl .nl{padding:7px 8px;font-size:.76rem}.topbar.fl .brand small{display:none}}
 .ftr{background:var(--black);color:var(--onblack);margin-top:60px;border-top:1px solid var(--blackline)}
-.ftg{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px;padding-block:44px 30px}
+.ftg{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:30px;padding-block:44px 30px}
 .fab{display:flex;flex-direction:column;gap:14px}
 .fab p{color:var(--onblack-mute);max-width:36ch;font-size:.9rem}
 .ftr nav{display:flex;flex-direction:column;gap:10px}
@@ -60,3 +60,43 @@
 .ftr nav a:hover{color:var(--onblack)}
 .fbt{border-top:1px solid var(--blackline);padding-block:16px;color:var(--onblack-mute);font-size:.78rem;font-family:var(--font-jost),sans-serif}
 @media (max-width:720px){.ftg{grid-template-columns:1fr 1fr}.fab{grid-column:1/-1}}
+/* ===== legal pages (/terms, /privacy) ===== */
+.lg2{padding-block:28px 40px;display:flex;flex-direction:column;gap:24px}
+.lg2-head{display:flex;flex-direction:column;gap:8px;max-width:68ch;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.lg2-head .eyebrow{color:var(--court)}
+.lg2-head h1{margin:0;font-size:clamp(1.7rem,3.6vw,2.4rem);font-weight:800;text-wrap:balance}
+.lg2-head p{margin:0;color:var(--muted);line-height:1.9}
+.lg2-head small{color:var(--muted);font-size:.78rem}
+.lg2-draft{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-size:.82rem}
+.lg2-cols{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;align-items:start}
+.lg2-toc{position:sticky;top:100px;display:flex;flex-direction:column;gap:10px;font-size:.86rem}
+.lg2-toc b{font-size:.8rem;color:var(--muted);font-weight:500}
+.lg2-toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;border-inline-start:2px solid var(--line)}
+.lg2-toc a{display:block;padding:5px 12px;color:var(--ink);margin-inline-start:-2px;border-inline-start:2px solid transparent}
+.lg2-toc a:hover{color:var(--court);border-inline-start-color:var(--gold)}
+.lg2-other{margin-top:6px;font-weight:600;color:var(--court)}
+.lg2-body{display:flex;flex-direction:column;gap:30px;max-width:72ch}
+.lg2-body section{scroll-margin-top:100px;display:flex;flex-direction:column;gap:10px}
+.lg2-body h2{margin:0;display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:700}
+.lg2-body h2 span{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--black);color:var(--gold);font-size:.78rem}
+.lg2-body p{margin:0;line-height:2}
+.lg2-list{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px;line-height:1.9}
+.lg2-muted{margin:0;color:var(--muted);font-size:.86rem}
+.lg2-table{width:100%;max-width:520px;border-collapse:collapse;font-size:.9rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.lg2-table th{text-align:right;font-weight:500;font-size:.78rem;color:var(--muted);padding:10px 14px;background:var(--surface-2)}
+.lg2-table td{padding:10px 14px;border-top:1px solid var(--line)}
+.lg2-contact{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:.86rem}
+.legal-note{margin:0;text-align:center}
+.legal-note a{color:var(--court);text-decoration:underline;text-underline-offset:3px}
+@media (max-width:860px){.lg2-cols{grid-template-columns:1fr;gap:20px}.lg2-toc{position:static;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}}
+
+/* ===== error pages ===== */
+.er{min-height:60vh;display:grid;place-items:center;padding:40px 16px}
+.er-panel{min-height:50vh}
+.er-card{max-width:480px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.er-mark{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--black);color:var(--gold);font-size:1.8rem;font-weight:800;box-shadow:0 0 0 6px var(--court-soft)}
+.er-card h1{margin:0;font-size:1.5rem;font-weight:800}
+.er-card p{margin:0;color:var(--muted);line-height:1.9}
+.er-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin-top:6px}
+.er-ref{font-size:.76rem}
+@media (max-width:860px){.ftg{grid-template-columns:repeat(3,1fr)}.fab{grid-column:1/-1}}

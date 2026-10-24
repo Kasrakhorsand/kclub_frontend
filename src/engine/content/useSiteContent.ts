@@ -6,7 +6,7 @@
  */
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCoaches, getGallery, getReviews, getSiteMedia, resetSiteMedia, setSiteMedia } from "@/engine/api";
+import { getCoaches, getGallery, getPublicRules, getReviews, getSiteMedia, resetSiteMedia, setSiteMedia } from "@/engine/api";
 import { checkFiles } from "@/engine/content/permissions";
 import type { MediaItem } from "@/engine/types";
 
@@ -22,6 +22,12 @@ export function useGallery() {
 export function useReviews() {
   const { data, isLoading } = useQuery({ queryKey: ["site-reviews"], queryFn: getReviews, staleTime: 5 * 60_000 });
   return { reviews: data?.reviews ?? [], average: data?.average ?? 0, count: data?.count ?? 0, loading: isLoading };
+}
+
+/** Booking window, gateway hold and refund ladder currently in force. */
+export function usePublicRules() {
+  const { data, isLoading } = useQuery({ queryKey: ["site-rules"], queryFn: getPublicRules, staleTime: 10 * 60_000 });
+  return { rules: data, loading: isLoading };
 }
 
 /** Coaches with their current photos. */
