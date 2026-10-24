@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 /** Test numbers from the sample data (see CLAUDE.md). */
-export const PHONES = { player: "09121234567", desk: "09120000001", admin: "09120000002" };
+export const PHONES = { player: "09121234567", desk: "09120000001", admin: "09120000002", support: "09120000003" };
 
 /** Sign in with an SMS code (sample data accepts any 5 digits). */
 export async function login(page: Page, phone: string, next = "/panel") {

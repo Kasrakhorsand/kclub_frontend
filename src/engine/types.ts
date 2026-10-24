@@ -35,8 +35,8 @@ export interface SportDef {
   /** Short note under the price, e.g. "هر سانس یک ساعت · تا ۴ بازیکن". */
   priceNote: string;
 }
-/** "secretary" is the front desk. */
-export type Role = "player" | "secretary" | "admin";
+/** "secretary" is the front desk; "support" is the website's own technical support team. */
+export type Role = "player" | "secretary" | "admin" | "support";
 
 export interface Court {
   id: string;
@@ -321,6 +321,77 @@ export interface SupportTicket {
   diagnostics?: SupportDiagnostics;
   attachments: SupportAttachment[];
   messages: SupportMessage[];
+}
+
+/** A note the support team keeps on a report; never shown to the user. */
+export interface SupportNote {
+  by: string;
+  text: string;
+  date: string;
+  time: string;
+}
+
+/** A report as the support team sees it: who sent it, who works on it, internal notes. */
+export interface SupportQueueTicket extends SupportTicket {
+  reporter: {
+    name: string;
+    role: Role;
+    /** Only when the user allowed a call. */
+    phone?: string;
+  };
+  /** Agent name working on it, or null. */
+  assignee: string | null;
+  notes: SupportNote[];
+  /** ISO time of the last change (message, status, note). */
+  updatedAt: string;
+  /** Minutes from report to the first support reply, once there is one. */
+  firstResponseMins?: number;
+}
+
+/** Fields the support team can change on a report. */
+export type SupportTicketPatch = Partial<Pick<SupportQueueTicket, "status" | "severity" | "area" | "assignee">>;
+
+export interface SupportAgent {
+  phone: string;
+  name: string;
+}
+
+/** Saved answer the support team can drop into a reply. */
+export interface CannedReply {
+  id: string;
+  title: string;
+  text: string;
+}
+
+/** Site-wide status banner (outage, gateway problem, maintenance) set by support. */
+export interface SiteNotice {
+  active: boolean;
+  tone: "info" | "warn" | "down";
+  text: string;
+  /** In-app path for "more", optional. */
+  link?: string;
+  /** ISO time after which the banner hides by itself, optional. */
+  until?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+/** What GET /health answers. */
+export interface HealthReport {
+  ok: boolean;
+  version: string;
+  time: string;
+  /** Named dependencies (database, sms, gateway, storage…) and whether each is up. */
+  checks: { name: string; ok: boolean; detail?: string }[];
+}
+
+/** One user as support sees them (for "who is this and what did they report"). */
+export interface SupportUserCard {
+  phone: string;
+  name: string;
+  roles: Role[];
+  activeBookings: number;
+  tickets: SupportQueueTicket[];
 }
 
 /** What the form sends; files go alongside as multipart parts. */

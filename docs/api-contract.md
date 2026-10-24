@@ -107,6 +107,25 @@
 
 **بک‌اند حتماً:** نوع واقعی فایل را از محتوای آن تشخیص دهد (نه از نام یا Content-Type)، حجم و تعداد را دوباره چک کند، متادیتای EXIF (مثل موقعیت مکانی) را پاک کند، فایل‌ها را خارج از مسیر قابل‌اجرا ذخیره کند و فقط به صاحب گزارش و تیم فنی نشان دهد (با `Content-Disposition` و `X-Content-Type-Options: nosniff`)، و روی ثبت گزارش محدودیت تعداد بگذارد.
 
+## تیم پشتیبانی فنی سایت (نقش `support`)
+
+نقش `support` را فقط تیم فنی سایت (از بک‌اند) می‌دهد، نه ادمین مجموعه. همه‌ی مسیرهای `/support/admin/...` فقط برای این نقش‌اند.
+
+| متد و مسیر | ورودی | خروجی |
+|---|---|---|
+| `GET /support/admin/tickets` | — | `SupportQueueTicket[]`: گزارش با `reporter { name, role, phone? }` (شماره فقط وقتی `allowCall`)، `assignee`، `notes`، `updatedAt`، `firstResponseMins?` |
+| `PATCH /support/admin/tickets/:id` | `{ status?, severity?, area?, assignee? }` | `204` |
+| `POST /support/admin/tickets/:id/messages` | multipart: `data = { text, status? }` و `files` | `204`؛ کاربر پیامک می‌گیرد. بدون `status`، گزارش `new` به `in_progress` می‌رود |
+| `POST /support/admin/tickets/:id/notes` | `{ text }` | `204`؛ یادداشت داخلی، هرگز به کاربر برنمی‌گردد |
+| `GET /support/admin/agents` | — | `{ phone, name }[]` |
+| `GET /support/admin/replies` · `POST` · `PUT /:id` · `DELETE /:id` | `{ title, text }` | `CannedReply` |
+| `PUT /support/admin/notice` | `SiteNotice` (`{ active, tone: "info"\|"warn"\|"down", text, link?, until? }`) | `SiteNotice` با `updatedAt`، `updatedBy` |
+| `GET /support/admin/users/:phone` | — | `{ phone, name, roles, activeBookings, tickets }` یا `404` |
+| `GET /health` | — | `{ ok, version, time, checks: [{ name, ok, detail? }] }`؛ پایگاه داده، پیامک، درگاه، فضای فایل |
+
+- **`GET /site/notice`** (عمومی): اطلاعیه‌ی بالای سایت؛ وقتی نیست `{ active: false }`. فرانت هر ۵ دقیقه می‌خواند و بعد از `until` خودش پنهانش می‌کند.
+- خطاهای مرورگر از `diagnostics.recentErrors` گزارش‌ها در فرانت گروه‌بندی می‌شوند؛ اگر بعداً لاگ خطای جدا (مثلاً Sentry روی سرور خودتان) اضافه شد، صفحه‌ی «خطاهای سایت» به آن وصل می‌شود.
+
 ## کارکنان
 
 | متد و مسیر | ورودی | خروجی |

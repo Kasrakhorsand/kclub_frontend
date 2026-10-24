@@ -29,6 +29,13 @@ import { NewBookingView } from "@/ui/panel/secretary/NewBookingPage";
 import { ScheduleView } from "@/ui/panel/secretary/SchedulePage";
 import { AllTransactionsView } from "@/ui/panel/secretary/TransactionsPage";
 import { UsersView } from "@/ui/panel/secretary/UsersPage";
+import { SupportDashboard } from "@/ui/panel/support/DashboardPage";
+import { SupportErrorsView } from "@/ui/panel/support/ErrorsPage";
+import { SupportHealthView } from "@/ui/panel/support/HealthPage";
+import { SupportLookupView } from "@/ui/panel/support/LookupPage";
+import { SupportNoticeView } from "@/ui/panel/support/NoticePage";
+import { SupportQueueView } from "@/ui/panel/support/QueuePage";
+import { SupportRepliesView } from "@/ui/panel/support/RepliesPage";
 
 /** Sections that only show a "next phase" placeholder for now. */
 const COMING_SOON: Record<string, [title: string, lines: string[]]> = {
@@ -80,6 +87,18 @@ const BY_ROLE: Record<Role, Routes> = {
     staff: () => <StaffView />,
     coaches: () => <CoachesAdminView />,
     media: () => <MediaView />,
+  },
+  // The website's technical support team (not the venue). Its "support" key is the queue, not the report form.
+  support: {
+    dash: () => <SupportDashboard />,
+    queue: () => <SupportQueueView />,
+    support: () => <SupportQueueView />,
+    errors: () => <SupportErrorsView />,
+    health: () => <SupportHealthView />,
+    notice: () => <SupportNoticeView />,
+    replies: () => <SupportRepliesView />,
+    lookup: () => <SupportLookupView />,
+    tickets: () => <SupportDashboard />,
   },
 };
 

@@ -6,4 +6,5 @@ export const MENU_ICON: Record<string, Icon3DName> = {
   coach: "user", cafe: "cup", shop: "bag", tickets: "ticket", support: "gear", media: "park", staff: "lock", coaches: "user", logout: "door", sched: "cal", newb: "plus",
   users: "users", wops: "swap", cash: "cash", courts: "court", close: "lock", pricing: "tag", settings: "gear",
   rfin: "chart", rbook: "trend", alltx: "swap", audit: "hist", profile: "user",
+  queue: "ticket", errors: "bell", health: "trend", notice: "bell", replies: "list", lookup: "users",
 };

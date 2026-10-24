@@ -11,6 +11,7 @@ src/ui/panel/
   player/               بازیکن
   secretary/            منشی (پذیرش)
   admin/                ادمین
+  support/              پشتیبانی فنی سایت (تیم فنی خود سایت، نه پذیرش مجموعه)
 ```
 
 ## کدام فایل را باز کنم؟
@@ -50,6 +51,21 @@ src/ui/panel/
 | تاریخچه تغییرات | `/panel/audit` | `admin/AuditLogPage.tsx` |
 | جدول رزروها، رزرو جدید، کاربران | | همان صفحه‌های منشی |
 | استایل‌ها | | `admin/admin.css` |
+
+### پشتیبانی فنی سایت — `support/` (نقش `support`)
+
+| صفحه در منو | آدرس | فایل |
+|---|---|---|
+| داشبورد | `/panel` | `support/DashboardPage.tsx` |
+| صف گزارش‌ها | `/panel/queue` (`?id=` یک گزارش را باز می‌کند) | `support/QueuePage.tsx` |
+| خطاهای سایت | `/panel/errors` | `support/ErrorsPage.tsx` |
+| وضعیت سامانه | `/panel/health` | `support/HealthPage.tsx` |
+| اطلاعیه‌ی سایت | `/panel/notice` | `support/NoticePage.tsx` (نوار روی سایت: `src/ui/layout/SiteNotice.tsx`) |
+| پاسخ‌های آماده | `/panel/replies` | `support/RepliesPage.tsx` |
+| جستجوی کاربر | `/panel/lookup` | `support/LookupPage.tsx` |
+| تکه‌های مشترک و استایل‌ها | | `support/parts.tsx` + `support/support.css` |
+
+منطق: `src/engine/support/useSupportDesk.ts` (صف، پاسخ، یادداشت، آمار، گروه‌بندی خطاها، پاسخ‌های آماده) و `src/engine/support/useSiteOps.ts` (اطلاعیه، وضعیت سامانه، جستجوی کاربر).
 
 ### همه‌ی نقش‌ها — `common/`
 

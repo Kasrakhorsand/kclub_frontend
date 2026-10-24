@@ -265,7 +265,8 @@
 .tgh .rng{margin-inline-start:0}
 .tgc{margin-inline-start:auto;font-size:.68rem;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--free-bg);color:var(--free)}
 .tgc.none{background:var(--past-bg);color:var(--muted)}
-.tgrp.gone{opacity:.6}
+/* Past part of the day: fade the (disabled) hour buttons only, so its heading and note stay readable. */
+.tgrp.gone .tsg{opacity:.6}
 .tg-gone{margin:0;padding:14px 4px;font-size:.8rem;color:var(--muted);text-align:center}
 .repeat{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.8rem}
 .repeat span{padding-inline:10px 4px;color:var(--muted)}

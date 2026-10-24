@@ -3,9 +3,9 @@
  */
 :root{
   --bg:#EFEDE8; --surface:#FFFFFF; --surface-2:#F6F5F1; --ink:#121214; --muted:#6B6862; --line:#DCD8CF;
-  --court:#8E6D2F; --court-ink:#FFFFFF; --court-soft:#F3EBDA; --navy:#0D0D0E; --ball:#B08A45; --clay:#8E6D2F;
+  --court:#7A5A22; --court-ink:#FFFFFF; --court-soft:#F3EBDA; --navy:#0D0D0E; --ball:#B08A45; --clay:#8E6D2F;
   --gold:#C9A45C; --gold-2:#E3C994; --silver:#B9BCC0; --black:#0D0D0E; --onblack:#ECEAE4; --onblack-mute:#8F8C86; --blackline:#2A2926;
-  --free:#2E7A55; --free-bg:#E5F1EA; --busy:#A63A2F; --busy-bg:#F6E4E1; --past-bg:#ECEAE5; --warn:#8C6716; --warn-bg:#F6EDD7;
+  --free:#276B4A; --free-bg:#E5F1EA; --busy:#A63A2F; --busy-bg:#F6E4E1; --past-bg:#ECEAE5; --warn:#8C6716; --warn-bg:#F6EDD7;
   --info:#46505C; --info-bg:#E8EBEE; --shadow:0 1px 0 rgba(18,18,20,.04);
   --grad:linear-gradient(120deg,#A9823F 0%,#D9B771 55%,#B38B45 100%);
   --glow:none;

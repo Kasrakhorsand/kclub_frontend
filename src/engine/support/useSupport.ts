@@ -43,8 +43,8 @@ const supportKey = (phone: string) => ["support", phone];
 
 type Picked = { file: File; preview: string };
 
-/** Screenshot picker with type, size and count checks; frees previews when files go away. */
-function useAttachments() {
+/** Screenshot picker with type, size and count checks; frees previews when files go away. Also used by the support desk. */
+export function useAttachments() {
   const [items, setItems] = useState<Picked[]>([]);
   const [error, setError] = useState("");
   const live = useRef(items);

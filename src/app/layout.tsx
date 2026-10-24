@@ -18,6 +18,7 @@ import "@/ui/panel/common/common.css";
 import "@/ui/panel/player/player.css";
 import "@/ui/panel/secretary/secretary.css";
 import "@/ui/panel/admin/admin.css";
+import "@/ui/panel/support/support.css";
 import "@/app/globals.css";
 import Providers from "@/ui/layout/Providers";
 import { SITE } from "@/config/site";

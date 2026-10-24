@@ -17,7 +17,7 @@ export function LoginPage() {
       <div className="card stack-l">
         {login.step === "phone" && (
           <form className="stack" onSubmit={login.submitPhone}>
-            <h2>ورود یا ثبت‌نام</h2>
+            <h1 className="auth-h">ورود یا ثبت‌نام</h1>
             <p className="small muted">شماره‌ی موبایل را وارد کنید. اگر رمز عبور گذاشته‌اید با رمز وارد می‌شوید، وگرنه کد تأیید پیامک می‌شود.</p>
             <label className="f" htmlFor="ph">
               شماره موبایل
@@ -31,7 +31,7 @@ export function LoginPage() {
 
         {login.step === "password" && (
           <form className="stack" onSubmit={login.submitPassword}>
-            <h2>رمز عبور</h2>
+            <h1 className="auth-h">رمز عبور</h1>
             <p className="small muted">رمز عبور حساب {fa(login.phone)} را وارد کنید.</p>
             {/* Hidden username so password managers save the right account. */}
             <input type="text" name="username" autoComplete="username" value={login.phone} readOnly hidden />
@@ -51,7 +51,7 @@ export function LoginPage() {
 
         {login.step === "otp" && (
           <form className="stack" onSubmit={login.submitCode}>
-            <h2>کد تأیید</h2>
+            <h1 className="auth-h">کد تأیید</h1>
             <p className="small muted">کد {fa(CODE_LENGTH)} رقمی ارسال‌شده به {fa(login.phone)} را وارد کنید.</p>
             <input
               className="input otp"
@@ -79,7 +79,7 @@ export function LoginPage() {
 
         {login.step === "register" && (
           <form className="stack" onSubmit={login.submitName}>
-            <h2>خوش آمدید</h2>
+            <h1 className="auth-h">خوش آمدید</h1>
             <p className="small muted">برای ساخت حساب فقط نام و نام خانوادگی لازم است. بعداً از پروفایل می‌توانید رمز عبور هم بگذارید.</p>
             <label className="f">نام<input className="input" autoComplete="given-name" {...login.nameForm.register("first")} /></label>
             <label className="f">نام خانوادگی<input className="input" autoComplete="family-name" {...login.nameForm.register("last")} /></label>

@@ -9,13 +9,13 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { fa, jDate, jFull } from "@/engine/format";
-import { SUPPORT_AREAS, SUPPORT_LIMITS, SUPPORT_SEVERITIES, SUPPORT_WHEN, useSupport } from "@/engine/support/useSupport";
+import { SUPPORT_AREAS, SUPPORT_LIMITS, SUPPORT_SEVERITIES, SUPPORT_WHEN, useAttachments, useSupport } from "@/engine/support/useSupport";
 import type { SupportAttachment, SupportDiagnostics, SupportStatus } from "@/engine/types";
 import { Button3D } from "@/ui/kit/Buttons";
 import { Icon3D } from "@/ui/kit/Icon3D";
 import { PageHead } from "@/ui/panel/shell/PageHead";
 
-const STATUS: Record<SupportStatus, { label: string; tone: string }> = {
+export const STATUS: Record<SupportStatus, { label: string; tone: string }> = {
   new: { label: "ثبت شد", tone: "warn" },
   in_progress: { label: "در حال بررسی", tone: "warn" },
   need_info: { label: "نیاز به توضیح شما", tone: "hot" },
@@ -23,12 +23,12 @@ const STATUS: Record<SupportStatus, { label: string; tone: string }> = {
   closed: { label: "بسته", tone: "off" },
 };
 
-const areaLabel = (id: string) => SUPPORT_AREAS.find((a) => a.id === id)?.label ?? id;
+export const areaLabel = (id: string) => SUPPORT_AREAS.find((a) => a.id === id)?.label ?? id;
 const whenLabel = (id: string) => SUPPORT_WHEN.find((w) => w.id === id)?.label ?? id;
-const kb = (n: number) => (n < 1024 * 1024 ? `${fa(Math.round(n / 1024))} کیلوبایت` : `${fa(Math.round((n / 1024 / 1024) * 10) / 10)} مگابایت`);
+export const kb = (n: number) => (n < 1024 * 1024 ? `${fa(Math.round(n / 1024))} کیلوبایت` : `${fa(Math.round((n / 1024 / 1024) * 10) / 10)} مگابایت`);
 
 /** Drop zone + file button + paste; thumbnails with remove. */
-function Uploader({ files, compact }: { files: ReturnType<typeof useSupport>["files"]; compact?: boolean }) {
+export function Uploader({ files, compact }: { files: ReturnType<typeof useAttachments>; compact?: boolean }) {
   const [over, setOver] = useState(false);
   return (
     <div className={clsx("su-up", compact && "compact")}>
@@ -80,7 +80,7 @@ function Uploader({ files, compact }: { files: ReturnType<typeof useSupport>["fi
 }
 
 /** Attached screenshots; click opens the full image. */
-function Gallery({ items, onOpen }: { items: SupportAttachment[]; onOpen: (a: SupportAttachment) => void }) {
+export function Gallery({ items, onOpen }: { items: SupportAttachment[]; onOpen: (a: SupportAttachment) => void }) {
   if (!items.length) return null;
   return (
     <ul className="su-thumbs view">
@@ -97,7 +97,7 @@ function Gallery({ items, onOpen }: { items: SupportAttachment[]; onOpen: (a: Su
 }
 
 /** Every device detail that is (or was) sent, in full. */
-function DiagnosticsList({ d }: { d: SupportDiagnostics }) {
+export function DiagnosticsList({ d }: { d: SupportDiagnostics }) {
   const rows: [string, string][] = [
     ["صفحه", d.page],
     ["صفحه‌های قبلی", d.recentPages.join(" ← ") || "—"],

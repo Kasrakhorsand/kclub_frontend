@@ -1,5 +1,6 @@
 "use client";
 /** Panel frame for every role: side menu with role switch and badges, top bar, and the page area. */
+import { SiteNotice } from "@/ui/layout/SiteNotice";
 import clsx from "clsx";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -92,7 +93,10 @@ export function PanelShell({ children }: { children: React.ReactNode }) {
           <span className="pbar-sp" />
           <ThemeButton />
         </header>
-        <main className="main">{children}</main>
+        <main className="main">
+          <SiteNotice />
+          {children}
+        </main>
       </div>
     </div>
   );

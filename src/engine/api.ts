@@ -18,7 +18,7 @@ import { AUDIT, COACHES, NOTIFS, SUPPORT, TICKETS, TXS, USERS, seedBookings } fr
 import { CANCEL_RULES, courtById, COURTS, HOLD_MINUTES, HOURS, MAX_DAYS_AHEAD, PRICING, priceOf, refundPercent, RENTALS } from "@/engine/venue";
 import { REVIEWS } from "@/config/content";
 import { useSession } from "@/engine/store";
-import type { Album, Audit, Booking, BookingQuote, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, PublicRules, RevenueReport, ReviewSummary, Role, Slot, Sport, StaffMember, StaffPermission, SupportAttachment, SupportTicket, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
+import type { Album, Audit, Booking, BookingQuote, CannedReply, CartItem, CashReport, Closure, Coach, CoachInput, Court, CustomerDetail, CustomerFilter, CustomerRow, DeskBookingInput, DeskBookingResult, DeskCustomer, DeskMethod, HealthReport, MediaItem, NewClosure, NewSupportTicket, Notif, PaymentResult, PriceSheet, PublicRules, RevenueReport, ReviewSummary, Role, SiteNotice, Slot, Sport, StaffMember, StaffPermission, SupportAgent, SupportAttachment, SupportNote, SupportQueueTicket, SupportTicket, SupportTicketPatch, SupportUserCard, Ticket, TicketCategory, TicketStatus, Tx, User, VenueSettings } from "@/engine/types";
 import { addDays, dayKey, hm, toLatinDigits } from "@/engine/format";
 import { itemTotal, usePricing } from "@/engine/pricing";
 
@@ -532,6 +532,164 @@ export async function closeSupportTicket(id: string): Promise<void> {
   if (t) t.status = "closed";
   await wait(null, 150);
 }
+/* ===== Support desk: the website's support team (role "support") ===== */
+
+/** Mock only: what the support team adds to a report. */
+const supportDesk = new Map<string, { assignee: string | null; notes: SupportNote[]; updatedAt: string }>();
+const deskOf = (t: SupportTicket & { phone: string }) => {
+  let d = supportDesk.get(t.id);
+  if (!d) {
+    d = { assignee: t.status === "new" ? null : "تیم پشتیبانی", notes: [], updatedAt: new Date(`${t.date}T${t.time}:00`).toISOString() };
+    supportDesk.set(t.id, d);
+  }
+  return d;
+};
+const minutesBetween = (a: string, b: string) => Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60_000));
+const agentName = () => {
+  const u = sessionUser();
+  return u ? `${u.first} ${u.last}` : "پشتیبانی";
+};
+
+function mockQueueRow(t: SupportTicket & { phone: string }): SupportQueueTicket {
+  const d = deskOf(t);
+  const u = USERS[t.phone];
+  const first = t.messages.find((m) => m.by === "support");
+  return {
+    ...withoutPhone(t),
+    reporter: { name: u ? `${u.first} ${u.last}` : nameOf(t.phone), role: t.diagnostics?.role ?? u?.roles[0] ?? "player", phone: t.allowCall ? t.phone : undefined },
+    assignee: d.assignee,
+    notes: structuredClone(d.notes),
+    updatedAt: d.updatedAt,
+    firstResponseMins: first ? minutesBetween(`${t.date}T${t.time}:00`, `${first.date}T${first.time}:00`) : undefined,
+  };
+}
+
+/** Support: every report from every user, newest change first. */
+export async function getSupportQueue(): Promise<SupportQueueTicket[]> {
+  if (!USE_MOCK) return http("/support/admin/tickets");
+  return wait(SUPPORT.map(mockQueueRow).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)), 200);
+}
+
+/** Support: change status, severity, area or who works on a report. */
+export async function updateSupportTicket(id: string, patch: SupportTicketPatch): Promise<void> {
+  if (!USE_MOCK) return http(`/support/admin/tickets/${seg(id)}`, { method: "PATCH", body: patch });
+  const t = SUPPORT.find((x) => x.id === id);
+  if (!t) throw new ApiError("گزارش پیدا نشد", 404);
+  const d = deskOf(t);
+  if (patch.status) t.status = patch.status;
+  if (patch.severity) t.severity = patch.severity;
+  if (patch.area) t.area = patch.area;
+  if (patch.assignee !== undefined) d.assignee = patch.assignee;
+  d.updatedAt = new Date().toISOString();
+  await wait(null, 150);
+}
+
+/** Support: answer the user (they see it and get an SMS); optionally move the status at the same time. */
+export async function replyAsSupport(id: string, text: string, files: File[], status?: SupportTicketPatch["status"]): Promise<void> {
+  if (!USE_MOCK) return http(`/support/admin/tickets/${seg(id)}/messages`, { method: "POST", body: supportForm({ text, status }, files), timeoutMs: SUPPORT_UPLOAD.timeoutMs });
+  const t = SUPPORT.find((x) => x.id === id);
+  if (!t) throw new ApiError("گزارش پیدا نشد", 404);
+  t.messages.push({ by: "support", text, date: dayKey(new Date()), time: nowTime(), attachments: files.length ? mockAttachments(files) : undefined });
+  t.status = status ?? (t.status === "new" ? "in_progress" : t.status);
+  const d = deskOf(t);
+  if (!d.assignee) d.assignee = agentName();
+  d.updatedAt = new Date().toISOString();
+  await wait(null, 300);
+}
+
+/** Support: an internal note on a report (never shown to the user). */
+export async function addSupportNote(id: string, text: string): Promise<void> {
+  if (!USE_MOCK) return http(`/support/admin/tickets/${seg(id)}/notes`, { method: "POST", body: { text } });
+  const t = SUPPORT.find((x) => x.id === id);
+  if (!t) throw new ApiError("گزارش پیدا نشد", 404);
+  const d = deskOf(t);
+  d.notes.push({ by: agentName(), text, date: dayKey(new Date()), time: nowTime() });
+  d.updatedAt = new Date().toISOString();
+  await wait(null, 150);
+}
+
+/** Support: the team members a report can be given to. */
+export async function getSupportAgents(): Promise<SupportAgent[]> {
+  if (!USE_MOCK) return http("/support/admin/agents");
+  return wait(Object.values(USERS).filter((u) => u.roles.includes("support")).map((u) => ({ phone: u.phone, name: `${u.first} ${u.last}` })), 80);
+}
+
+const CANNED: CannedReply[] = [
+  { id: "c1", title: "درخواست عکس صفحه", text: "سلام، ممنون از گزارش. لطفاً از صفحه‌ای که خطا داد یک عکس (اسکرین‌شات) بفرستید تا دقیق‌تر بررسی کنیم." },
+  { id: "c2", title: "پیگیری پرداخت", text: "سلام، پرداخت شما را با بانک پیگیری می‌کنیم. اگر مبلغ کم شده و رزرو ثبت نشده باشد، حداکثر تا ۷۲ ساعت به حساب یا کیف پول برمی‌گردد." },
+  { id: "c3", title: "مشکل برطرف شد", text: "سلام، مشکل برطرف شد. لطفاً یک بار صفحه را تازه کنید و دوباره امتحان کنید. اگر باز هم پیش آمد همین‌جا خبر بدهید." },
+  { id: "c4", title: "پاک کردن حافظه‌ی مرورگر", text: "لطفاً یک بار حافظه‌ی مرورگر (cache) را پاک کنید یا سایت را در پنجره‌ی ناشناس باز کنید و نتیجه را بگویید." },
+];
+
+/** Support: saved answers. */
+export async function getCannedReplies(): Promise<CannedReply[]> {
+  if (!USE_MOCK) return http("/support/admin/replies");
+  return wait(structuredClone(CANNED), 80);
+}
+
+/** Support: add (no id) or edit a saved answer. */
+export async function saveCannedReply(reply: Omit<CannedReply, "id"> & { id?: string }): Promise<CannedReply> {
+  if (!USE_MOCK) return reply.id ? http(`/support/admin/replies/${seg(reply.id)}`, { method: "PUT", body: reply }) : http("/support/admin/replies", { method: "POST", body: reply });
+  const saved = { id: reply.id ?? `c${Date.now()}`, title: reply.title, text: reply.text };
+  const i = CANNED.findIndex((c) => c.id === saved.id);
+  if (i >= 0) CANNED[i] = saved;
+  else CANNED.push(saved);
+  return wait(structuredClone(saved), 120);
+}
+
+export async function deleteCannedReply(id: string): Promise<void> {
+  if (!USE_MOCK) return http(`/support/admin/replies/${seg(id)}`, { method: "DELETE" });
+  const i = CANNED.findIndex((c) => c.id === id);
+  if (i >= 0) CANNED.splice(i, 1);
+  await wait(null, 100);
+}
+
+let notice: SiteNotice = { active: false, tone: "info", text: "" };
+
+/** Public: the site-wide status banner (empty / inactive when there is none). */
+export async function getSiteNotice(): Promise<SiteNotice> {
+  if (!USE_MOCK) return http("/site/notice");
+  return wait(structuredClone(notice), 60);
+}
+
+/** Support: publish, change or turn off the site-wide banner. */
+export async function setSiteNotice(next: SiteNotice): Promise<SiteNotice> {
+  if (!USE_MOCK) return http("/support/admin/notice", { method: "PUT", body: next });
+  notice = { ...next, text: next.text.trim(), updatedAt: new Date().toISOString(), updatedBy: agentName() };
+  return wait(structuredClone(notice), 150);
+}
+
+/** Support: backend health and its dependencies (database, SMS, gateway, storage). */
+export async function getHealth(): Promise<HealthReport> {
+  if (!USE_MOCK) return http("/health", { timeoutMs: 8_000 });
+  return wait({
+    ok: true, version: "sample-data", time: new Date().toISOString(),
+    checks: [
+      { name: "پایگاه داده", ok: true, detail: "داده‌ی نمونه" },
+      { name: "پیامک", ok: true, detail: "داده‌ی نمونه" },
+      { name: "درگاه بانک", ok: true, detail: "داده‌ی نمونه" },
+      { name: "فضای فایل", ok: true, detail: "داده‌ی نمونه" },
+    ],
+  }, 120);
+}
+
+/** Support: one user by phone with their reports, to see the whole picture. */
+export async function lookupSupportUser(phone: string): Promise<SupportUserCard | null> {
+  const p = toLatinDigits(phone).replace(/\D/g, "");
+  if (!USE_MOCK) return http<SupportUserCard>(`/support/admin/users/${seg(p)}`).catch((e: ApiError) => (e.status === 404 ? null : Promise.reject(e)));
+  const u = USERS[p];
+  const known = u || db().some((b) => b.userPhone === p) || SUPPORT.some((t) => t.phone === p);
+  if (!known) return wait(null, 150);
+  const today = dayKey(new Date());
+  return wait({
+    phone: p,
+    name: u ? `${u.first} ${u.last}` : nameOf(p),
+    roles: u?.roles ?? ["player"],
+    activeBookings: db().filter((b) => b.userPhone === p && b.status === "active" && b.date >= today).length,
+    tickets: SUPPORT.filter((t) => t.phone === p).map(mockQueueRow),
+  }, 200);
+}
+
 /* ------------------------------------------------------------------ */
 /* Bank gateway return                                                 */
 /* ------------------------------------------------------------------ */

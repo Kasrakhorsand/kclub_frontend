@@ -57,10 +57,20 @@ export const MENUS: Record<Role, MenuItem[]> = {
     { key: "notif", label: "اعلان‌ها" },
     { key: "profile", label: "پروفایل و رمز عبور" },
   ],
+  support: [
+    { key: "dash", label: "داشبورد" },
+    { key: "queue", label: "صف گزارش‌ها" },
+    { key: "errors", label: "خطاهای سایت" },
+    { key: "health", label: "وضعیت سامانه" },
+    { key: "notice", label: "اطلاعیه‌ی سایت" },
+    { key: "replies", label: "پاسخ‌های آماده" },
+    { key: "lookup", label: "جستجوی کاربر" },
+    { key: "profile", label: "پروفایل و رمز عبور" },
+  ],
 };
 
-export const ROLE_FA: Record<Role, string> = { player: "بازیکن", secretary: "منشی", admin: "ادمین" };
-export const ROLE_EN: Record<Role, string> = { player: "Player", secretary: "Front Desk", admin: "Admin" };
+export const ROLE_FA: Record<Role, string> = { player: "بازیکن", secretary: "منشی", admin: "ادمین", support: "پشتیبانی فنی" };
+export const ROLE_EN: Record<Role, string> = { player: "Player", secretary: "Front Desk", admin: "Admin", support: "Support" };
 
 /** Menu key → URL; "book" leaves the panel for the public booking flow. */
 export const sectionHref = (key: string) => (key === "book" ? "/sport" : key === "dash" ? "/panel" : `/panel/${key}`);

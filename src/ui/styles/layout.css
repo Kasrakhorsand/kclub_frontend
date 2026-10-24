@@ -69,6 +69,7 @@
 .lg2-head small{color:var(--muted);font-size:.78rem}
 .lg2-draft{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-size:.82rem}
 .lg2-cols{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;align-items:start}
+.lg2-cols>*{min-width:0}
 .lg2-toc{position:sticky;top:100px;display:flex;flex-direction:column;gap:10px;font-size:.86rem}
 .lg2-toc b{font-size:.8rem;color:var(--muted);font-weight:500}
 .lg2-toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;border-inline-start:2px solid var(--line)}
@@ -82,13 +83,13 @@
 .lg2-body p{margin:0;line-height:2}
 .lg2-list{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px;line-height:1.9}
 .lg2-muted{margin:0;color:var(--muted);font-size:.86rem}
-.lg2-table{width:100%;max-width:520px;border-collapse:collapse;font-size:.9rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.lg2-table th{text-align:right;font-weight:500;font-size:.78rem;color:var(--muted);padding:10px 14px;background:var(--surface-2)}
+.lg2-table{table-layout:fixed;width:100%;min-width:0;max-width:520px;border-collapse:collapse;font-size:.9rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.lg2-table th{white-space:normal;text-align:right;font-weight:500;font-size:.78rem;color:var(--muted);padding:10px 14px;background:var(--surface-2)}
 .lg2-table td{padding:10px 14px;border-top:1px solid var(--line)}
 .lg2-contact{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:.86rem}
 .legal-note{margin:0;text-align:center}
 .legal-note a{color:var(--court);text-decoration:underline;text-underline-offset:3px}
-@media (max-width:860px){.lg2-cols{grid-template-columns:1fr;gap:20px}.lg2-toc{position:static;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}}
+@media (max-width:860px){.lg2-cols{grid-template-columns:minmax(0,1fr);gap:20px}.lg2-toc{position:static;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}}
 
 /* ===== error pages ===== */
 .er{min-height:60vh;display:grid;place-items:center;padding:40px 16px}

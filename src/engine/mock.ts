@@ -11,6 +11,7 @@ export const USERS: Record<string, User> = {
   "09125556677": { phone: "09125556677", first: "سارا", last: "محمدی", roles: ["player"], wallet: 3_500_000, vip: true },
   "09120000001": { phone: "09120000001", first: "مریم", last: "احمدی", roles: ["secretary"], wallet: 0 },
   "09120000002": { phone: "09120000002", first: "مدیر", last: "مجموعه", roles: ["admin", "secretary"], wallet: 0 },
+  "09120000003": { phone: "09120000003", first: "تیم", last: "پشتیبانی", roles: ["support"], wallet: 0 },
 };
 
 const NAMES = [
@@ -108,6 +109,14 @@ export const AUDIT: Audit[] = [
   { date: k(-2), actor: "مدیر مجموعه", action: "بستن زمین", target: "پدل ۳", detail: "تعمیر چمن · ۸ تا ۱۲" },
 ];
 
+/** Device details for sample reports. */
+const diag = (page: string, browser: string, os: string, device: "mobile" | "tablet" | "desktop", errors: [page: string, message: string][] = [], role: "player" | "secretary" = "player") => ({
+  page, recentPages: ["/", "/sport", page].filter((x, i, a) => a.indexOf(x) === i), browser, os, device,
+  screen: device === "mobile" ? "390×844" : "1920×1080", viewport: device === "mobile" ? "390×740" : "1440×820", pixelRatio: device === "mobile" ? 3 : 1,
+  language: "fa-IR", timeZone: "Asia/Tehran", online: true, connection: device === "mobile" ? "4g" : undefined, theme: "light", role,
+  appVersion: "0.1.0", reportedAt: new Date().toISOString(), recentErrors: errors.map(([pg, message], i) => ({ time: `21:${40 + i}:10`, page: pg, message })),
+});
+
 /** Technical support reports (per phone), with one waiting on the player for more detail. */
 export const SUPPORT: (SupportTicket & { phone: string })[] = [
   {
@@ -118,8 +127,44 @@ export const SUPPORT: (SupportTicket & { phone: string })[] = [
     expected: "برگشت به سایت و نمایش کد رهگیری",
     when: "yesterday", whenTime: "21:40", refCode: "KC-48213", allowCall: true,
     status: "need_info", date: k(-1), time: "21:52", attachments: [],
+    diagnostics: diag("/payment/return", "Chrome 129", "Android 14", "mobile", [["/payment/return", "Failed to fetch"]]),
     messages: [
       { by: "support", text: "سلام، گزارش شما بررسی شد. لطفاً چهار رقم آخر کارت و ساعت دقیق پرداخت را بنویسید تا تراکنش را با بانک پیگیری کنیم. اگر از صفحه‌ی بانک عکس دارید، پیوست کنید.", date: k(0), time: "09:15" },
+    ],
+  },
+  {
+    id: "s2", ref: "SUP-1017", phone: "09125556677", area: "booking", severity: "blocker",
+    subject: "دکمه‌ی انتخاب زمین در آیفون کار نمی‌کند",
+    steps: "وارد رزرو ساحلی شدم، روز و ساعت را زدم و روی زمین ۲ زدم.",
+    actual: "هیچ اتفاقی نمی‌افتد و زمین به سبد اضافه نمی‌شود.",
+    when: "today", whenTime: "10:05", allowCall: false,
+    status: "new", date: k(0), time: "10:12", attachments: [],
+    diagnostics: diag("/book/beach", "Safari 17", "iOS 17.5", "mobile", [["/book/beach", "TypeError: undefined is not an object (evaluating 'e.getContext')"], ["/book/beach", "WebGL context lost"]]),
+    messages: [],
+  },
+  {
+    id: "s3", ref: "SUP-1016", phone: "09120000001", area: "panel", severity: "minor",
+    subject: "جدول رزروها در لپ‌تاپ کوچک بیرون می‌زند",
+    steps: "در پنل منشی جدول رزروها را باز کردم.",
+    actual: "ستون ساعت ۲۳ دیده نمی‌شود و باید صفحه را کوچک کنم.",
+    expected: "اسکرول افقی یا جا شدن جدول",
+    when: "earlier", allowCall: true,
+    status: "in_progress", date: k(-3), time: "17:30", attachments: [],
+    diagnostics: diag("/panel/sched", "Edge 129", "Windows 11", "desktop", [], "secretary"),
+    messages: [
+      { by: "support", text: "ممنون از گزارش. مشکل را دیدیم و در نسخه‌ی بعد درست می‌شود.", date: k(-2), time: "11:00" },
+    ],
+  },
+  {
+    id: "s4", ref: "SUP-1015", phone: "09121234567", area: "login", severity: "major",
+    subject: "کد تأیید دیر می‌رسد",
+    steps: "شماره را زدم و منتظر پیامک ماندم.",
+    actual: "پیامک بعد از سه دقیقه آمد و کد منقضی شده بود.",
+    when: "earlier", allowCall: true,
+    status: "resolved", date: k(-6), time: "08:20", attachments: [],
+    diagnostics: diag("/login", "Chrome 129", "Android 14", "mobile", [["/login", "Failed to fetch"]]),
+    messages: [
+      { by: "support", text: "اپراتور پیامک تأخیر داشت؛ برطرف شد. اگر دوباره پیش آمد خبر بدهید.", date: k(-6), time: "09:05" },
     ],
   },
 ];
