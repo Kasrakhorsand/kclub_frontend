@@ -6,6 +6,7 @@ Next.js 15 (App Router) + TypeScript front end for K Club court booking (padel, 
 - `npm run dev` — dev server on :3000 with Turbopack (preview config: `kclub-web` in `.claude/launch.json`)
 - `npx tsc --noEmit` — type check (slow, ~1–2 min on this machine)
 - `npm run lint` — ESLint
+- `npm run build && npm run test:e2e` — Playwright end-to-end tests (`tests/e2e`: login, booking, payment) against the production build on :3100, using the installed Edge (`E2E_CHANNEL=chrome` for Chrome, `E2E_BASE_URL` to test a running server). Add a test here when a main flow changes.
 
 ## Structure
 - `src/engine/` is the shared, UI-free logic used by several club sites (K Club, Noor Club): types, venue rules, format, store, API, mock data and hooks (`useBookingFlow`, `useCart`, `useCheckout`, `useOpenSlots`, `useLogin`, `useSetPassword`, `usePanelSession`, panel stats). No components, CSS or brand copy; ESLint blocks imports of `@/ui`, `@/app`, `@/config/site`, `@/config/home` and CSS from it. See `src/engine/README.md`.
