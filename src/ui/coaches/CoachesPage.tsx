@@ -16,6 +16,8 @@ import { fa, hm, toman } from "@/engine/format";
 import type { Coach } from "@/engine/types";
 import { CoachBook } from "@/ui/coaches/CoachBook";
 import { CoachPortrait } from "@/ui/coaches/CoachPortrait";
+import { JsonLd } from "@/ui/seo/JsonLd";
+import { coachesSchema } from "@/ui/seo/schema";
 
 const levelLatin = (c: Coach) => COACH_LEVELS.find((l) => l.id === c.level)?.latin ?? "Coach";
 
@@ -155,6 +157,7 @@ export function CoachesPage() {
         {d.shown.map((c) => <Card key={c.id} c={c} d={d} />)}
       </section>
       <Profile d={d} />
+      {d.total > 0 && <JsonLd data={coachesSchema(d.all)} />}
     </main>
   );
 }

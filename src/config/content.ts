@@ -45,6 +45,8 @@ export const CONTACT = {
   instagram: "kclub.padel",
   /** Google Maps / Neshan link for the address. */
   mapUrl: undefined as string | undefined,
+  /** Map coordinates of the club, for search engines and map apps, e.g. { lat: 35.75, lng: 51.41 }. */
+  geo: undefined as { lat: number; lng: number } | undefined,
 };
 
 /** Show placeholders for missing content (development only). */

@@ -39,9 +39,24 @@ const jost = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   title: { default: SITE.seoTitle, template: `%s | ${SITE.name}` },
   description: SITE.seoDescription,
-  robots: process.env.NEXT_PUBLIC_NOINDEX === "1" ? { index: false, follow: false } : undefined,
+  applicationName: SITE.name,
+  category: "sports",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: SITE.locale,
+    siteName: SITE.name,
+    title: SITE.seoTitle,
+    description: SITE.seoDescription,
+    url: "/",
+  },
+  twitter: { card: "summary_large_image", title: SITE.seoTitle, description: SITE.seoDescription },
+  // Phone numbers in copy (prices, codes) shouldn't turn into call links on iOS.
+  formatDetection: { telephone: false },
+  robots: process.env.NEXT_PUBLIC_NOINDEX === "1" ? { index: false, follow: false } : { index: true, follow: true, "max-image-preview": "large" },
 };
 
 export const viewport: Viewport = { themeColor: SITE.themeColor, viewportFit: "cover" };

@@ -37,7 +37,7 @@ export function SportPicker() {
   return (
     <main className="wrap">
       <div className="pghead">
-        <h2>امروز چه بازی می‌کنید؟</h2>
+        <h1>امروز چه بازی می‌کنید؟</h1>
         <BackButton href="/">بازگشت به خانه</BackButton>
       </div>
       <section className="pick3">

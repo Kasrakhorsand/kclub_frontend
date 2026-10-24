@@ -10,6 +10,9 @@ import { Reviews } from "@/ui/home/Reviews";
 import { FinalCta } from "@/ui/home/FinalCta";
 import { MobileBookBar } from "@/ui/home/MobileBookBar";
 import { RevealOnScroll } from "@/ui/home/RevealOnScroll";
+import { SPORTS } from "@/engine/venue";
+import { JsonLd } from "@/ui/seo/JsonLd";
+import { clubSchema, faqSchema, serviceSchema, websiteSchema } from "@/ui/seo/schema";
 
 /**
  * Home, top to bottom: hero, open slots, sports, prices, the club and
@@ -18,6 +21,7 @@ import { RevealOnScroll } from "@/ui/home/RevealOnScroll";
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={[clubSchema(), websiteSchema(), faqSchema(), ...SPORTS.map((s) => serviceSchema(s.id)).filter((x) => x !== null)]} />
       <Hero />
       <FreeSlotsToday />
       <SportCards />

@@ -198,7 +198,7 @@ export function Booking({ sport }: { sport: Sport }) {
         <div className="row between">
           <div className="row">
             <BackButton href="/sport">تغییر رشته</BackButton>
-            <h2>رزرو زمین {flow.title}</h2>
+            <h1 className="bk-title">رزرو زمین {flow.title}</h1>
           </div>
           <label className="repeat">
             <span>تکرار هفتگی</span>

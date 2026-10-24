@@ -18,6 +18,17 @@ export const SITE = {
     "رزرو آنلاین زمین پدل، تنیس ساحلی و والیبال ساحلی در کی کلاب. سانس خالی را ببینید، زمین را انتخاب کنید و آنلاین پرداخت کنید.",
   /** Browser UI colour on phones. */
   themeColor: "#0D0D0E",
+  /**
+   * Public address of the site, used for canonical links, the sitemap,
+   * structured data and share images. Set NEXT_PUBLIC_SITE_URL in production
+   * (e.g. https://kclub.ir); without it links point at localhost.
+   */
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, ""),
+  /** Open Graph locale. */
+  locale: "fa_IR",
+  /** City and country for search results and AI answers ("پدل در تهران"). */
+  city: "تهران",
+  country: "IR",
   logo: {
     /** Square emblem, transparent background. */
     emblem: "/brand/k-emblem.webp",

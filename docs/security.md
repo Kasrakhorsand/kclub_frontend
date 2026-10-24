@@ -15,7 +15,7 @@
 | Redirect به درگاه جعلی | فقط https و فقط میزبان‌های `NEXT_PUBLIC_PAYMENT_HOSTS` | `engine/security.ts` |
 | لینک مخرب در اعلان | `href` اعلان‌ها فقط وقتی دنبال می‌شود که مسیر داخلی باشد. | `ui/panel/common/NotificationsPage.tsx` |
 | پارامترهای URL دست‌کاری‌شده | `?date` و `?hour` و `?game` در صفحه‌ی رزرو اعتبارسنجی می‌شوند. | `engine/security.ts`، `ui/booking/Booking.tsx` |
-| XSS در محتوای کاربر | همه‌ی متن‌ها (نام، تیکت، اعلان) به‌صورت متن رندر می‌شوند. تنها `dangerouslySetInnerHTML` پروژه برای SVG آیکون‌های ثابت داخل کد است. | `ui/kit/Icon3D.tsx` |
+| XSS در محتوای کاربر | همه‌ی متن‌ها (نام، تیکت، اعلان) به‌صورت متن رندر می‌شوند. `dangerouslySetInnerHTML` فقط برای SVG آیکون‌های ثابت داخل کد و داده‌ی ساختاریافته‌ی JSON-LD است؛ در JSON-LD کاراکتر `<` فرار داده می‌شود تا متن مربی یا تنظیمات نتواند تگ script را ببندد. | `ui/kit/Icon3D.tsx`، `ui/seo/JsonLd.tsx` |
 | بارگذاری اسکریپت یا قاب از جای دیگر | هدرهای CSP، `X-Frame-Options: DENY`، `nosniff`، `Referrer-Policy`، `Permissions-Policy` و HSTS (در production) | `next.config.ts` |
 | اطلاعات شخصی در مرورگر | ایمیل و کد ملی در localStorage ذخیره نمی‌شوند. | `engine/store.ts` |
 | ورودی‌های خیلی بلند | سقف طول برای نام، ایمیل، رمز و تیکت | `engine/auth/*`، `engine/tickets/useTickets.ts` |

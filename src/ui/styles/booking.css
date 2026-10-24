@@ -293,3 +293,5 @@
 .rush-wait .btn.ghost{color:var(--onblack);border-color:var(--blackline);background:transparent}
 .rush-spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--blackline);border-top-color:var(--gold);animation:prspin .9s linear infinite;flex:none}
 @media (prefers-reduced-motion:reduce){.rush-spin{animation-duration:3s}}
+/* Page title of the booking page: an h1 for search engines, sized like the old h2. */
+.bk-title{font-size:1.35rem;font-weight:400}

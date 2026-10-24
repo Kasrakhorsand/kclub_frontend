@@ -18,7 +18,7 @@ export function useCoachDirectory() {
   const opened: Coach | null = coaches.find((c) => c.id === openId) ?? null;
 
   return {
-    loading, total: coaches.length, shown, games, hasGender,
+    loading, total: coaches.length, all: coaches, shown, games, hasGender,
     game, setGame, gender, setGender,
     clear: () => { setGame(null); setGender(null); },
     opened, open: setOpenId,
